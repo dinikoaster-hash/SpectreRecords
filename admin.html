@@ -1,0 +1,364 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Spectre Records — Admin</title>
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Syne:wght@400;600;800&family=DM+Mono:wght@300;400;500&display=swap" rel="stylesheet"/>
+  <style>
+    :root{--bg:#080808;--surface:#0e0e0e;--surface2:#131318;--purple:#7c3aed;--purple-light:#a855f7;--purple-glow:#9333ea;--purple-dim:#2d1b5e;--text:#f0eaf8;--muted:#6b6378;--muted2:#4a4356;--border:#1a1625;--border2:#221e30;--green:#34d399;--yellow:#fbbf24;--red:#f87171;--gold:#C9A84C;}
+    *,*::before,*::after{margin:0;padding:0;box-sizing:border-box;}
+    html{scroll-behavior:smooth;}
+    body{background:var(--bg);color:var(--text);font-family:'Syne',sans-serif;min-height:100vh;overflow-x:hidden;cursor:none;}
+    body::before{content:'';position:fixed;inset:0;background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E");pointer-events:none;z-index:9000;opacity:0.35;}
+    .cursor{position:fixed;width:10px;height:10px;background:var(--gold);border-radius:50%;pointer-events:none;z-index:9999;transform:translate(-50%,-50%);mix-blend-mode:screen;transition:width .15s,height .15s;}
+    .cursor-ring{position:fixed;width:32px;height:32px;border:1px solid rgba(201,168,76,.35);border-radius:50%;pointer-events:none;z-index:9998;transform:translate(-50%,-50%);transition:width .3s,height .3s;}
+    @keyframes fadeUp{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:translateY(0)}}
+    @keyframes shimmer{from{transform:translateX(-100%)}to{transform:translateX(100%)}}
+    @keyframes spin{to{transform:rotate(360deg)}}
+    #loginScreen{min-height:100vh;display:flex;align-items:center;justify-content:center;position:relative;overflow:hidden;}
+    .login-bg{position:absolute;inset:0;background:radial-gradient(ellipse 50% 60% at 50% 50%,rgba(201,168,76,.1) 0%,transparent 70%);}
+    .login-grid{position:absolute;inset:0;background-image:linear-gradient(rgba(201,168,76,.03) 1px,transparent 1px),linear-gradient(90deg,rgba(201,168,76,.03) 1px,transparent 1px);background-size:50px 50px;mask-image:radial-gradient(ellipse 70% 70% at 50% 50%,black 0%,transparent 100%);}
+    .login-box{position:relative;z-index:2;width:100%;max-width:420px;padding:3rem;border:1px solid var(--border2);background:rgba(14,14,14,.95);backdrop-filter:blur(20px);animation:fadeUp .7s .1s both;}
+    .login-logo-img{display:block;margin:0 auto 1rem;height:70px;width:auto;filter:drop-shadow(0 0 16px rgba(201,168,76,0.3));}
+    .login-sub{font-family:'DM Mono',monospace;font-size:.6rem;letter-spacing:.25em;text-transform:uppercase;color:var(--muted);text-align:center;margin-bottom:2rem;}
+    .admin-badge{display:block;margin:0 auto 2rem;width:fit-content;background:rgba(201,168,76,.1);border:1px solid rgba(201,168,76,.3);color:var(--gold);font-family:'DM Mono',monospace;font-size:.6rem;letter-spacing:.2em;text-transform:uppercase;padding:.4rem 1rem;}
+    .login-label{font-family:'DM Mono',monospace;font-size:.65rem;letter-spacing:.2em;text-transform:uppercase;color:var(--muted);display:block;margin-bottom:.5rem;}
+    .login-input{width:100%;background:var(--surface2);border:1px solid var(--border2);color:var(--text);font-family:'DM Mono',monospace;font-size:1.1rem;letter-spacing:.3em;text-align:center;padding:1rem;outline:none;transition:border-color .2s;margin-bottom:1.2rem;}
+    .login-input:focus{border-color:var(--gold);}
+    .login-btn{width:100%;font-family:'DM Mono',monospace;font-size:.8rem;letter-spacing:.15em;text-transform:uppercase;background:var(--gold);color:#0a0a0a;border:none;padding:1rem;cursor:none;transition:opacity .2s;position:relative;overflow:hidden;}
+    .login-btn:hover{opacity:.85;}
+    .login-btn.loading::after{content:'';position:absolute;inset:0;background:linear-gradient(90deg,transparent,rgba(255,255,255,.15),transparent);animation:shimmer 1s infinite;}
+    .login-error{font-family:'DM Mono',monospace;font-size:.7rem;color:var(--red);letter-spacing:.1em;text-align:center;margin-top:1rem;display:none;}
+    .login-hint{font-family:'DM Mono',monospace;font-size:.6rem;color:var(--muted2);text-align:center;margin-top:1.5rem;letter-spacing:.08em;line-height:1.6;}
+    #adminScreen{display:none;min-height:100vh;}
+    .admin-nav{position:sticky;top:0;z-index:100;display:flex;align-items:center;justify-content:space-between;padding:1.2rem 2.5rem;background:rgba(8,8,8,.9);backdrop-filter:blur(16px);border-bottom:1px solid var(--border);}
+    .admin-nav-logo img{height:30px;width:auto;filter:brightness(.9);}
+    .admin-nav-right{display:flex;align-items:center;gap:.8rem;flex-wrap:wrap;}
+    .admin-tag{font-family:'DM Mono',monospace;font-size:.6rem;letter-spacing:.15em;text-transform:uppercase;background:rgba(201,168,76,.1);border:1px solid rgba(201,168,76,.3);color:var(--gold);padding:.3rem .8rem;}
+    .nav-btn{font-family:'DM Mono',monospace;font-size:.65rem;letter-spacing:.1em;text-transform:uppercase;color:var(--muted2);background:none;border:1px solid var(--border2);padding:.5rem 1rem;cursor:none;transition:border-color .2s,color .2s;text-decoration:none;display:inline-block;}
+    .nav-btn:hover{border-color:var(--purple-light);color:var(--purple-light);}
+    .logout-btn{font-family:'DM Mono',monospace;font-size:.65rem;letter-spacing:.1em;text-transform:uppercase;color:var(--muted2);background:none;border:1px solid var(--border2);padding:.5rem 1rem;cursor:none;transition:border-color .2s,color .2s;}
+    .logout-btn:hover{border-color:var(--red);color:var(--red);}
+    .admin-tabs{display:flex;gap:0;border-bottom:1px solid var(--border);padding:0 2.5rem;overflow-x:auto;}
+    .tab-btn{font-family:'DM Mono',monospace;font-size:.7rem;letter-spacing:.12em;text-transform:uppercase;color:var(--muted2);background:none;border:none;border-bottom:2px solid transparent;padding:1.2rem 1.5rem;cursor:none;transition:color .2s,border-color .2s;white-space:nowrap;}
+    .tab-btn:hover{color:var(--muted);}
+    .tab-btn.active{color:var(--gold);border-bottom-color:var(--gold);}
+    .tab-content{display:none;padding:2.5rem;}
+    .tab-content.active{display:block;}
+    .stats-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:1px;border:1px solid var(--border);margin-bottom:2.5rem;}
+    .stat-card{background:var(--surface);padding:1.5rem;}
+    .stat-label{font-family:'DM Mono',monospace;font-size:.6rem;letter-spacing:.2em;text-transform:uppercase;color:var(--muted);margin-bottom:.5rem;}
+    .stat-value{font-family:'Bebas Neue',sans-serif;font-size:2.2rem;letter-spacing:.04em;line-height:1;}
+    .sv-gold{color:var(--gold);}.sv-green{color:var(--green);}.sv-purple{color:var(--purple-light);}.sv-red{color:var(--red);}
+    .admin-section{margin-bottom:3rem;}
+    .section-eyebrow{font-family:'DM Mono',monospace;font-size:.6rem;letter-spacing:.2em;color:var(--muted2);margin-bottom:.3rem;}
+    .section-title{font-family:'Bebas Neue',sans-serif;font-size:1.8rem;letter-spacing:.06em;margin-bottom:1.2rem;}
+    .filter-bar{display:flex;gap:1rem;margin-bottom:1.5rem;flex-wrap:wrap;}
+    .filter-input{background:var(--surface2);border:1px solid var(--border2);color:var(--text);font-family:'DM Mono',monospace;font-size:.75rem;letter-spacing:.08em;padding:.7rem 1rem;outline:none;transition:border-color .2s;flex:1;min-width:180px;}
+    .filter-input:focus{border-color:var(--gold);}
+    .filter-input::placeholder{color:var(--muted2);}
+    .filter-select{background:var(--surface2);border:1px solid var(--border2);color:var(--muted);font-family:'DM Mono',monospace;font-size:.7rem;padding:.7rem 1rem;outline:none;cursor:none;}
+    .data-table{width:100%;border-collapse:collapse;}
+    .data-table th{font-family:'DM Mono',monospace;font-size:.6rem;letter-spacing:.15em;text-transform:uppercase;color:var(--muted2);text-align:left;padding:.8rem 1rem;border-bottom:1px solid var(--border);}
+    .data-table td{padding:.9rem 1rem;border-bottom:1px solid var(--border);font-size:.88rem;vertical-align:middle;}
+    .data-table tr:hover td{background:var(--surface2);}
+    .data-table tr:last-child td{border-bottom:none;}
+    .badge{font-family:'DM Mono',monospace;font-size:.6rem;letter-spacing:.1em;text-transform:uppercase;padding:.3rem .7rem;}
+    .badge-done{background:rgba(52,211,153,.1);color:var(--green);border:1px solid rgba(52,211,153,.2);}
+    .badge-active{background:rgba(168,85,247,.1);color:var(--purple-light);border:1px solid rgba(168,85,247,.2);}
+    .badge-pending{background:rgba(251,191,36,.1);color:var(--yellow);border:1px solid rgba(251,191,36,.2);}
+    .badge-paid{background:rgba(52,211,153,.1);color:var(--green);border:1px solid rgba(52,211,153,.2);}
+    .badge-unpaid{background:rgba(248,113,113,.1);color:var(--red);border:1px solid rgba(248,113,113,.2);}
+    .artists-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:1px;border:1px solid var(--border);}
+    .artist-card{background:var(--surface);padding:1.5rem;position:relative;overflow:hidden;transition:background .2s;}
+    .artist-card::before{content:'';position:absolute;left:0;top:0;bottom:0;width:2px;background:var(--border);transition:background .2s;}
+    .artist-card:hover{background:var(--surface2);}
+    .artist-card:hover::before{background:var(--purple-light);}
+    .artist-card.has-debt::before{background:var(--red);}
+    .artist-card.ok::before{background:var(--green);}
+    .artist-header{display:flex;align-items:center;gap:.9rem;margin-bottom:1rem;}
+    .artist-avatar{width:40px;height:40px;border-radius:50%;background:var(--purple-dim);display:flex;align-items:center;justify-content:center;font-family:'Bebas Neue',sans-serif;font-size:1rem;color:var(--purple-light);flex-shrink:0;border:1px solid var(--border2);}
+    .artist-name{font-weight:600;font-size:.95rem;}
+    .artist-aka{font-family:'DM Mono',monospace;font-size:.65rem;color:var(--purple-light);margin-top:.15rem;}
+    .artist-meta{font-family:'DM Mono',monospace;font-size:.65rem;color:var(--muted);line-height:1.9;}
+    .artist-meta span{color:var(--muted2);}
+    .artist-code{display:inline-block;margin-top:.75rem;font-family:'DM Mono',monospace;font-size:.68rem;letter-spacing:.12em;background:var(--surface2);border:1px solid var(--border2);padding:.3rem .7rem;color:var(--muted);}
+    .finance-summary{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:1px;border:1px solid var(--border);margin-bottom:2rem;}
+    .fin-sum-card{background:var(--surface);padding:1.2rem 1.5rem;}
+    .fin-sum-label{font-family:'DM Mono',monospace;font-size:.6rem;letter-spacing:.15em;text-transform:uppercase;color:var(--muted);margin-bottom:.4rem;}
+    .fin-sum-val{font-family:'Bebas Neue',sans-serif;font-size:1.8rem;letter-spacing:.04em;}
+    .form-card{background:var(--surface);border:1px solid var(--border2);padding:2rem;margin-bottom:2rem;display:none;}
+    .form-card.show{display:block;}
+    .form-grid{display:grid;grid-template-columns:1fr 1fr;gap:1rem;}
+    .form-group{display:flex;flex-direction:column;gap:.4rem;}
+    .form-group.full{grid-column:1/-1;}
+    .form-label{font-family:'DM Mono',monospace;font-size:.62rem;letter-spacing:.15em;text-transform:uppercase;color:var(--muted);}
+    .form-input{background:var(--surface2);border:1px solid var(--border2);color:var(--text);font-family:'DM Mono',monospace;font-size:.8rem;padding:.75rem;outline:none;transition:border-color .2s;}
+    .form-input:focus{border-color:var(--gold);}
+    .form-actions{display:flex;gap:1rem;margin-top:1.2rem;flex-wrap:wrap;}
+    .btn-gold{font-family:'DM Mono',monospace;font-size:.75rem;letter-spacing:.12em;text-transform:uppercase;background:var(--gold);color:#0a0a0a;border:none;padding:.85rem 2rem;cursor:none;transition:opacity .2s;}
+    .btn-gold:hover{opacity:.85;}
+    .btn-outline{font-family:'DM Mono',monospace;font-size:.75rem;letter-spacing:.12em;text-transform:uppercase;background:none;color:var(--muted);border:1px solid var(--border2);padding:.85rem 2rem;cursor:none;transition:border-color .2s,color .2s;}
+    .btn-outline:hover{border-color:var(--muted);color:var(--text);}
+    .form-result{margin-top:1rem;font-family:'DM Mono',monospace;font-size:.7rem;color:var(--muted);display:none;line-height:1.8;padding:1rem;background:rgba(201,168,76,.04);border:1px solid rgba(201,168,76,.2);}
+    .result-row{color:var(--gold);word-break:break-all;line-height:1.8;}
+    .copy-row-btn{margin-top:.5rem;font-family:'DM Mono',monospace;font-size:.65rem;letter-spacing:.1em;background:none;border:1px solid var(--border2);color:var(--muted);padding:.4rem .9rem;cursor:none;transition:border-color .2s,color .2s;}
+    .copy-row-btn:hover{border-color:var(--gold);color:var(--gold);}
+    .config-panel{position:fixed;right:0;top:0;bottom:0;width:380px;z-index:500;background:var(--surface);border-left:1px solid var(--border2);padding:2rem;overflow-y:auto;transform:translateX(100%);transition:transform .3s;display:flex;flex-direction:column;gap:1rem;}
+    .config-panel.show{transform:translateX(0);}
+    .config-title{font-family:'Bebas Neue',sans-serif;font-size:1.6rem;letter-spacing:.08em;}
+    .config-label{font-family:'DM Mono',monospace;font-size:.62rem;letter-spacing:.15em;text-transform:uppercase;color:var(--muted);display:block;margin-bottom:.4rem;}
+    .config-input{width:100%;background:var(--surface2);border:1px solid var(--border2);color:var(--text);font-family:'DM Mono',monospace;font-size:.8rem;padding:.8rem;outline:none;transition:border-color .2s;margin-bottom:.8rem;}
+    .config-input:focus{border-color:var(--gold);}
+    .config-save{width:100%;font-family:'DM Mono',monospace;font-size:.75rem;letter-spacing:.12em;text-transform:uppercase;background:var(--gold);color:#0a0a0a;border:none;padding:.9rem;cursor:none;}
+    .config-close{background:none;border:1px solid var(--border2);color:var(--muted);font-family:'DM Mono',monospace;font-size:.7rem;letter-spacing:.1em;text-transform:uppercase;padding:.7rem 1rem;cursor:none;}
+    .toast{position:fixed;bottom:2rem;left:50%;transform:translateX(-50%);background:var(--surface);border:1px solid var(--gold);color:var(--gold);font-family:'DM Mono',monospace;font-size:.7rem;letter-spacing:.12em;padding:.9rem 1.8rem;z-index:9999;animation:fadeUp .3s both;white-space:nowrap;}
+    .empty-state{font-family:'DM Mono',monospace;font-size:.75rem;color:var(--muted2);padding:3rem;text-align:center;letter-spacing:.08em;border:1px solid var(--border);}
+    .spinner{width:20px;height:20px;border:2px solid var(--border2);border-top-color:var(--gold);border-radius:50%;animation:spin 1s linear infinite;margin:0 auto 1rem;}
+    .loading-state{text-align:center;padding:3rem;font-family:'DM Mono',monospace;font-size:.7rem;color:var(--muted);letter-spacing:.1em;}
+    .reveal{opacity:0;transform:translateY(12px);transition:opacity .4s,transform .4s;}
+    .reveal.visible{opacity:1;transform:none;}
+    @media(max-width:768px){.admin-nav{padding:1rem 1.25rem;}.admin-tabs{padding:0 1.25rem;}.tab-content{padding:1.5rem 1.25rem;}.form-grid{grid-template-columns:1fr;}.form-group.full{grid-column:1;}.config-panel{width:100%;}.stats-grid{grid-template-columns:1fr 1fr;}}
+  </style>
+</head>
+<body>
+<div class="cursor" id="cursor"></div>
+<div class="cursor-ring" id="cursorRing"></div>
+
+<!-- LOGIN -->
+<div id="loginScreen">
+  <div class="login-bg"></div>
+  <div class="login-grid"></div>
+  <div class="login-box">
+    <img class="login-logo-img" src="assets/logo_sr.PNG" alt="Spectre Records"/>
+    <div class="login-sub">// Sistema de administración</div>
+    <span class="admin-badge">// Panel Heaven Music</span>
+    <label class="login-label" for="adminPass">Contraseña de administrador</label>
+    <input class="login-input" type="password" id="adminPass" placeholder="••••••••" onkeydown="if(event.key==='Enter')doAdminLogin()"/>
+    <button class="login-btn" id="loginBtn" onclick="doAdminLogin()">Acceder →</button>
+    <div class="login-error" id="loginError">// Contraseña incorrecta</div>
+    <div class="login-hint">Acceso exclusivo para Heaven Music<br>// Spectre Records Admin v2.0</div>
+  </div>
+</div>
+
+<!-- ADMIN -->
+<div id="adminScreen">
+  <nav class="admin-nav">
+    <a href="index.html" class="admin-nav-logo"><img src="assets/logo_sr.PNG" alt="Spectre Records"/></a>
+    <div class="admin-nav-right">
+      <span class="admin-tag">// Admin Heaven</span>
+      <a href="portal.html" class="nav-btn" target="_blank">Portal artistas →</a>
+      <a href="index.html" class="nav-btn" target="_blank">Index →</a>
+      <button class="nav-btn" onclick="openConfig()">⚙ Config</button>
+      <button class="logout-btn" onclick="doLogout()">Salir</button>
+    </div>
+  </nav>
+
+  <div class="admin-tabs">
+    <button class="tab-btn active" onclick="switchTab('dashboard',this)">Dashboard</button>
+    <button class="tab-btn" onclick="switchTab('artistas',this)">Artistas</button>
+    <button class="tab-btn" onclick="switchTab('proyectos',this)">Proyectos</button>
+    <button class="tab-btn" onclick="switchTab('finanzas',this)">Finanzas</button>
+    <button class="tab-btn" onclick="switchTab('nuevo',this)">+ Nuevo proyecto</button>
+  </div>
+
+  <!-- DASHBOARD -->
+  <div class="tab-content active" id="tab-dashboard">
+    <div class="stats-grid reveal">
+      <div class="stat-card"><div class="stat-label">Artistas</div><div class="stat-value sv-purple" id="stArtistas">—</div></div>
+      <div class="stat-card"><div class="stat-label">Activos</div><div class="stat-value sv-gold" id="stActivos">—</div></div>
+      <div class="stat-card"><div class="stat-label">Finalizados</div><div class="stat-value sv-green" id="stFinalizados">—</div></div>
+      <div class="stat-card"><div class="stat-label">Cobrado</div><div class="stat-value sv-green" id="stCobrado">—</div></div>
+      <div class="stat-card"><div class="stat-label">Por cobrar</div><div class="stat-value sv-red" id="stPendiente">—</div></div>
+      <div class="stat-card"><div class="stat-label">Total</div><div class="stat-value sv-gold" id="stTotal">—</div></div>
+    </div>
+    <div class="admin-section reveal">
+      <div class="section-eyebrow">// En curso</div>
+      <div class="section-title">PROYECTOS ACTIVOS</div>
+      <div id="dashProyectos"><div class="loading-state"><div class="spinner"></div>Cargando...</div></div>
+    </div>
+    <div class="admin-section reveal">
+      <div class="section-eyebrow">// Pendientes</div>
+      <div class="section-title">PAGOS PENDIENTES</div>
+      <div id="dashPendientes"><div class="loading-state"><div class="spinner"></div>Cargando...</div></div>
+    </div>
+  </div>
+
+  <!-- ARTISTAS -->
+  <div class="tab-content" id="tab-artistas">
+    <div style="display:flex;justify-content:space-between;align-items:flex-end;margin-bottom:1.5rem;flex-wrap:wrap;gap:1rem;">
+      <div><div class="section-eyebrow">// Directorio</div><div class="section-title" style="margin-bottom:0;">ARTISTAS</div></div>
+      <button class="btn-gold" onclick="toggleForm('newArtistForm')">+ Nuevo artista</button>
+    </div>
+    <div class="form-card" id="newArtistForm">
+      <div class="section-eyebrow">// Registro</div>
+      <div class="section-title" style="font-size:1.3rem;margin-bottom:1.2rem;">NUEVO ARTISTA</div>
+      <div class="form-grid">
+        <div class="form-group"><label class="form-label">Nombre completo</label><input class="form-input" id="naNombre" placeholder="Nombre real"/></div>
+        <div class="form-group"><label class="form-label">AKA / Nombre artístico</label><input class="form-input" id="naAka" placeholder="Nombre artístico"/></div>
+        <div class="form-group"><label class="form-label">Teléfono / WhatsApp</label><input class="form-input" id="naTel" placeholder="9991234567"/></div>
+        <div class="form-group"><label class="form-label">Correo</label><input class="form-input" id="naCorreo" placeholder="artista@email.com"/></div>
+        <div class="form-group"><label class="form-label">Código de acceso al portal</label><input class="form-input" id="naCodigo" placeholder="ej: SNOKI2025"/></div>
+        <div class="form-group"><label class="form-label">Tipo</label>
+          <select class="form-input" id="naTipo">
+            <option>Membresía Core</option><option>Membresía Full</option>
+            <option>Cliente regular</option><option>Colaborador</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-actions">
+        <button class="btn-gold" onclick="copyNewArtist()">Copiar fila para Sheets →</button>
+        <button class="btn-outline" onclick="toggleForm('newArtistForm')">Cancelar</button>
+      </div>
+      <div class="form-result" id="naResult"></div>
+    </div>
+    <div class="filter-bar reveal">
+      <input class="filter-input" id="searchArtistas" placeholder="// Buscar artista..." oninput="renderArtistas()"/>
+      <select class="filter-select" id="filterTipo" onchange="renderArtistas()">
+        <option value="">Todos</option><option>Membresía Core</option>
+        <option>Membresía Full</option><option>Cliente regular</option><option>Colaborador</option>
+      </select>
+    </div>
+    <div id="artistasContainer" class="reveal"><div class="loading-state"><div class="spinner"></div>Cargando artistas...</div></div>
+  </div>
+
+  <!-- PROYECTOS -->
+  <div class="tab-content" id="tab-proyectos">
+    <div class="section-eyebrow">// Todos</div>
+    <div class="section-title">PROYECTOS</div>
+    <div class="filter-bar reveal">
+      <input class="filter-input" id="searchProyectos" placeholder="// Buscar proyecto o artista..." oninput="renderProyectos()"/>
+      <select class="filter-select" id="filterEstado" onchange="renderProyectos()">
+        <option value="">Todos</option><option value="proceso">En proceso</option>
+        <option value="finalizado">Finalizados</option><option value="mezcla">En mezcla</option><option value="revision">Revisión</option>
+      </select>
+    </div>
+    <div id="proyectosContainer" class="reveal"><div class="loading-state"><div class="spinner"></div>Cargando...</div></div>
+  </div>
+
+  <!-- FINANZAS -->
+  <div class="tab-content" id="tab-finanzas">
+    <div class="section-eyebrow">// Flujo de caja</div>
+    <div class="section-title">FINANZAS</div>
+    <div class="finance-summary reveal">
+      <div class="fin-sum-card"><div class="fin-sum-label">Cobrado</div><div class="fin-sum-val" style="color:var(--green)" id="finCobrado">$0</div></div>
+      <div class="fin-sum-card"><div class="fin-sum-label">Por cobrar</div><div class="fin-sum-val" style="color:var(--red)" id="finPendiente">$0</div></div>
+      <div class="fin-sum-card"><div class="fin-sum-label">Total facturado</div><div class="fin-sum-val" style="color:var(--gold)" id="finTotal">$0</div></div>
+      <div class="fin-sum-card"><div class="fin-sum-label">Movimientos</div><div class="fin-sum-val" style="color:var(--purple-light)" id="finMovs">0</div></div>
+    </div>
+    <div class="filter-bar reveal">
+      <input class="filter-input" id="searchFinanzas" placeholder="// Buscar concepto o artista..." oninput="renderFinanzas()"/>
+      <select class="filter-select" id="filterEstadoPago" onchange="renderFinanzas()">
+        <option value="">Todos</option><option value="pagado">Pagados</option><option value="pendiente">Pendientes</option>
+      </select>
+    </div>
+    <div id="finanzasContainer" class="reveal"><div class="loading-state"><div class="spinner"></div>Cargando...</div></div>
+  </div>
+
+  <!-- NUEVO PROYECTO -->
+  <div class="tab-content" id="tab-nuevo">
+    <div class="section-eyebrow">// Captura rápida</div>
+    <div class="section-title">NUEVO PROYECTO</div>
+    <p style="font-family:'DM Mono',monospace;font-size:.7rem;color:var(--muted);margin-bottom:2rem;line-height:1.7;letter-spacing:.05em;">Llena los datos. Te generamos las filas listas para pegar en Google Sheets — hoja <strong style="color:var(--text)">Proyectos</strong> y hoja <strong style="color:var(--text)">Finanzas</strong>.</p>
+    <div class="form-grid" style="max-width:800px;">
+      <div class="form-group"><label class="form-label">Nombre del proyecto</label><input class="form-input" id="npNombre" placeholder="Título de la rola o EP"/></div>
+      <div class="form-group"><label class="form-label">Artista</label>
+        <select class="form-input" id="npArtista"><option value="">Seleccionar artista...</option></select>
+      </div>
+      <div class="form-group"><label class="form-label">Tipo de servicio</label>
+        <select class="form-input" id="npServicio">
+          <option>Paquete Esencia Privada</option><option>Paquete Experiencia Elevada</option>
+          <option>Grabación, Mezcla, Masterización</option><option>Grabación, Mezcla</option>
+          <option>Mezcla, Masterización</option><option>Solo Mezcla</option>
+          <option>Solo Masterización</option><option>Beat Presencial</option>
+          <option>Beat por encargo</option><option>Membresía Core</option><option>Membresía Full</option>
+        </select>
+      </div>
+      <div class="form-group"><label class="form-label">Estado inicial</label>
+        <select class="form-input" id="npEstado">
+          <option value="01 | En proceso">En proceso</option>
+          <option value="02 | En mezcla">En mezcla</option>
+          <option value="03 | En revisión">En revisión</option>
+          <option value="04 | Finalizado">Finalizado</option>
+        </select>
+      </div>
+      <div class="form-group"><label class="form-label">Fecha de inicio</label><input class="form-input" id="npFechaI" type="date"/></div>
+      <div class="form-group"><label class="form-label">Fecha de entrega estimada</label><input class="form-input" id="npFechaE" type="date"/></div>
+      <div class="form-group"><label class="form-label">Monto total (MXN)</label><input class="form-input" id="npMonto" type="number" placeholder="2500"/></div>
+      <div class="form-group"><label class="form-label">Anticipo cobrado (MXN)</label><input class="form-input" id="npAnticipo" type="number" placeholder="1250"/></div>
+      <div class="form-group full"><label class="form-label">Bonos incluidos</label><input class="form-input" id="npBonos" placeholder="Cover Art, Reel, Gorra..."/></div>
+      <div class="form-group full"><label class="form-label">Notas</label><input class="form-input" id="npNotas" placeholder="Observaciones del proyecto..."/></div>
+    </div>
+    <div class="form-actions" style="margin-top:1.5rem;">
+      <button class="btn-gold" onclick="generarProyecto()">Generar filas para Sheets →</button>
+      <button class="btn-outline" onclick="limpiarNP()">Limpiar</button>
+    </div>
+    <div class="form-result" id="npResult"></div>
+  </div>
+</div>
+
+<!-- CONFIG -->
+<div class="config-panel" id="configPanel">
+  <div style="display:flex;justify-content:space-between;align-items:center;">
+    <div class="config-title">CONFIG</div>
+    <button class="config-close" onclick="closeConfig()">✕ Cerrar</button>
+  </div>
+  <div>
+    <label class="config-label">Google Sheet ID</label>
+    <input class="config-input" id="cfgSheetId" placeholder="1BxiMVs0XRA5..."/>
+    <label class="config-label">API Key de Google</label>
+    <input class="config-input" id="cfgApiKey" placeholder="AIzaSy..."/>
+    <label class="config-label">Hoja Artistas</label>
+    <input class="config-input" id="cfgArtistas" placeholder="Artistas"/>
+    <label class="config-label">Hoja Proyectos</label>
+    <input class="config-input" id="cfgProyectos" placeholder="Proyectos"/>
+    <label class="config-label">Hoja Finanzas</label>
+    <input class="config-input" id="cfgFinanzas" placeholder="Finanzas"/>
+    <label class="config-label">Nueva contraseña admin</label>
+    <input class="config-input" id="cfgAdminPass" type="password" placeholder="Dejar vacío para no cambiar"/>
+  </div>
+  <button class="config-save" onclick="saveConfig()">Guardar configuración →</button>
+</div>
+
+<script>
+const DEFAULT_PASS='heaven2025';
+function getCfg(){return{sheetId:localStorage.getItem('adm_sheetId')||'',apiKey:localStorage.getItem('adm_apiKey')||'',shArtistas:localStorage.getItem('adm_artistas')||'Artistas',shProyectos:localStorage.getItem('adm_proyectos')||'Proyectos',shFinanzas:localStorage.getItem('adm_finanzas')||'Finanzas',adminPass:localStorage.getItem('adm_pass')||DEFAULT_PASS};}
+function saveConfig(){localStorage.setItem('adm_sheetId',document.getElementById('cfgSheetId').value.trim());localStorage.setItem('adm_apiKey',document.getElementById('cfgApiKey').value.trim());localStorage.setItem('adm_artistas',document.getElementById('cfgArtistas').value.trim()||'Artistas');localStorage.setItem('adm_proyectos',document.getElementById('cfgProyectos').value.trim()||'Proyectos');localStorage.setItem('adm_finanzas',document.getElementById('cfgFinanzas').value.trim()||'Finanzas');const np=document.getElementById('cfgAdminPass').value.trim();if(np)localStorage.setItem('adm_pass',np);closeConfig();showToast('✓ Configuración guardada');}
+function openConfig(){const c=getCfg();document.getElementById('cfgSheetId').value=c.sheetId;document.getElementById('cfgApiKey').value=c.apiKey;document.getElementById('cfgArtistas').value=c.shArtistas;document.getElementById('cfgProyectos').value=c.shProyectos;document.getElementById('cfgFinanzas').value=c.shFinanzas;document.getElementById('configPanel').classList.add('show');}
+function closeConfig(){document.getElementById('configPanel').classList.remove('show');}
+async function fetchSheet(name){const c=getCfg();if(!c.sheetId||!c.apiKey)return null;try{const r=await fetch(`https://sheets.googleapis.com/v4/spreadsheets/${c.sheetId}/values/${encodeURIComponent(name)}?key=${c.apiKey}`);if(!r.ok)return null;const d=await r.json();if(!d.values||d.values.length<2)return[];const[headers,...rows]=d.values;return rows.map(row=>{const o={};headers.forEach((h,i)=>{o[h.trim()]=(row[i]||'').trim();});return o;});}catch{return null;}}
+const DEMO_ARTISTAS=[{ArtistaID:'Art01',Nombre:'Geovanni Berzunza',AKA:'Flare PTG',Telefono:'9995516669',Correo:'flarerap@gmail.com',CodigoAcceso:'FLARE2025',Tipo:'Cliente regular'},{ArtistaID:'Art02',Nombre:'Alan Dzul',AKA:'Snoki',Telefono:'9991234001',Correo:'snoki@gmail.com',CodigoAcceso:'SNOKI2025',Tipo:'Membresía Full'},{ArtistaID:'Art03',Nombre:'Bryan E',AKA:'Bryan E',Telefono:'9991234002',Correo:'bryane@gmail.com',CodigoAcceso:'BRYAN2025',Tipo:'Cliente regular'},{ArtistaID:'Art04',Nombre:'Bby Flaco',AKA:'Bby Flaco',Telefono:'9991234003',Correo:'bbyflaco@gmail.com',CodigoAcceso:'FLACO2025',Tipo:'Membresía Core'}];
+const DEMO_PROYECTOS=[{ID:'Proy01','Nombre del proyecto':'Pa las plebes v2',Cliente:'Art01','Tipo de servicio':'Mezcla, Masterización','Fecha inicio':'10/03/2025','Fecha entrega':'','Estado proyecto':'01 | En proceso',Bonos:'500'},{ID:'Proy02','Nombre del proyecto':'Rola nueva',Cliente:'Art02','Tipo de servicio':'Grabación, Mezcla','Fecha inicio':'15/03/2025','Fecha entrega':'30/03/2025','Estado proyecto':'04 | Finalizado',Bonos:'0'},{ID:'Proy03','Nombre del proyecto':'Debut EP',Cliente:'Art03','Tipo de servicio':'Grabación, Producción','Fecha inicio':'01/03/2025','Fecha entrega':'','Estado proyecto':'02 | En mezcla',Bonos:'1000'}];
+const DEMO_FINANZAS=[{ID:'Fin01',Concepto:'Anticipo Pa las plebes',Tipo:'Ingreso',Monto:'1250',Fecha:'10/03/2025',Cliente:'Art01',Estado:'Pagado'},{ID:'Fin02',Concepto:'Saldo pendiente',Tipo:'Ingreso',Monto:'1250',Fecha:'—',Cliente:'Art01',Estado:'Pendiente'},{ID:'Fin03',Concepto:'Rola nueva completo',Tipo:'Ingreso',Monto:'1500',Fecha:'15/03/2025',Cliente:'Art02',Estado:'Pagado'},{ID:'Fin04',Concepto:'Anticipo Debut EP',Tipo:'Ingreso',Monto:'2500',Fecha:'01/03/2025',Cliente:'Art03',Estado:'Pagado'},{ID:'Fin05',Concepto:'Saldo Debut EP',Tipo:'Ingreso',Monto:'2500',Fecha:'—',Cliente:'Art03',Estado:'Pendiente'}];
+let allArtistas=[],allProyectos=[],allFinanzas=[],isDemo=false;
+const cur=document.getElementById('cursor'),ring=document.getElementById('cursorRing');
+let mx=0,my=0,rx=0,ry=0;
+document.addEventListener('mousemove',e=>{mx=e.clientX;my=e.clientY;cur.style.left=mx+'px';cur.style.top=my+'px';});
+(function anim(){rx+=(mx-rx)*.12;ry+=(my-ry)*.12;ring.style.left=rx+'px';ring.style.top=ry+'px';requestAnimationFrame(anim);})();
+document.addEventListener('mouseover',e=>{if(e.target.closest('a,button,input,select')){cur.style.width='5px';cur.style.height='5px';ring.style.width='48px';ring.style.height='48px';}else{cur.style.width='10px';cur.style.height='10px';ring.style.width='32px';ring.style.height='32px';}});
+async function doAdminLogin(){const pass=document.getElementById('adminPass').value.trim();if(!pass)return;const btn=document.getElementById('loginBtn');btn.textContent='Verificando...';btn.classList.add('loading');await new Promise(r=>setTimeout(r,600));if(pass!==getCfg().adminPass){btn.textContent='Acceder →';btn.classList.remove('loading');document.getElementById('loginError').style.display='block';setTimeout(()=>{document.getElementById('loginError').style.display='none';},3000);return;}btn.textContent='Acceder →';btn.classList.remove('loading');document.getElementById('loginScreen').style.display='none';document.getElementById('adminScreen').style.display='block';await loadAdmin();}
+function doLogout(){document.getElementById('adminScreen').style.display='none';document.getElementById('loginScreen').style.display='flex';document.getElementById('adminPass').value='';}
+async function loadAdmin(){const c=getCfg();let a=null,p=null,f=null;if(c.sheetId&&c.apiKey)[a,p,f]=await Promise.all([fetchSheet(c.shArtistas),fetchSheet(c.shProyectos),fetchSheet(c.shFinanzas)]);isDemo=!a;allArtistas=a||DEMO_ARTISTAS;allProyectos=p||DEMO_PROYECTOS;allFinanzas=f||DEMO_FINANZAS;renderDashboard();renderArtistas();renderProyectos();renderFinanzas();populateArtistSelect();setTimeout(()=>{document.querySelectorAll('.reveal').forEach((el,i)=>setTimeout(()=>el.classList.add('visible'),i*80));},100);if(isDemo)showToast('// Modo demo — conecta Google Sheets en ⚙ Config');}
+function getArtista(id){return allArtistas.find(a=>a['ArtistaID']===id||a['AKA']===id||a['Nombre']===id);}
+function getBadge(e){if(!e)return'<span class="badge badge-pending">Sin estado</span>';if(/finalizado/i.test(e))return'<span class="badge badge-done">Finalizado</span>';if(/proceso/i.test(e))return'<span class="badge badge-active">En proceso</span>';if(/mezcla/i.test(e))return'<span class="badge badge-pending">En mezcla</span>';if(/revision/i.test(e))return'<span class="badge badge-pending">Revisión</span>';return`<span class="badge badge-pending">${e.replace(/^\d+\s*\|\s*/,'')}</span>`;}
+function renderDashboard(){const activos=allProyectos.filter(p=>!/finalizado/i.test(p['Estado proyecto']||'')).length;const fin=allProyectos.filter(p=>/finalizado/i.test(p['Estado proyecto']||'')).length;const cobrado=allFinanzas.filter(f=>/pagado/i.test(f['Estado']||'')).reduce((s,f)=>s+(parseFloat(f['Monto'])||0),0);const pend=allFinanzas.filter(f=>/pendiente/i.test(f['Estado']||'')).reduce((s,f)=>s+(parseFloat(f['Monto'])||0),0);document.getElementById('stArtistas').textContent=allArtistas.length;document.getElementById('stActivos').textContent=activos;document.getElementById('stFinalizados').textContent=fin;document.getElementById('stCobrado').textContent='$'+cobrado.toLocaleString();document.getElementById('stPendiente').textContent='$'+pend.toLocaleString();document.getElementById('stTotal').textContent='$'+(cobrado+pend).toLocaleString();const al=allProyectos.filter(p=>!/finalizado/i.test(p['Estado proyecto']||''));document.getElementById('dashProyectos').innerHTML=al.length?`<table class="data-table"><thead><tr><th>Proyecto</th><th>Artista</th><th>Servicio</th><th>Inicio</th><th>Estado</th></tr></thead><tbody>${al.map(p=>{const a=getArtista(p['Cliente']);return`<tr><td style="font-weight:600">${p['Nombre del proyecto']||'—'}</td><td style="font-family:'DM Mono',monospace;font-size:.75rem;color:var(--purple-light)">${a?a['AKA']||a['Nombre']:p['Cliente']||'—'}</td><td style="font-family:'DM Mono',monospace;font-size:.72rem;color:var(--muted)">${p['Tipo de servicio']||'—'}</td><td style="font-family:'DM Mono',monospace;font-size:.72rem;color:var(--muted)">${p['Fecha inicio']||'—'}</td><td>${getBadge(p['Estado proyecto'])}</td></tr>`;}).join('')}</tbody></table>`:'<div class="empty-state">// No hay proyectos activos</div>';const pl=allFinanzas.filter(f=>/pendiente/i.test(f['Estado']||''));document.getElementById('dashPendientes').innerHTML=pl.length?`<table class="data-table"><thead><tr><th>Concepto</th><th>Artista</th><th>Monto</th><th>Estado</th></tr></thead><tbody>${pl.map(f=>{const a=getArtista(f['Cliente']);return`<tr><td style="font-weight:600">${f['Concepto']||'—'}</td><td style="font-family:'DM Mono',monospace;font-size:.75rem;color:var(--purple-light)">${a?a['AKA']||a['Nombre']:f['Cliente']||'—'}</td><td style="font-family:'Bebas Neue',sans-serif;font-size:1.2rem;color:var(--red)">$${(parseFloat(f['Monto'])||0).toLocaleString()} MXN</td><td><span class="badge badge-unpaid">Pendiente</span></td></tr>`;}).join('')}</tbody></table>`:'<div class="empty-state">// Sin pagos pendientes 🎉</div>';}
+function renderArtistas(){const q=(document.getElementById('searchArtistas').value||'').toLowerCase();const tipo=document.getElementById('filterTipo').value;const list=allArtistas.filter(a=>{const m=!q||(a['Nombre']||'').toLowerCase().includes(q)||(a['AKA']||'').toLowerCase().includes(q)||(a['Telefono']||'').includes(q);const t=!tipo||(a['Tipo']||'')===tipo;return m&&t;});if(!list.length){document.getElementById('artistasContainer').innerHTML='<div class="empty-state">// No se encontraron artistas</div>';return;}document.getElementById('artistasContainer').innerHTML=`<div class="artists-grid">${list.map(a=>{const ini=(a['AKA']||a['Nombre']||'?').split(' ').map(w=>w[0]).join('').slice(0,2).toUpperCase();const proy=allProyectos.filter(p=>p['Cliente']===a['ArtistaID']||p['Cliente']===a['AKA']||p['Cliente']===a['Nombre']);const fin=allFinanzas.filter(f=>f['Cliente']===a['ArtistaID']||f['Cliente']===a['AKA']||f['Cliente']===a['Nombre']);const deuda=fin.filter(f=>/pendiente/i.test(f['Estado']||'')).reduce((s,f)=>s+(parseFloat(f['Monto'])||0),0);const cls=deuda>0?'has-debt':proy.length>0?'ok':'';return`<div class="artist-card ${cls}"><div class="artist-header"><div class="artist-avatar">${ini}</div><div><div class="artist-name">${a['AKA']||a['Nombre']||'—'}</div>${a['AKA']?`<div class="artist-aka">// ${a['Nombre']}</div>`:''}</div></div><div class="artist-meta">${a['Telefono']?`<div><span>Tel </span>${a['Telefono']}</div>`:''} ${a['Correo']?`<div><span>Mail </span>${a['Correo']}</div>`:''} ${a['Tipo']?`<div><span>Tipo </span>${a['Tipo']}</div>`:''}<div><span>Proyectos </span>${proy.length}</div>${deuda>0?`<div style="color:var(--red)"><span>Debe </span>$${deuda.toLocaleString()} MXN</div>`:''}</div><div class="artist-code">Código portal: ${a['CodigoAcceso']||'—'}</div></div>`;}).join('')}</div>`;}
+function renderProyectos(){const q=(document.getElementById('searchProyectos').value||'').toLowerCase();const estado=document.getElementById('filterEstado').value;const list=allProyectos.filter(p=>{const a=getArtista(p['Cliente']);const na=a?(a['AKA']||a['Nombre']||''):p['Cliente']||'';const m=!q||(p['Nombre del proyecto']||'').toLowerCase().includes(q)||na.toLowerCase().includes(q);const e=!estado||(p['Estado proyecto']||'').toLowerCase().includes(estado);return m&&e;});if(!list.length){document.getElementById('proyectosContainer').innerHTML='<div class="empty-state">// No se encontraron proyectos</div>';return;}document.getElementById('proyectosContainer').innerHTML=`<table class="data-table"><thead><tr><th>Proyecto</th><th>Artista</th><th>Servicio</th><th>Inicio</th><th>Entrega</th><th>Estado</th><th>Bonos</th></tr></thead><tbody>${list.map(p=>{const a=getArtista(p['Cliente']);const na=a?a['AKA']||a['Nombre']:p['Cliente']||'—';return`<tr><td><div style="font-weight:600">${p['Nombre del proyecto']||'—'}</div><div style="font-family:'DM Mono',monospace;font-size:.65rem;color:var(--muted2)">${p['ID']||''}</div></td><td style="font-family:'DM Mono',monospace;font-size:.75rem;color:var(--purple-light)">${na}</td><td style="font-family:'DM Mono',monospace;font-size:.72rem;color:var(--muted)">${p['Tipo de servicio']||'—'}</td><td style="font-family:'DM Mono',monospace;font-size:.72rem;color:var(--muted)">${p['Fecha inicio']||'—'}</td><td style="font-family:'DM Mono',monospace;font-size:.72rem;color:var(--muted)">${p['Fecha entrega']||'—'}</td><td>${getBadge(p['Estado proyecto'])}</td><td style="font-family:'Bebas Neue',sans-serif;color:var(--gold);font-size:1.1rem">${p['Bonos']||'—'}</td></tr>`;}).join('')}</tbody></table>`;}
+function renderFinanzas(){const q=(document.getElementById('searchFinanzas').value||'').toLowerCase();const estado=document.getElementById('filterEstadoPago').value;const list=allFinanzas.filter(f=>{const a=getArtista(f['Cliente']);const na=a?(a['AKA']||a['Nombre']||''):f['Cliente']||'';const m=!q||(f['Concepto']||'').toLowerCase().includes(q)||na.toLowerCase().includes(q);const e=!estado||(f['Estado']||'').toLowerCase().includes(estado);return m&&e;});const cobrado=list.filter(f=>/pagado/i.test(f['Estado']||'')).reduce((s,f)=>s+(parseFloat(f['Monto'])||0),0);const pend=list.filter(f=>/pendiente/i.test(f['Estado']||'')).reduce((s,f)=>s+(parseFloat(f['Monto'])||0),0);document.getElementById('finCobrado').textContent='$'+cobrado.toLocaleString();document.getElementById('finPendiente').textContent='$'+pend.toLocaleString();document.getElementById('finTotal').textContent='$'+(cobrado+pend).toLocaleString();document.getElementById('finMovs').textContent=list.length;if(!list.length){document.getElementById('finanzasContainer').innerHTML='<div class="empty-state">// No se encontraron movimientos</div>';return;}document.getElementById('finanzasContainer').innerHTML=`<table class="data-table"><thead><tr><th>ID</th><th>Concepto</th><th>Artista</th><th>Fecha</th><th>Monto</th><th>Estado</th></tr></thead><tbody>${list.map(f=>{const a=getArtista(f['Cliente']);const na=a?a['AKA']||a['Nombre']:f['Cliente']||'—';const paid=/pagado/i.test(f['Estado']||'');return`<tr><td style="font-family:'DM Mono',monospace;font-size:.65rem;color:var(--muted2)">${f['ID']||'—'}</td><td style="font-weight:600">${f['Concepto']||'—'}</td><td style="font-family:'DM Mono',monospace;font-size:.75rem;color:var(--purple-light)">${na}</td><td style="font-family:'DM Mono',monospace;font-size:.72rem;color:var(--muted)">${f['Fecha']||'—'}</td><td style="font-family:'Bebas Neue',sans-serif;font-size:1.2rem;color:${paid?'var(--green)':'var(--red)'}">$${(parseFloat(f['Monto'])||0).toLocaleString()} MXN</td><td>${paid?'<span class="badge badge-paid">Pagado</span>':'<span class="badge badge-unpaid">Pendiente</span>'}</td></tr>`;}).join('')}</tbody></table>`;}
+function populateArtistSelect(){const sel=document.getElementById('npArtista');sel.innerHTML='<option value="">Seleccionar artista...</option>';allArtistas.forEach(a=>{const opt=document.createElement('option');opt.value=a['ArtistaID']||a['AKA'];opt.textContent=(a['AKA']||a['Nombre'])+(a['AKA']&&a['Nombre']?' ('+a['Nombre']+')':'');sel.appendChild(opt);});}
+function generarProyecto(){const nombre=document.getElementById('npNombre').value.trim();const artista=document.getElementById('npArtista').value;const servicio=document.getElementById('npServicio').value;const estado=document.getElementById('npEstado').value;const fechaI=document.getElementById('npFechaI').value;const fechaE=document.getElementById('npFechaE').value;const monto=parseFloat(document.getElementById('npMonto').value)||0;const anticipo=parseFloat(document.getElementById('npAnticipo').value)||0;const bonos=document.getElementById('npBonos').value.trim();const notas=document.getElementById('npNotas').value.trim();if(!nombre||!artista){showToast('// Nombre y artista son requeridos');return;}const id='Proy'+String(allProyectos.length+1).padStart(2,'0');const fi=fechaI?new Date(fechaI).toLocaleDateString('es-MX'):'';const fe=fechaE?new Date(fechaE).toLocaleDateString('es-MX'):'';const saldo=monto-anticipo;const rowP=[id,nombre,artista,servicio,fi,fe,estado,bonos,notas,''].join('\t');const finID1='Fin'+Date.now()+'a';const rowFA=anticipo>0?[finID1,'Anticipo '+nombre,'Ingreso',anticipo.toString(),fi,'',artista,'Pagado'].join('\t'):'';const finID2='Fin'+(Date.now()+1)+'b';const rowFS=saldo>0?[finID2,'Saldo '+nombre,'Ingreso',saldo.toString(),'—','',artista,'Pendiente'].join('\t'):'';const res=document.getElementById('npResult');res.style.display='block';
+res.innerHTML=`<strong style="color:var(--text);display:block;margin-bottom:1rem;">// Filas generadas — pega en Google Sheets</strong>
+<div style="margin-bottom:1.2rem;"><div style="font-size:.6rem;letter-spacing:.15em;text-transform:uppercase;color:var(--muted2);margin-bottom:.5rem;">HOJA: PROYECTOS</div><div class="result-row">${rowP}</div><button class="copy-row-btn" id="btnP" onclick="copyText(${JSON.stringify(rowP)},'btnP')">Copiar →</button></div>
+${anticipo>0?`<div style="margin-bottom:1.2rem;"><div style="font-size:.6rem;letter-spacing:.15em;text-transform:uppercase;color:var(--muted2);margin-bottom:.5rem;">HOJA: FINANZAS — Anticipo</div><div class="result-row">${rowFA}</div><button class="copy-row-btn" id="btnFA" onclick="copyText(${JSON.stringify(rowFA)},'btnFA')">Copiar →</button></div>`:''}
+${saldo>0?`<div style="margin-bottom:1.2rem;"><div style="font-size:.6rem;letter-spacing:.15em;text-transform:uppercase;color:var(--muted2);margin-bottom:.5rem;">HOJA: FINANZAS — Saldo pendiente</div><div class="result-row">${rowFS}</div><button class="copy-row-btn" id="btnFS" onclick="copyText(${JSON.stringify(rowFS)},'btnFS')">Copiar →</button></div>`:''}
+<div style="font-family:'DM Mono',monospace;font-size:.62rem;color:var(--muted2);line-height:1.8;margin-top:.5rem;">// Columnas Proyectos: ID | Nombre del proyecto | Cliente | Tipo de servicio | Fecha inicio | Fecha entrega | Estado proyecto | Bonos | Notas | Archivos entregados<br>// Columnas Finanzas: ID | Concepto | Tipo | Monto | Fecha | Proyecto | Cliente | Estado</div>`;}
+function copyText(text,btnId){navigator.clipboard.writeText(text).then(()=>{const b=document.getElementById(btnId);if(b){b.textContent='✓ Copiado';setTimeout(()=>{b.textContent='Copiar →';},2000);}showToast('✓ Fila copiada');}).catch(()=>showToast('// Selecciona el texto manualmente'));}
+function limpiarNP(){['npNombre','npBonos','npNotas','npFechaI','npFechaE','npMonto','npAnticipo'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});document.getElementById('npArtista').value='';document.getElementById('npResult').style.display='none';}
+function copyNewArtist(){const nombre=document.getElementById('naNombre').value.trim();const aka=document.getElementById('naAka').value.trim();const tel=document.getElementById('naTel').value.trim();const correo=document.getElementById('naCorreo').value.trim();const codigo=document.getElementById('naCodigo').value.trim();const tipo=document.getElementById('naTipo').value;if(!nombre){showToast('// Ingresa al menos el nombre');return;}const id='Art'+String(allArtistas.length+1).padStart(2,'0');const row=[id,nombre,aka,tel,correo,codigo,tipo].join('\t');navigator.clipboard.writeText(row).then(()=>{const res=document.getElementById('naResult');res.style.display='block';res.innerHTML=`<strong style="color:var(--text)">// Fila copiada — pega en hoja Artistas:</strong><br><br><span class="result-row">${row}</span><br><br><span style="color:var(--muted2)">// Columnas: ArtistaID | Nombre | AKA | Telefono | Correo | CodigoAcceso | Tipo</span>`;showToast('✓ Fila copiada al portapapeles');}).catch(()=>{document.getElementById('naResult').style.display='block';document.getElementById('naResult').innerHTML=`<span class="result-row">${row}</span>`;});}
+function toggleForm(id){document.getElementById(id).classList.toggle('show');}
+function switchTab(name,el){document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));document.querySelectorAll('.tab-content').forEach(t=>t.classList.remove('active'));el.classList.add('active');document.getElementById('tab-'+name).classList.add('active');}
+function showToast(msg){const t=document.createElement('div');t.className='toast';t.textContent=msg;document.body.appendChild(t);setTimeout(()=>t.remove(),3000);}
+</script>
+</body>
+</html>
