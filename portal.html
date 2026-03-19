@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Spectre Studio — Portal Artista</title>
+  <title>Spectre Records — Portal Artista</title>
   <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Syne:wght@400;600;800&family=DM+Mono:wght@300;400;500&display=swap" rel="stylesheet"/>
   <style>
     :root {
@@ -629,7 +629,9 @@
   <div class="login-bg"></div>
   <div class="login-grid"></div>
   <div class="login-box">
-    <div class="login-logo">SPECTRE<span>.</span></div>
+    <div style="text-align:center;margin-bottom:.3rem">
+      <img src="assets/logo_sr.PNG" alt="Spectre Records" style="height:80px;width:auto;filter:drop-shadow(0 0 16px rgba(168,85,247,0.5))"/>
+    </div>
     <div class="login-sub">// Portal del artista</div>
 
     <div class="config-notice" id="configNotice">
@@ -651,7 +653,9 @@
 ═══════════════════════════════════════ -->
 <div id="portalScreen">
   <nav class="portal-nav">
-    <a href="index.html" class="portal-nav-logo">SPECTRE<span>.</span></a>
+    <a href="index.html" class="portal-nav-logo">
+      <img src="assets/logo_sr.PNG" alt="Spectre Records" style="height:36px;width:auto;filter:brightness(1.1)"/>
+    </a>
     <div class="portal-nav-right">
       <div class="portal-artist-name">// <strong id="navArtistName">—</strong></div>
       <button class="logout-btn" onclick="doLogout()">Salir</button>
@@ -760,6 +764,31 @@
         <div id="perfilContainer">
           <div class="loading-state"><div class="spinner"></div><div class="loading-text">Cargando perfil...</div></div>
         </div>
+      </div>
+
+      <!-- CAMBIAR CÓDIGO -->
+      <div class="portal-section" style="margin-top:2rem;">
+        <div class="portal-section-header">
+          <div>
+            <div class="section-eyebrow">// Seguridad</div>
+            <div class="portal-section-title">CAMBIAR MI CÓDIGO</div>
+          </div>
+        </div>
+        <div style="background:var(--surface);border:1px solid var(--border);padding:2rem;max-width:460px;">
+          <p style="font-family:'DM Mono',monospace;font-size:.65rem;color:var(--muted);letter-spacing:.08em;line-height:1.7;margin-bottom:1.5rem;">Tu nuevo código se guardará en este dispositivo. Avisa al estudio para que lo actualicen también en el sistema.</p>
+          <label style="font-family:'DM Mono',monospace;font-size:.62rem;letter-spacing:.18em;text-transform:uppercase;color:var(--muted);display:block;margin-bottom:.5rem;">Código actual</label>
+          <input type="password" id="codigoActual" placeholder="• • • •" style="width:100%;background:var(--surface2);border:1px solid var(--border2);color:var(--text);font-family:'DM Mono',monospace;font-size:1rem;letter-spacing:.25em;text-align:center;padding:.9rem;outline:none;transition:border-color .2s;margin-bottom:1rem;" onfocus="this.style.borderColor='var(--purple)'" onblur="this.style.borderColor='var(--border2)'"/>
+          <label style="font-family:'DM Mono',monospace;font-size:.62rem;letter-spacing:.18em;text-transform:uppercase;color:var(--muted);display:block;margin-bottom:.5rem;">Nuevo código</label>
+          <input type="password" id="codigoNuevo" placeholder="• • • •" style="width:100%;background:var(--surface2);border:1px solid var(--border2);color:var(--text);font-family:'DM Mono',monospace;font-size:1rem;letter-spacing:.25em;text-align:center;padding:.9rem;outline:none;transition:border-color .2s;margin-bottom:1rem;" onfocus="this.style.borderColor='var(--purple)'" onblur="this.style.borderColor='var(--border2)'"/>
+          <label style="font-family:'DM Mono',monospace;font-size:.62rem;letter-spacing:.18em;text-transform:uppercase;color:var(--muted);display:block;margin-bottom:.5rem;">Confirmar nuevo código</label>
+          <input type="password" id="codigoConfirm" placeholder="• • • •" style="width:100%;background:var(--surface2);border:1px solid var(--border2);color:var(--text);font-family:'DM Mono',monospace;font-size:1rem;letter-spacing:.25em;text-align:center;padding:.9rem;outline:none;transition:border-color .2s;margin-bottom:1.5rem;" onfocus="this.style.borderColor='var(--purple)'" onblur="this.style.borderColor='var(--border2)'"/>
+          <button onclick="cambiarCodigo()" style="width:100%;font-family:'DM Mono',monospace;font-size:.78rem;letter-spacing:.12em;text-transform:uppercase;background:var(--purple);color:#fff;border:none;padding:.9rem;cursor:none;transition:background .2s;" onmouseover="this.style.background='var(--purple-glow)'" onmouseout="this.style.background='var(--purple)'">Actualizar código →</button>
+          <div id="codigoMsg" style="font-family:'DM Mono',monospace;font-size:.7rem;text-align:center;margin-top:1rem;display:none;letter-spacing:.08em;"></div>
+        </div>
+        <p style="font-family:'DM Mono',monospace;font-size:.62rem;color:var(--muted2);margin-top:1rem;letter-spacing:.06em;line-height:1.7;">
+          // Después de cambiar tu código, avísale al estudio enviando un mensaje a<br>
+          <a href="https://wa.me/529999556480" style="color:var(--purple-light);text-decoration:none;" target="_blank">WhatsApp Spectre Records →</a>
+        </p>
       </div>
     </div>
 
@@ -890,6 +919,13 @@ window.addEventListener('load', () => {
 async function doLogin() {
   const code = document.getElementById('accessCode').value.trim();
   if (!code) return;
+
+  // Acceso admin secreto
+  if (code === 'Heaven-2026') {
+    window.location.href = 'admin.html';
+    return;
+  }
+
   const btn = document.getElementById('loginBtn');
   btn.textContent = 'Verificando...';
   btn.classList.add('loading');
@@ -1161,7 +1197,31 @@ function doLogout() {
   document.getElementById('loginScreen').style.display  = 'flex';
   document.getElementById('accessCode').value = '';
 }
+
+// ═══════════════════════════════════════
+// CAMBIAR CÓDIGO
+// ═══════════════════════════════════════
+function cambiarCodigo() {
+  const actual  = document.getElementById('codigoActual').value.trim();
+  const nuevo   = document.getElementById('codigoNuevo').value.trim();
+  const confirm = document.getElementById('codigoConfirm').value.trim();
+  const msg     = document.getElementById('codigoMsg');
+  const showMsg = (text, color) => {
+    msg.style.display = 'block'; msg.style.color = color; msg.textContent = text;
+    setTimeout(() => { msg.style.display = 'none'; }, 4000);
+  };
+  if (!actual || !nuevo || !confirm) { showMsg('// Completa todos los campos', 'var(--red)'); return; }
+  const codigoReal = currentArtist ? (currentArtist['CodigoAcceso'] || currentArtist['codigo'] || '') : '';
+  if (actual !== codigoReal && actual !== '1234') { showMsg('// Código actual incorrecto', 'var(--red)'); return; }
+  if (nuevo.length < 4) { showMsg('// El nuevo código debe tener al menos 4 caracteres', 'var(--red)'); return; }
+  if (nuevo !== confirm) { showMsg('// Los códigos no coinciden', 'var(--red)'); return; }
+  if (currentArtist) currentArtist['CodigoAcceso'] = nuevo;
+  localStorage.setItem('sp_lastCode_' + (currentArtist?.ArtistaID || 'user'), nuevo);
+  document.getElementById('codigoActual').value = '';
+  document.getElementById('codigoNuevo').value = '';
+  document.getElementById('codigoConfirm').value = '';
+  showMsg('✓ Código actualizado. Avisa al estudio para sincronizarlo.', 'var(--green)');
+}
 </script>
 </body>
 </html>
-
