@@ -782,13 +782,25 @@ function getCfg() {
   };
 }
 function saveConfig() {
-  localStorage.setItem('sp_sheetId',    document.getElementById('cfgSheetId').value.trim());
-  localStorage.setItem('sp_apiKey',     document.getElementById('cfgApiKey').value.trim());
+  const sheetId = document.getElementById('cfgSheetId').value.trim();
+  const apiKey  = document.getElementById('cfgApiKey').value.trim();
+  if (!sheetId || !apiKey) {
+    alert('⚠ Por favor ingresa el Sheet ID y la API Key antes de guardar.');
+    return;
+  }
+  localStorage.setItem('sp_sheetId',    sheetId);
+  localStorage.setItem('sp_apiKey',     apiKey);
   localStorage.setItem('sp_shArtistas', document.getElementById('cfgArtistas').value.trim() || 'Artistas');
   localStorage.setItem('sp_shProyectos',document.getElementById('cfgProyectos').value.trim() || 'Proyectos');
   localStorage.setItem('sp_shFinanzas', document.getElementById('cfgFinanzas').value.trim() || 'Finanzas');
   document.getElementById('configPanel').classList.remove('show');
   document.getElementById('configNotice').classList.remove('show');
+  // Mostrar confirmación
+  const toast = document.createElement('div');
+  toast.textContent = '✓ Configuración guardada correctamente';
+  toast.style.cssText = 'position:fixed;bottom:2rem;left:50%;transform:translateX(-50%);background:#1a1625;border:1px solid var(--purple);color:var(--purple-light);font-family:DM Mono,monospace;font-size:.7rem;letter-spacing:.12em;padding:.9rem 1.8rem;z-index:9999;animation:fadeUp .3s both';
+  document.body.appendChild(toast);
+  setTimeout(() => toast.remove(), 3000);
 }
 function openConfig() {
   const cfg = getCfg();
@@ -888,7 +900,17 @@ async function doLogin() {
   if (cfg.sheetId && cfg.apiKey) {
     const artistas = await fetchSheet(cfg.shArtistas);
     if (artistas) {
-      artist = artistas.find(a => a['CodigoAcceso'] === code || a['Codigo Acceso'] === code);
+      // Búsqueda flexible: encuentra la columna correcta sin importar tildes/espacios/mayúsculas
+      const normalize = s => s.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/\s/g,'');
+      const codigoKey = artistas[0] ? Object.keys(artistas[0]).find(k => normalize(k).includes('codigoacce') || normalize(k) === 'codigo') : null;
+      console.log('Columna código encontrada:', codigoKey);
+      console.log('Columnas disponibles:', artistas[0] ? Object.keys(artistas[0]) : []);
+      if (codigoKey) {
+        artist = artistas.find(a => (a[codigoKey]||'').trim() === code.trim());
+      } else {
+        // último recurso: buscar en todas las columnas
+        artist = artistas.find(a => Object.values(a).some(v => v.trim() === code.trim()));
+      }
     }
   }
 
@@ -1142,3 +1164,4 @@ function doLogout() {
 </script>
 </body>
 </html>
+
