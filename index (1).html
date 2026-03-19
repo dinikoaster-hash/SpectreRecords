@@ -1,0 +1,860 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Spectre Studio</title>
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Syne:wght@400;600;800&family=DM+Mono:wght@300;400&display=swap" rel="stylesheet"/>
+  <style>
+    :root {
+      --bg: #080808;
+      --surface: #0e0e0e;
+      --purple: #7c3aed;
+      --purple-light: #a855f7;
+      --purple-glow: #9333ea;
+      --purple-dim: #3b1f6e;
+      --text: #f0eaf8;
+      --muted: #6b6378;
+      --border: #1e1a2a;
+    }
+
+    *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Syne', sans-serif;
+      overflow-x: hidden;
+      cursor: none;
+    }
+
+    /* Custom cursor */
+    .cursor {
+      position: fixed;
+      width: 12px; height: 12px;
+      background: var(--purple-light);
+      border-radius: 50%;
+      pointer-events: none;
+      z-index: 9999;
+      transform: translate(-50%, -50%);
+      transition: transform 0.1s, width 0.2s, height 0.2s, opacity 0.2s;
+      mix-blend-mode: screen;
+    }
+    .cursor-ring {
+      position: fixed;
+      width: 36px; height: 36px;
+      border: 1px solid rgba(168,85,247,0.4);
+      border-radius: 50%;
+      pointer-events: none;
+      z-index: 9998;
+      transform: translate(-50%, -50%);
+      transition: transform 0.15s ease, width 0.3s, height 0.3s;
+    }
+
+    /* Noise overlay */
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.04'/%3E%3C/svg%3E");
+      pointer-events: none;
+      z-index: 1000;
+      opacity: 0.4;
+    }
+
+    /* NAV */
+    nav {
+      position: fixed;
+      top: 0; left: 0; right: 0;
+      z-index: 100;
+      padding: 1.5rem 3rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 1px solid transparent;
+      transition: border-color 0.3s, background 0.3s;
+    }
+    nav.scrolled {
+      background: rgba(8,8,8,0.92);
+      backdrop-filter: blur(12px);
+      border-color: var(--border);
+    }
+    .nav-logo {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 1.8rem;
+      letter-spacing: 0.15em;
+      color: var(--text);
+      text-decoration: none;
+    }
+    .nav-logo span { color: var(--purple-light); }
+    .nav-links {
+      display: flex;
+      gap: 2.5rem;
+      list-style: none;
+    }
+    .nav-links a {
+      font-family: 'DM Mono', monospace;
+      font-size: 0.75rem;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--muted);
+      text-decoration: none;
+      transition: color 0.2s;
+    }
+    .nav-links a:hover { color: var(--purple-light); }
+    .nav-cta {
+      font-family: 'DM Mono', monospace;
+      font-size: 0.75rem;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--purple-light);
+      border: 1px solid var(--purple-dim);
+      padding: 0.6rem 1.4rem;
+      text-decoration: none;
+      transition: background 0.2s, color 0.2s;
+    }
+    .nav-cta:hover {
+      background: var(--purple);
+      color: #fff;
+      border-color: var(--purple);
+    }
+
+    /* HERO */
+    .hero {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      position: relative;
+      padding: 0 3rem;
+      overflow: hidden;
+    }
+    .hero-bg {
+      position: absolute;
+      inset: 0;
+      background:
+        radial-gradient(ellipse 60% 70% at 70% 50%, rgba(124,58,237,0.12) 0%, transparent 70%),
+        radial-gradient(ellipse 30% 40% at 20% 80%, rgba(147,51,234,0.08) 0%, transparent 60%);
+    }
+    .hero-grid {
+      position: absolute;
+      inset: 0;
+      background-image:
+        linear-gradient(rgba(124,58,237,0.04) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(124,58,237,0.04) 1px, transparent 1px);
+      background-size: 60px 60px;
+      mask-image: radial-gradient(ellipse 80% 80% at 50% 50%, black 0%, transparent 100%);
+    }
+    .hero-content {
+      position: relative;
+      z-index: 2;
+      max-width: 900px;
+    }
+    .hero-eyebrow {
+      font-family: 'DM Mono', monospace;
+      font-size: 0.7rem;
+      letter-spacing: 0.3em;
+      text-transform: uppercase;
+      color: var(--purple-light);
+      margin-bottom: 1.5rem;
+      opacity: 0;
+      animation: fadeUp 0.8s 0.2s forwards;
+    }
+    .hero-title {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: clamp(5rem, 13vw, 11rem);
+      line-height: 0.9;
+      letter-spacing: 0.02em;
+      margin-bottom: 2rem;
+      opacity: 0;
+      animation: fadeUp 0.8s 0.4s forwards;
+    }
+    .hero-title .line-2 {
+      display: block;
+      color: transparent;
+      -webkit-text-stroke: 1px rgba(168,85,247,0.5);
+    }
+    .hero-title .accent { color: var(--purple-light); }
+    .hero-desc {
+      font-size: 1rem;
+      color: var(--muted);
+      max-width: 460px;
+      line-height: 1.7;
+      margin-bottom: 2.5rem;
+      opacity: 0;
+      animation: fadeUp 0.8s 0.6s forwards;
+    }
+    .hero-actions {
+      display: flex;
+      gap: 1rem;
+      opacity: 0;
+      animation: fadeUp 0.8s 0.8s forwards;
+    }
+    .btn-primary {
+      font-family: 'DM Mono', monospace;
+      font-size: 0.8rem;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      background: var(--purple);
+      color: #fff;
+      padding: 1rem 2.2rem;
+      text-decoration: none;
+      border: none;
+      cursor: none;
+      position: relative;
+      overflow: hidden;
+      transition: background 0.2s;
+    }
+    .btn-primary::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(135deg, rgba(255,255,255,0.1), transparent);
+      opacity: 0;
+      transition: opacity 0.2s;
+    }
+    .btn-primary:hover { background: var(--purple-glow); }
+    .btn-primary:hover::after { opacity: 1; }
+    .btn-secondary {
+      font-family: 'DM Mono', monospace;
+      font-size: 0.8rem;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--muted);
+      padding: 1rem 2.2rem;
+      text-decoration: none;
+      border: 1px solid var(--border);
+      transition: color 0.2s, border-color 0.2s;
+    }
+    .btn-secondary:hover {
+      color: var(--text);
+      border-color: var(--purple-dim);
+    }
+
+    /* Waveform deco */
+    .hero-waveform {
+      position: absolute;
+      right: -2rem;
+      top: 50%;
+      transform: translateY(-50%);
+      opacity: 0.15;
+      width: 420px;
+      animation: fadeUp 1.2s 1s forwards;
+    }
+
+    /* MARQUEE */
+    .marquee-wrap {
+      overflow: hidden;
+      border-top: 1px solid var(--border);
+      border-bottom: 1px solid var(--border);
+      padding: 1rem 0;
+      background: var(--surface);
+    }
+    .marquee-track {
+      display: flex;
+      gap: 3rem;
+      animation: marquee 18s linear infinite;
+      white-space: nowrap;
+    }
+    .marquee-item {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 1rem;
+      letter-spacing: 0.2em;
+      color: var(--muted);
+      flex-shrink: 0;
+    }
+    .marquee-item span { color: var(--purple-light); margin-right: 3rem; }
+
+    /* SERVICES */
+    #servicios {
+      padding: 8rem 3rem;
+      position: relative;
+    }
+    .section-label {
+      font-family: 'DM Mono', monospace;
+      font-size: 0.7rem;
+      letter-spacing: 0.3em;
+      text-transform: uppercase;
+      color: var(--purple-light);
+      margin-bottom: 1rem;
+    }
+    .section-title {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: clamp(3rem, 6vw, 5rem);
+      line-height: 1;
+      margin-bottom: 4rem;
+    }
+    .services-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+      gap: 1px;
+      border: 1px solid var(--border);
+    }
+    .service-card {
+      padding: 2.5rem;
+      background: var(--surface);
+      border: none;
+      position: relative;
+      overflow: hidden;
+      transition: background 0.3s;
+    }
+    .service-card::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 2px;
+      background: linear-gradient(90deg, var(--purple), var(--purple-light));
+      transform: scaleX(0);
+      transform-origin: left;
+      transition: transform 0.4s ease;
+    }
+    .service-card:hover::before { transform: scaleX(1); }
+    .service-card:hover { background: #111018; }
+    .service-num {
+      font-family: 'DM Mono', monospace;
+      font-size: 0.65rem;
+      color: var(--purple-dim);
+      letter-spacing: 0.2em;
+      margin-bottom: 1.5rem;
+    }
+    .service-icon {
+      font-size: 2rem;
+      margin-bottom: 1rem;
+      display: block;
+    }
+    .service-name {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 1.8rem;
+      letter-spacing: 0.05em;
+      margin-bottom: 0.75rem;
+      color: var(--text);
+    }
+    .service-desc {
+      font-size: 0.85rem;
+      color: var(--muted);
+      line-height: 1.7;
+    }
+
+    /* ABOUT */
+    #nosotros {
+      padding: 8rem 3rem;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 6rem;
+      align-items: center;
+      border-top: 1px solid var(--border);
+    }
+    .about-visual {
+      position: relative;
+      aspect-ratio: 4/5;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      overflow: hidden;
+    }
+    .about-visual-inner {
+      position: absolute;
+      inset: 0;
+      background:
+        radial-gradient(ellipse 70% 70% at 50% 50%, rgba(124,58,237,0.15), transparent 70%);
+    }
+    .about-visual svg {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      opacity: 0.2;
+    }
+    .about-tag {
+      position: absolute;
+      bottom: 2rem;
+      left: 2rem;
+      font-family: 'DM Mono', monospace;
+      font-size: 0.7rem;
+      letter-spacing: 0.2em;
+      color: var(--purple-light);
+      border: 1px solid var(--purple-dim);
+      padding: 0.5rem 1rem;
+      background: rgba(8,8,8,0.8);
+    }
+    .about-text .section-title { margin-bottom: 1.5rem; }
+    .about-text p {
+      color: var(--muted);
+      line-height: 1.8;
+      font-size: 0.95rem;
+      margin-bottom: 1.5rem;
+    }
+    .about-stats {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 1.5rem;
+      margin-top: 3rem;
+      padding-top: 2rem;
+      border-top: 1px solid var(--border);
+    }
+    .stat-val {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 2.5rem;
+      color: var(--purple-light);
+      line-height: 1;
+    }
+    .stat-label {
+      font-family: 'DM Mono', monospace;
+      font-size: 0.65rem;
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin-top: 0.3rem;
+    }
+
+    /* CONTACT */
+    #contacto {
+      padding: 8rem 3rem;
+      border-top: 1px solid var(--border);
+      position: relative;
+      overflow: hidden;
+    }
+    .contact-bg {
+      position: absolute;
+      bottom: 0; right: 0;
+      width: 50%;
+      height: 100%;
+      background: radial-gradient(ellipse 60% 80% at 80% 80%, rgba(124,58,237,0.07), transparent 70%);
+      pointer-events: none;
+    }
+    .contact-inner {
+      position: relative;
+      z-index: 2;
+      max-width: 680px;
+    }
+    .contact-form {
+      display: flex;
+      flex-direction: column;
+      gap: 1.2rem;
+      margin-top: 3rem;
+    }
+    .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 1.2rem; }
+    .form-group { display: flex; flex-direction: column; gap: 0.5rem; }
+    .form-label {
+      font-family: 'DM Mono', monospace;
+      font-size: 0.65rem;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      color: var(--muted);
+    }
+    .form-input, .form-textarea, .form-select {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      color: var(--text);
+      font-family: 'Syne', sans-serif;
+      font-size: 0.9rem;
+      padding: 0.9rem 1.2rem;
+      outline: none;
+      transition: border-color 0.2s;
+      appearance: none;
+    }
+    .form-input:focus, .form-textarea:focus, .form-select:focus {
+      border-color: var(--purple);
+    }
+    .form-textarea { resize: vertical; min-height: 120px; }
+    .form-select option { background: var(--surface); }
+    .form-submit {
+      font-family: 'DM Mono', monospace;
+      font-size: 0.8rem;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      background: var(--purple);
+      color: #fff;
+      border: none;
+      padding: 1.1rem 2.5rem;
+      cursor: none;
+      align-self: flex-start;
+      transition: background 0.2s;
+      position: relative;
+      overflow: hidden;
+    }
+    .form-submit:hover { background: var(--purple-glow); }
+    .form-success {
+      display: none;
+      font-family: 'DM Mono', monospace;
+      font-size: 0.8rem;
+      color: var(--purple-light);
+      letter-spacing: 0.1em;
+      padding: 1rem;
+      border: 1px solid var(--purple-dim);
+      margin-top: 1rem;
+    }
+
+    /* PORTAL CTA */
+    .portal-banner {
+      margin: 0 3rem;
+      border: 1px solid var(--purple-dim);
+      padding: 3rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: linear-gradient(135deg, rgba(124,58,237,0.08), rgba(8,8,8,0));
+      position: relative;
+      overflow: hidden;
+    }
+    .portal-banner::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(90deg, rgba(124,58,237,0.05), transparent);
+    }
+    .portal-banner-text { position: relative; z-index: 2; }
+    .portal-banner-title {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 2rem;
+      letter-spacing: 0.05em;
+      margin-bottom: 0.5rem;
+    }
+    .portal-banner-sub {
+      font-family: 'DM Mono', monospace;
+      font-size: 0.75rem;
+      color: var(--muted);
+      letter-spacing: 0.1em;
+    }
+    .portal-banner-cta {
+      position: relative;
+      z-index: 2;
+      font-family: 'DM Mono', monospace;
+      font-size: 0.8rem;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--purple-light);
+      border: 1px solid var(--purple);
+      padding: 1rem 2rem;
+      text-decoration: none;
+      transition: background 0.2s, color 0.2s;
+      white-space: nowrap;
+    }
+    .portal-banner-cta:hover {
+      background: var(--purple);
+      color: #fff;
+    }
+
+    /* FOOTER */
+    footer {
+      margin-top: 6rem;
+      padding: 3rem;
+      border-top: 1px solid var(--border);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .footer-logo {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 1.4rem;
+      letter-spacing: 0.15em;
+      color: var(--muted);
+    }
+    .footer-logo span { color: var(--purple-light); }
+    .footer-copy {
+      font-family: 'DM Mono', monospace;
+      font-size: 0.65rem;
+      color: var(--muted);
+      letter-spacing: 0.1em;
+    }
+    .footer-links {
+      display: flex;
+      gap: 2rem;
+      list-style: none;
+    }
+    .footer-links a {
+      font-family: 'DM Mono', monospace;
+      font-size: 0.65rem;
+      letter-spacing: 0.1em;
+      color: var(--muted);
+      text-decoration: none;
+      transition: color 0.2s;
+    }
+    .footer-links a:hover { color: var(--purple-light); }
+
+    /* ANIMATIONS */
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(24px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    @keyframes marquee {
+      from { transform: translateX(0); }
+      to { transform: translateX(-50%); }
+    }
+    @keyframes pulse-glow {
+      0%, 100% { opacity: 0.15; }
+      50% { opacity: 0.3; }
+    }
+
+    /* Intersection observer fade-in */
+    .reveal {
+      opacity: 0;
+      transform: translateY(30px);
+      transition: opacity 0.7s ease, transform 0.7s ease;
+    }
+    .reveal.visible {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    @media (max-width: 768px) {
+      nav { padding: 1.2rem 1.5rem; }
+      .nav-links, .nav-cta { display: none; }
+      .hero { padding: 0 1.5rem; }
+      .hero-waveform { display: none; }
+      #servicios, #contacto { padding: 5rem 1.5rem; }
+      #nosotros { grid-template-columns: 1fr; padding: 5rem 1.5rem; gap: 3rem; }
+      .about-visual { display: none; }
+      .form-row { grid-template-columns: 1fr; }
+      .portal-banner { flex-direction: column; gap: 2rem; margin: 0 1.5rem; }
+      footer { flex-direction: column; gap: 1.5rem; text-align: center; padding: 2rem 1.5rem; }
+      .footer-links { display: none; }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="cursor" id="cursor"></div>
+  <div class="cursor-ring" id="cursorRing"></div>
+
+  <!-- NAV -->
+  <nav id="navbar">
+    <a href="#" class="nav-logo">SPECTRE<span>.</span></a>
+    <ul class="nav-links">
+      <li><a href="#servicios">Servicios</a></li>
+      <li><a href="#nosotros">Estudio</a></li>
+      <li><a href="#contacto">Contacto</a></li>
+    </ul>
+    <a href="portal.html" class="nav-cta">Portal Artista →</a>
+  </nav>
+
+  <!-- HERO -->
+  <section class="hero">
+    <div class="hero-bg"></div>
+    <div class="hero-grid"></div>
+    <div class="hero-content">
+      <p class="hero-eyebrow">// Estudio de grabación profesional</p>
+      <h1 class="hero-title">
+        SONIDO<br>
+        <span class="line-2">QUE <span class="accent">PERSISTE</span></span>
+      </h1>
+      <p class="hero-desc">Grabación, mezcla, masterización y producción de beats. Tu visión artística, nuestra obsesión técnica.</p>
+      <div class="hero-actions">
+        <a href="#contacto" class="btn-primary">Agendar sesión</a>
+        <a href="#servicios" class="btn-secondary">Ver servicios</a>
+      </div>
+    </div>
+
+    <!-- Waveform SVG decoration -->
+    <svg class="hero-waveform" viewBox="0 0 400 300" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <g stroke="#a855f7" stroke-width="1">
+        <line x1="20" y1="150" x2="20" y2="80" /><line x1="35" y1="150" x2="35" y2="60" />
+        <line x1="50" y1="150" x2="50" y2="100" /><line x1="65" y1="150" x2="65" y2="40" />
+        <line x1="80" y1="150" x2="80" y2="20" /><line x1="95" y1="150" x2="95" y2="70" />
+        <line x1="110" y1="150" x2="110" y2="110" /><line x1="125" y1="150" x2="125" y2="30" />
+        <line x1="140" y1="150" x2="140" y2="50" /><line x1="155" y1="150" x2="155" y2="90" />
+        <line x1="170" y1="150" x2="170" y2="10" /><line x1="185" y1="150" x2="185" y2="60" />
+        <line x1="200" y1="150" x2="200" y2="120" /><line x1="215" y1="150" x2="215" y2="35" />
+        <line x1="230" y1="150" x2="230" y2="75" /><line x1="245" y1="150" x2="245" y2="55" />
+        <line x1="260" y1="150" x2="260" y2="100" /><line x1="275" y1="150" x2="275" y2="25" />
+        <line x1="290" y1="150" x2="290" y2="80" /><line x1="305" y1="150" x2="305" y2="115" />
+        <line x1="320" y1="150" x2="320" y2="45" /><line x1="335" y1="150" x2="335" y2="65" />
+        <line x1="350" y1="150" x2="350" y2="90" /><line x1="365" y1="150" x2="365" y2="130" />
+        <line x1="380" y1="150" x2="380" y2="70" />
+        <!-- mirrored bottom -->
+        <line x1="20" y1="150" x2="20" y2="220" /><line x1="35" y1="150" x2="35" y2="240" />
+        <line x1="50" y1="150" x2="50" y2="200" /><line x1="65" y1="150" x2="65" y2="260" />
+        <line x1="80" y1="150" x2="80" y2="280" /><line x1="95" y1="150" x2="95" y2="230" />
+        <line x1="110" y1="150" x2="110" y2="190" /><line x1="125" y1="150" x2="125" y2="270" />
+        <line x1="140" y1="150" x2="140" y2="250" /><line x1="155" y1="150" x2="155" y2="210" />
+        <line x1="170" y1="150" x2="170" y2="290" /><line x1="185" y1="150" x2="185" y2="240" />
+        <line x1="200" y1="150" x2="200" y2="180" /><line x1="215" y1="150" x2="215" y2="265" />
+        <line x1="230" y1="150" x2="230" y2="225" /><line x1="245" y1="150" x2="245" y2="245" />
+        <line x1="260" y1="150" x2="260" y2="200" /><line x1="275" y1="150" x2="275" y2="275" />
+        <line x1="290" y1="150" x2="290" y2="220" /><line x1="305" y1="150" x2="305" y2="185" />
+        <line x1="320" y1="150" x2="320" y2="255" /><line x1="335" y1="150" x2="335" y2="235" />
+        <line x1="350" y1="150" x2="350" y2="210" /><line x1="365" y1="150" x2="365" y2="170" />
+        <line x1="380" y1="150" x2="380" y2="230" />
+      </g>
+    </svg>
+  </section>
+
+  <!-- MARQUEE -->
+  <div class="marquee-wrap">
+    <div class="marquee-track">
+      <span class="marquee-item"><span>✦</span> GRABACIÓN</span>
+      <span class="marquee-item"><span>✦</span> MEZCLA</span>
+      <span class="marquee-item"><span>✦</span> MASTERIZACIÓN</span>
+      <span class="marquee-item"><span>✦</span> PRODUCCIÓN DE BEATS</span>
+      <span class="marquee-item"><span>✦</span> SPECTRE STUDIO</span>
+      <span class="marquee-item"><span>✦</span> GRABACIÓN</span>
+      <span class="marquee-item"><span>✦</span> MEZCLA</span>
+      <span class="marquee-item"><span>✦</span> MASTERIZACIÓN</span>
+      <span class="marquee-item"><span>✦</span> PRODUCCIÓN DE BEATS</span>
+      <span class="marquee-item"><span>✦</span> SPECTRE STUDIO</span>
+    </div>
+  </div>
+
+  <!-- SERVICES -->
+  <section id="servicios">
+    <p class="section-label reveal">// 01 — Servicios</p>
+    <h2 class="section-title reveal">LO QUE<br><span style="color:var(--purple-light)">HACEMOS</span></h2>
+    <div class="services-grid">
+      <div class="service-card reveal">
+        <div class="service-num">01</div>
+        <span class="service-icon">🎙️</span>
+        <div class="service-name">Grabación</div>
+        <p class="service-desc">Capturamos cada detalle de tu voz e instrumentos con equipo de alta fidelidad y acústica profesional.</p>
+      </div>
+      <div class="service-card reveal">
+        <div class="service-num">02</div>
+        <span class="service-icon">🎚️</span>
+        <div class="service-name">Mezcla</div>
+        <p class="service-desc">Balanceamos frecuencias, dinámica y espacialidad para que cada elemento de tu track encuentre su lugar.</p>
+      </div>
+      <div class="service-card reveal">
+        <div class="service-num">03</div>
+        <span class="service-icon">💿</span>
+        <div class="service-name">Masterización</div>
+        <p class="service-desc">El toque final que lleva tu música al nivel sonoro de las plataformas comerciales y la radio.</p>
+      </div>
+      <div class="service-card reveal">
+        <div class="service-num">04</div>
+        <span class="service-icon">🎹</span>
+        <div class="service-name">Producción de Beats</div>
+        <p class="service-desc">Creamos bases originales a medida — trap, urbano, experimental — con identidad propia para tu proyecto.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- PORTAL BANNER -->
+  <div class="portal-banner reveal">
+    <div class="portal-banner-text">
+      <div class="portal-banner-title">¿Ya eres artista del estudio?</div>
+      <div class="portal-banner-sub">// Accede a tus proyectos, archivos y estado de pagos</div>
+    </div>
+    <a href="portal.html" class="portal-banner-cta">Entrar al portal →</a>
+  </div>
+
+  <!-- ABOUT -->
+  <section id="nosotros">
+    <div class="about-visual">
+      <div class="about-visual-inner"></div>
+      <svg viewBox="0 0 300 400" xmlns="http://www.w3.org/2000/svg">
+        <circle cx="150" cy="200" r="120" stroke="#7c3aed" stroke-width="0.5" fill="none"/>
+        <circle cx="150" cy="200" r="80" stroke="#a855f7" stroke-width="0.5" fill="none"/>
+        <circle cx="150" cy="200" r="40" stroke="#7c3aed" stroke-width="0.5" fill="none"/>
+        <line x1="30" y1="200" x2="270" y2="200" stroke="#a855f7" stroke-width="0.3"/>
+        <line x1="150" y1="80" x2="150" y2="320" stroke="#a855f7" stroke-width="0.3"/>
+        <line x1="65" y1="115" x2="235" y2="285" stroke="#7c3aed" stroke-width="0.3"/>
+        <line x1="235" y1="115" x2="65" y2="285" stroke="#7c3aed" stroke-width="0.3"/>
+      </svg>
+      <div class="about-tag">// SPECTRE STUDIO</div>
+    </div>
+    <div class="about-text">
+      <p class="section-label reveal">// 02 — El estudio</p>
+      <h2 class="section-title reveal">MÁS QUE<br><span style="color:var(--purple-light)">UN ESTUDIO</span></h2>
+      <p class="reveal">Spectre Studio nació con una misión clara: darle a los artistas emergentes acceso a producción de nivel profesional sin comprometer su visión creativa.</p>
+      <p class="reveal">Trabajamos con artistas urbanos, alternativos e independientes que quieren un sonido que los represente genuinamente.</p>
+      <div class="about-stats reveal">
+        <div>
+          <div class="stat-val">100%</div>
+          <div class="stat-label">Dedicación</div>
+        </div>
+        <div>
+          <div class="stat-val">4</div>
+          <div class="stat-label">Servicios</div>
+        </div>
+        <div>
+          <div class="stat-val">∞</div>
+          <div class="stat-label">Visión</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- CONTACT -->
+  <section id="contacto">
+    <div class="contact-bg"></div>
+    <div class="contact-inner">
+      <p class="section-label reveal">// 03 — Contacto</p>
+      <h2 class="section-title reveal">HAGAMOS<br><span style="color:var(--purple-light)">ALGO</span></h2>
+      <form class="contact-form" id="contactForm">
+        <div class="form-row">
+          <div class="form-group reveal">
+            <label class="form-label">Nombre</label>
+            <input type="text" class="form-input" placeholder="Tu nombre" required/>
+          </div>
+          <div class="form-group reveal">
+            <label class="form-label">Correo</label>
+            <input type="email" class="form-input" placeholder="tu@correo.com" required/>
+          </div>
+        </div>
+        <div class="form-group reveal">
+          <label class="form-label">Servicio de interés</label>
+          <select class="form-select">
+            <option value="">Selecciona un servicio</option>
+            <option>Grabación</option>
+            <option>Mezcla</option>
+            <option>Masterización</option>
+            <option>Producción de Beats</option>
+            <option>Paquete completo</option>
+          </select>
+        </div>
+        <div class="form-group reveal">
+          <label class="form-label">Mensaje</label>
+          <textarea class="form-textarea" placeholder="Cuéntanos sobre tu proyecto..."></textarea>
+        </div>
+        <button type="submit" class="form-submit reveal">Enviar mensaje →</button>
+        <div class="form-success" id="formSuccess">// Mensaje enviado. Te contactamos pronto.</div>
+      </form>
+    </div>
+  </section>
+
+  <!-- FOOTER -->
+  <footer>
+    <div class="footer-logo">SPECTRE<span>.</span></div>
+    <ul class="footer-links">
+      <li><a href="#servicios">Servicios</a></li>
+      <li><a href="#nosotros">Estudio</a></li>
+      <li><a href="portal.html">Portal</a></li>
+      <li><a href="#contacto">Contacto</a></li>
+    </ul>
+    <div class="footer-copy">© 2025 Spectre Studio. Todos los derechos reservados.</div>
+  </footer>
+
+  <script>
+    // Cursor
+    const cursor = document.getElementById('cursor');
+    const ring = document.getElementById('cursorRing');
+    let mx = 0, my = 0, rx = 0, ry = 0;
+    document.addEventListener('mousemove', e => { mx = e.clientX; my = e.clientY; cursor.style.left = mx + 'px'; cursor.style.top = my + 'px'; });
+    function animRing() { rx += (mx - rx) * 0.12; ry += (my - ry) * 0.12; ring.style.left = rx + 'px'; ring.style.top = ry + 'px'; requestAnimationFrame(animRing); }
+    animRing();
+    document.querySelectorAll('a, button').forEach(el => {
+      el.addEventListener('mouseenter', () => { cursor.style.width = '6px'; cursor.style.height = '6px'; ring.style.width = '52px'; ring.style.height = '52px'; });
+      el.addEventListener('mouseleave', () => { cursor.style.width = '12px'; cursor.style.height = '12px'; ring.style.width = '36px'; ring.style.height = '36px'; });
+    });
+
+    // Navbar scroll
+    window.addEventListener('scroll', () => {
+      document.getElementById('navbar').classList.toggle('scrolled', window.scrollY > 40);
+    });
+
+    // Reveal on scroll
+    const reveals = document.querySelectorAll('.reveal');
+    const obs = new IntersectionObserver(entries => {
+      entries.forEach((e, i) => { if (e.isIntersecting) { setTimeout(() => e.target.classList.add('visible'), i * 80); obs.unobserve(e.target); } });
+    }, { threshold: 0.1 });
+    reveals.forEach(el => obs.observe(el));
+
+    // Contact form
+    document.getElementById('contactForm').addEventListener('submit', e => {
+      e.preventDefault();
+      document.getElementById('formSuccess').style.display = 'block';
+      e.target.reset();
+      setTimeout(() => { document.getElementById('formSuccess').style.display = 'none'; }, 4000);
+    });
+  </script>
+</body>
+</html>

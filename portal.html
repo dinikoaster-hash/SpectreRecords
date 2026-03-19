@@ -1,0 +1,1144 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Spectre Studio — Portal Artista</title>
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Syne:wght@400;600;800&family=DM+Mono:wght@300;400;500&display=swap" rel="stylesheet"/>
+  <style>
+    :root {
+      --bg: #080808;
+      --surface: #0e0e0e;
+      --surface2: #131318;
+      --purple: #7c3aed;
+      --purple-light: #a855f7;
+      --purple-glow: #9333ea;
+      --purple-dim: #2d1b5e;
+      --purple-faint: rgba(124,58,237,0.08);
+      --text: #f0eaf8;
+      --muted: #6b6378;
+      --muted2: #4a4356;
+      --border: #1a1625;
+      --border2: #221e30;
+      --green: #34d399;
+      --yellow: #fbbf24;
+      --red: #f87171;
+    }
+
+    *, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
+    html { scroll-behavior: smooth; }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Syne', sans-serif;
+      min-height: 100vh;
+      overflow-x: hidden;
+      cursor: none;
+    }
+
+    /* Noise */
+    body::before {
+      content:'';
+      position:fixed; inset:0;
+      background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E");
+      pointer-events:none; z-index:9000; opacity:0.35;
+    }
+
+    /* Cursor */
+    .cursor { position:fixed; width:10px; height:10px; background:var(--purple-light); border-radius:50%; pointer-events:none; z-index:9999; transform:translate(-50%,-50%); mix-blend-mode:screen; transition:width .15s,height .15s; }
+    .cursor-ring { position:fixed; width:32px; height:32px; border:1px solid rgba(168,85,247,.35); border-radius:50%; pointer-events:none; z-index:9998; transform:translate(-50%,-50%); transition:width .3s,height .3s; }
+
+    /* ─── LOGIN SCREEN ─── */
+    #loginScreen {
+      min-height:100vh;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      position:relative;
+      overflow:hidden;
+    }
+    .login-bg {
+      position:absolute; inset:0;
+      background:
+        radial-gradient(ellipse 50% 60% at 50% 50%, rgba(124,58,237,.13) 0%, transparent 70%),
+        radial-gradient(ellipse 30% 30% at 20% 80%, rgba(147,51,234,.07) 0%, transparent 60%);
+    }
+    .login-grid {
+      position:absolute; inset:0;
+      background-image:
+        linear-gradient(rgba(124,58,237,.035) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(124,58,237,.035) 1px, transparent 1px);
+      background-size:50px 50px;
+      mask-image:radial-gradient(ellipse 70% 70% at 50% 50%, black 0%, transparent 100%);
+    }
+    .login-box {
+      position:relative; z-index:2;
+      width:100%; max-width:420px;
+      padding:3rem;
+      border:1px solid var(--border2);
+      background:rgba(14,14,14,.92);
+      backdrop-filter:blur(20px);
+      animation:fadeUp .7s .1s both;
+    }
+    .login-logo {
+      font-family:'Bebas Neue',sans-serif;
+      font-size:2.2rem;
+      letter-spacing:.15em;
+      text-align:center;
+      margin-bottom:.3rem;
+    }
+    .login-logo span { color:var(--purple-light); }
+    .login-sub {
+      font-family:'DM Mono',monospace;
+      font-size:.65rem;
+      letter-spacing:.25em;
+      text-transform:uppercase;
+      color:var(--muted);
+      text-align:center;
+      margin-bottom:2.5rem;
+    }
+    .login-label {
+      font-family:'DM Mono',monospace;
+      font-size:.65rem;
+      letter-spacing:.2em;
+      text-transform:uppercase;
+      color:var(--muted);
+      display:block;
+      margin-bottom:.5rem;
+    }
+    .login-input {
+      width:100%;
+      background:var(--surface2);
+      border:1px solid var(--border2);
+      color:var(--text);
+      font-family:'DM Mono',monospace;
+      font-size:1.1rem;
+      letter-spacing:.3em;
+      text-align:center;
+      padding:1rem;
+      outline:none;
+      transition:border-color .2s;
+      margin-bottom:1.2rem;
+    }
+    .login-input:focus { border-color:var(--purple); }
+    .login-btn {
+      width:100%;
+      font-family:'DM Mono',monospace;
+      font-size:.8rem;
+      letter-spacing:.15em;
+      text-transform:uppercase;
+      background:var(--purple);
+      color:#fff;
+      border:none;
+      padding:1rem;
+      cursor:none;
+      transition:background .2s;
+      position:relative;
+      overflow:hidden;
+    }
+    .login-btn:hover { background:var(--purple-glow); }
+    .login-btn.loading::after {
+      content:'';
+      position:absolute; inset:0;
+      background:linear-gradient(90deg,transparent,rgba(255,255,255,.1),transparent);
+      animation:shimmer 1s infinite;
+    }
+    .login-error {
+      font-family:'DM Mono',monospace;
+      font-size:.7rem;
+      color:var(--red);
+      letter-spacing:.1em;
+      text-align:center;
+      margin-top:1rem;
+      display:none;
+    }
+    .login-hint {
+      font-family:'DM Mono',monospace;
+      font-size:.6rem;
+      color:var(--muted2);
+      text-align:center;
+      margin-top:1.5rem;
+      letter-spacing:.08em;
+      line-height:1.6;
+    }
+
+    /* Config notice */
+    .config-notice {
+      background: rgba(124,58,237,.1);
+      border: 1px solid var(--purple-dim);
+      padding: 1rem;
+      margin-bottom: 1.5rem;
+      font-family:'DM Mono',monospace;
+      font-size:.65rem;
+      color:var(--purple-light);
+      letter-spacing:.05em;
+      line-height:1.6;
+      display:none;
+    }
+    .config-notice.show { display:block; }
+
+    /* ─── PORTAL ─── */
+    #portalScreen { display:none; min-height:100vh; }
+
+    /* Top bar */
+    .portal-nav {
+      position:sticky; top:0; z-index:100;
+      display:flex; align-items:center; justify-content:space-between;
+      padding:1.2rem 2.5rem;
+      background:rgba(8,8,8,.9);
+      backdrop-filter:blur(16px);
+      border-bottom:1px solid var(--border);
+    }
+    .portal-nav-logo {
+      font-family:'Bebas Neue',sans-serif;
+      font-size:1.5rem;
+      letter-spacing:.15em;
+      text-decoration:none;
+      color:var(--text);
+    }
+    .portal-nav-logo span { color:var(--purple-light); }
+    .portal-nav-right { display:flex; align-items:center; gap:1.5rem; }
+    .portal-artist-name {
+      font-family:'DM Mono',monospace;
+      font-size:.7rem;
+      letter-spacing:.12em;
+      color:var(--muted);
+    }
+    .portal-artist-name strong { color:var(--purple-light); }
+    .logout-btn {
+      font-family:'DM Mono',monospace;
+      font-size:.65rem;
+      letter-spacing:.12em;
+      text-transform:uppercase;
+      color:var(--muted2);
+      background:none;
+      border:1px solid var(--border2);
+      padding:.4rem .9rem;
+      cursor:none;
+      transition:color .2s, border-color .2s;
+    }
+    .logout-btn:hover { color:var(--red); border-color:var(--red); }
+
+    /* Main layout */
+    .portal-main { padding:2.5rem; max-width:1200px; margin:0 auto; }
+
+    /* Welcome */
+    .welcome-bar {
+      display:flex; align-items:flex-end; justify-content:space-between;
+      margin-bottom:2.5rem;
+      padding-bottom:2rem;
+      border-bottom:1px solid var(--border);
+    }
+    .welcome-title {
+      font-family:'Bebas Neue',sans-serif;
+      font-size:clamp(2.5rem,5vw,4rem);
+      line-height:.95;
+      letter-spacing:.03em;
+    }
+    .welcome-title span { color:var(--purple-light); }
+    .welcome-aka {
+      font-family:'DM Mono',monospace;
+      font-size:.7rem;
+      letter-spacing:.2em;
+      color:var(--muted);
+      margin-top:.5rem;
+    }
+    .welcome-date {
+      font-family:'DM Mono',monospace;
+      font-size:.65rem;
+      letter-spacing:.12em;
+      color:var(--muted2);
+      text-align:right;
+    }
+
+    /* Stats row */
+    .stats-row {
+      display:grid;
+      grid-template-columns:repeat(4,1fr);
+      gap:1px;
+      border:1px solid var(--border);
+      margin-bottom:2.5rem;
+    }
+    .stat-card {
+      background:var(--surface);
+      padding:1.8rem;
+      position:relative;
+      overflow:hidden;
+    }
+    .stat-card::after {
+      content:'';
+      position:absolute; top:0; left:0; right:0; height:2px;
+      background:linear-gradient(90deg,var(--purple),var(--purple-light));
+      opacity:0;
+      transition:opacity .3s;
+    }
+    .stat-card:hover::after { opacity:1; }
+    .stat-card-label {
+      font-family:'DM Mono',monospace;
+      font-size:.6rem;
+      letter-spacing:.2em;
+      text-transform:uppercase;
+      color:var(--muted);
+      margin-bottom:.8rem;
+    }
+    .stat-card-val {
+      font-family:'Bebas Neue',sans-serif;
+      font-size:2.2rem;
+      color:var(--purple-light);
+      line-height:1;
+    }
+    .stat-card-sub {
+      font-family:'DM Mono',monospace;
+      font-size:.6rem;
+      color:var(--muted2);
+      margin-top:.4rem;
+    }
+
+    /* Section */
+    .portal-section { margin-bottom:3rem; }
+    .portal-section-header {
+      display:flex; align-items:center; justify-content:space-between;
+      margin-bottom:1.2rem;
+    }
+    .portal-section-title {
+      font-family:'Bebas Neue',sans-serif;
+      font-size:1.4rem;
+      letter-spacing:.08em;
+    }
+    .section-eyebrow {
+      font-family:'DM Mono',monospace;
+      font-size:.6rem;
+      letter-spacing:.2em;
+      color:var(--purple-light);
+    }
+
+    /* Projects table */
+    .projects-table { width:100%; border-collapse:collapse; border:1px solid var(--border); }
+    .projects-table th {
+      font-family:'DM Mono',monospace;
+      font-size:.6rem;
+      letter-spacing:.18em;
+      text-transform:uppercase;
+      color:var(--muted);
+      padding:.9rem 1.2rem;
+      text-align:left;
+      background:var(--surface);
+      border-bottom:1px solid var(--border2);
+    }
+    .projects-table td {
+      padding:1rem 1.2rem;
+      font-size:.85rem;
+      border-bottom:1px solid var(--border);
+      vertical-align:middle;
+    }
+    .projects-table tr:last-child td { border-bottom:none; }
+    .projects-table tr { transition:background .2s; }
+    .projects-table tr:hover td { background:var(--surface); }
+    .project-name { font-weight:600; color:var(--text); }
+    .project-service {
+      font-family:'DM Mono',monospace;
+      font-size:.65rem;
+      color:var(--muted);
+      letter-spacing:.05em;
+    }
+
+    /* Status badge */
+    .badge {
+      display:inline-block;
+      font-family:'DM Mono',monospace;
+      font-size:.58rem;
+      letter-spacing:.12em;
+      text-transform:uppercase;
+      padding:.3rem .7rem;
+      border-radius:0;
+    }
+    .badge-active { background:rgba(52,211,153,.1); color:var(--green); border:1px solid rgba(52,211,153,.25); }
+    .badge-done { background:rgba(168,85,247,.1); color:var(--purple-light); border:1px solid rgba(168,85,247,.25); }
+    .badge-pending { background:rgba(251,191,36,.1); color:var(--yellow); border:1px solid rgba(251,191,36,.25); }
+    .badge-paid { background:rgba(52,211,153,.1); color:var(--green); border:1px solid rgba(52,211,153,.25); }
+    .badge-unpaid { background:rgba(248,113,113,.1); color:var(--red); border:1px solid rgba(248,113,113,.25); }
+
+    /* Finance cards */
+    .finance-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(300px,1fr)); gap:1px; border:1px solid var(--border); }
+    .finance-card {
+      background:var(--surface);
+      padding:1.8rem;
+      position:relative;
+      overflow:hidden;
+      transition:background .2s;
+    }
+    .finance-card:hover { background:var(--surface2); }
+    .finance-card-top { display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:1rem; }
+    .finance-id {
+      font-family:'DM Mono',monospace;
+      font-size:.6rem;
+      color:var(--muted2);
+      letter-spacing:.15em;
+    }
+    .finance-concept { font-size:.95rem; font-weight:600; margin-bottom:.3rem; }
+    .finance-date {
+      font-family:'DM Mono',monospace;
+      font-size:.65rem;
+      color:var(--muted);
+    }
+    .finance-amount {
+      font-family:'Bebas Neue',sans-serif;
+      font-size:1.8rem;
+      margin-top:.8rem;
+    }
+    .finance-amount.income { color:var(--green); }
+    .finance-amount.expense { color:var(--red); }
+
+    /* Profile card */
+    .profile-card {
+      display:grid;
+      grid-template-columns:auto 1fr;
+      gap:2rem;
+      align-items:center;
+      padding:2rem;
+      background:var(--surface);
+      border:1px solid var(--border);
+    }
+    .profile-avatar {
+      width:80px; height:80px;
+      background:var(--purple-dim);
+      border:1px solid var(--purple-dim);
+      display:flex; align-items:center; justify-content:center;
+      font-family:'Bebas Neue',sans-serif;
+      font-size:2rem;
+      color:var(--purple-light);
+      position:relative;
+      overflow:hidden;
+    }
+    .profile-avatar img { position:absolute; inset:0; width:100%; height:100%; object-fit:cover; }
+    .profile-name {
+      font-family:'Bebas Neue',sans-serif;
+      font-size:1.8rem;
+      letter-spacing:.05em;
+      line-height:1;
+    }
+    .profile-aka {
+      font-family:'DM Mono',monospace;
+      font-size:.7rem;
+      color:var(--purple-light);
+      letter-spacing:.15em;
+      margin:.3rem 0 .8rem;
+    }
+    .profile-meta {
+      display:flex; gap:2rem; flex-wrap:wrap;
+    }
+    .profile-meta-item {
+      font-family:'DM Mono',monospace;
+      font-size:.65rem;
+      color:var(--muted);
+      letter-spacing:.05em;
+    }
+    .profile-meta-item strong { color:var(--text); }
+
+    /* Files section */
+    .files-notice {
+      padding:2rem;
+      border:1px dashed var(--border2);
+      text-align:center;
+      font-family:'DM Mono',monospace;
+      font-size:.7rem;
+      color:var(--muted2);
+      letter-spacing:.1em;
+      line-height:1.8;
+    }
+
+    /* Tabs */
+    .tabs { display:flex; gap:0; border-bottom:1px solid var(--border); margin-bottom:2rem; }
+    .tab-btn {
+      font-family:'DM Mono',monospace;
+      font-size:.7rem;
+      letter-spacing:.15em;
+      text-transform:uppercase;
+      color:var(--muted);
+      background:none;
+      border:none;
+      border-bottom:2px solid transparent;
+      padding:.9rem 1.5rem;
+      cursor:none;
+      transition:color .2s, border-color .2s;
+      margin-bottom:-1px;
+    }
+    .tab-btn:hover { color:var(--text); }
+    .tab-btn.active { color:var(--purple-light); border-bottom-color:var(--purple-light); }
+    .tab-content { display:none; }
+    .tab-content.active { display:block; }
+
+    /* Loading spinner */
+    .loading-state {
+      display:flex; flex-direction:column; align-items:center; justify-content:center;
+      padding:4rem; gap:1rem;
+    }
+    .spinner {
+      width:32px; height:32px;
+      border:2px solid var(--border2);
+      border-top-color:var(--purple);
+      border-radius:50%;
+      animation:spin .8s linear infinite;
+    }
+    .loading-text {
+      font-family:'DM Mono',monospace;
+      font-size:.65rem;
+      letter-spacing:.15em;
+      color:var(--muted);
+    }
+
+    /* Empty state */
+    .empty-state {
+      padding:3rem;
+      text-align:center;
+      border:1px dashed var(--border2);
+      font-family:'DM Mono',monospace;
+      font-size:.7rem;
+      color:var(--muted2);
+      letter-spacing:.1em;
+    }
+
+    /* Config panel (for setup) */
+    .config-panel {
+      position:fixed; inset:0; z-index:500;
+      background:rgba(8,8,8,.96);
+      backdrop-filter:blur(20px);
+      display:flex; align-items:center; justify-content:center;
+      display:none;
+    }
+    .config-panel.show { display:flex; }
+    .config-box {
+      width:100%; max-width:560px;
+      padding:2.5rem;
+      border:1px solid var(--border2);
+      background:var(--surface);
+    }
+    .config-title {
+      font-family:'Bebas Neue',sans-serif;
+      font-size:1.8rem;
+      margin-bottom:.5rem;
+    }
+    .config-sub {
+      font-family:'DM Mono',monospace;
+      font-size:.65rem;
+      color:var(--muted);
+      letter-spacing:.08em;
+      margin-bottom:2rem;
+      line-height:1.7;
+    }
+    .config-field { margin-bottom:1.2rem; }
+    .config-field label {
+      font-family:'DM Mono',monospace;
+      font-size:.6rem;
+      letter-spacing:.18em;
+      text-transform:uppercase;
+      color:var(--muted);
+      display:block; margin-bottom:.5rem;
+    }
+    .config-field input {
+      width:100%;
+      background:var(--bg);
+      border:1px solid var(--border2);
+      color:var(--text);
+      font-family:'DM Mono',monospace;
+      font-size:.8rem;
+      padding:.8rem 1rem;
+      outline:none;
+      transition:border-color .2s;
+    }
+    .config-field input:focus { border-color:var(--purple); }
+    .config-save {
+      width:100%;
+      font-family:'DM Mono',monospace;
+      font-size:.75rem;
+      letter-spacing:.12em;
+      text-transform:uppercase;
+      background:var(--purple);
+      color:#fff;
+      border:none;
+      padding:.9rem;
+      cursor:none;
+      transition:background .2s;
+      margin-top:.5rem;
+    }
+    .config-save:hover { background:var(--purple-glow); }
+
+    @keyframes fadeUp { from{opacity:0;transform:translateY(20px)} to{opacity:1;transform:translateY(0)} }
+    @keyframes shimmer { from{transform:translateX(-100%)} to{transform:translateX(100%)} }
+    @keyframes spin { to{transform:rotate(360deg)} }
+
+    .reveal { opacity:0; transform:translateY(20px); transition:opacity .6s,transform .6s; }
+    .reveal.visible { opacity:1; transform:translateY(0); }
+
+    @media(max-width:768px) {
+      .portal-nav { padding:1rem 1.2rem; }
+      .portal-main { padding:1.5rem; }
+      .stats-row { grid-template-columns:1fr 1fr; }
+      .welcome-bar { flex-direction:column; align-items:flex-start; gap:1rem; }
+      .projects-table { display:block; overflow-x:auto; }
+      .profile-card { grid-template-columns:1fr; }
+    }
+  </style>
+</head>
+<body>
+
+<div class="cursor" id="cursor"></div>
+<div class="cursor-ring" id="cursorRing"></div>
+
+<!-- ═══════════════════════════════════════
+     CONFIG PANEL (first-time setup)
+═══════════════════════════════════════ -->
+<div class="config-panel" id="configPanel">
+  <div class="config-box">
+    <div class="config-title">CONFIGURAR SHEETS</div>
+    <p class="config-sub">
+      Para conectar tus datos en vivo necesitas:<br>
+      1. El ID de tu Google Spreadsheet (está en la URL: .../d/<strong>ESTE_ID</strong>/edit)<br>
+      2. Una Google Sheets API Key (gratuita en console.cloud.google.com)<br><br>
+      Estos datos se guardan solo en tu navegador.
+    </p>
+    <div class="config-field">
+      <label>Google Spreadsheet ID</label>
+      <input type="text" id="cfgSheetId" placeholder="1BxiMVs0XRA5nFMdKvBdBZjgmUUqptlbs74OgVE2upms"/>
+    </div>
+    <div class="config-field">
+      <label>Google Sheets API Key</label>
+      <input type="text" id="cfgApiKey" placeholder="AIzaSy..."/>
+    </div>
+    <div class="config-field">
+      <label>Nombre hoja Artistas</label>
+      <input type="text" id="cfgArtistas" value="Artistas" placeholder="Artistas"/>
+    </div>
+    <div class="config-field">
+      <label>Nombre hoja Proyectos</label>
+      <input type="text" id="cfgProyectos" value="Proyectos" placeholder="Proyectos"/>
+    </div>
+    <div class="config-field">
+      <label>Nombre hoja Finanzas</label>
+      <input type="text" id="cfgFinanzas" value="Finanzas" placeholder="Finanzas"/>
+    </div>
+    <button class="config-save" onclick="saveConfig()">Guardar y conectar →</button>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════
+     LOGIN
+═══════════════════════════════════════ -->
+<div id="loginScreen">
+  <div class="login-bg"></div>
+  <div class="login-grid"></div>
+  <div class="login-box">
+    <div class="login-logo">SPECTRE<span>.</span></div>
+    <div class="login-sub">// Portal del artista</div>
+
+    <div class="config-notice" id="configNotice">
+      ⚠ Sheets no configurado. <a href="#" onclick="openConfig()" style="color:var(--purple-light);text-decoration:none;">Configurar ahora →</a>
+      <br>O usa el modo demo con código: <strong>1234</strong>
+    </div>
+
+    <label class="login-label">Código de acceso</label>
+    <input type="password" class="login-input" id="accessCode" placeholder="• • • • " maxlength="10"
+      onkeydown="if(event.key==='Enter') doLogin()"/>
+    <button class="login-btn" id="loginBtn" onclick="doLogin()">Acceder →</button>
+    <div class="login-error" id="loginError">// Código incorrecto. Intenta de nuevo.</div>
+    <p class="login-hint">Tu código de acceso fue proporcionado por el estudio.<br>Si no lo recuerdas, contáctanos.</p>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════
+     PORTAL
+═══════════════════════════════════════ -->
+<div id="portalScreen">
+  <nav class="portal-nav">
+    <a href="index.html" class="portal-nav-logo">SPECTRE<span>.</span></a>
+    <div class="portal-nav-right">
+      <div class="portal-artist-name">// <strong id="navArtistName">—</strong></div>
+      <button class="logout-btn" onclick="doLogout()">Salir</button>
+    </div>
+  </nav>
+
+  <main class="portal-main">
+
+    <!-- Welcome -->
+    <div class="welcome-bar">
+      <div>
+        <div class="welcome-title">BIENVENIDO,<br><span id="welcomeName">—</span></div>
+        <div class="welcome-aka" id="welcomeAka"></div>
+      </div>
+      <div class="welcome-date" id="welcomeDate"></div>
+    </div>
+
+    <!-- Stats -->
+    <div class="stats-row reveal">
+      <div class="stat-card">
+        <div class="stat-card-label">Proyectos</div>
+        <div class="stat-card-val" id="statProyectos">—</div>
+        <div class="stat-card-sub">en total</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-card-label">En proceso</div>
+        <div class="stat-card-val" id="statActivos">—</div>
+        <div class="stat-card-sub">activos ahora</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-card-label">Total pagado</div>
+        <div class="stat-card-val" id="statPagado">—</div>
+        <div class="stat-card-sub">MXN</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-card-label">Finalizados</div>
+        <div class="stat-card-val" id="statFinalizados">—</div>
+        <div class="stat-card-sub">proyectos</div>
+      </div>
+    </div>
+
+    <!-- Tabs -->
+    <div class="tabs">
+      <button class="tab-btn active" onclick="switchTab('proyectos')">Proyectos</button>
+      <button class="tab-btn" onclick="switchTab('finanzas')">Pagos</button>
+      <button class="tab-btn" onclick="switchTab('archivos')">Archivos</button>
+      <button class="tab-btn" onclick="switchTab('perfil')">Mi Perfil</button>
+    </div>
+
+    <!-- TAB: Proyectos -->
+    <div class="tab-content active" id="tab-proyectos">
+      <div class="portal-section">
+        <div class="portal-section-header">
+          <div>
+            <div class="section-eyebrow">// 01</div>
+            <div class="portal-section-title">MIS PROYECTOS</div>
+          </div>
+        </div>
+        <div id="proyectosContainer">
+          <div class="loading-state"><div class="spinner"></div><div class="loading-text">Cargando proyectos...</div></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- TAB: Finanzas -->
+    <div class="tab-content" id="tab-finanzas">
+      <div class="portal-section">
+        <div class="portal-section-header">
+          <div>
+            <div class="section-eyebrow">// 02</div>
+            <div class="portal-section-title">MIS PAGOS</div>
+          </div>
+        </div>
+        <div id="finanzasContainer">
+          <div class="loading-state"><div class="spinner"></div><div class="loading-text">Cargando pagos...</div></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- TAB: Archivos -->
+    <div class="tab-content" id="tab-archivos">
+      <div class="portal-section">
+        <div class="portal-section-header">
+          <div>
+            <div class="section-eyebrow">// 03</div>
+            <div class="portal-section-title">MIS ARCHIVOS</div>
+          </div>
+        </div>
+        <div id="archivosContainer" class="files-notice">
+          Los archivos entregados aparecerán aquí.<br>
+          El estudio los cargará directamente desde tu Google Sheet.<br><br>
+          <span style="color:var(--muted2)">// Columna requerida en Proyectos: "Archivos entregados" con links de Drive</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- TAB: Perfil -->
+    <div class="tab-content" id="tab-perfil">
+      <div class="portal-section">
+        <div class="portal-section-header">
+          <div>
+            <div class="section-eyebrow">// 04</div>
+            <div class="portal-section-title">MI PERFIL</div>
+          </div>
+        </div>
+        <div id="perfilContainer">
+          <div class="loading-state"><div class="spinner"></div><div class="loading-text">Cargando perfil...</div></div>
+        </div>
+      </div>
+    </div>
+
+  </main>
+</div>
+
+<script>
+// ═══════════════════════════════════════
+// CONFIG
+// ═══════════════════════════════════════
+const DEMO_MODE_CODE = '1234';
+
+function getCfg() {
+  return {
+    sheetId: localStorage.getItem('sp_sheetId') || '',
+    apiKey:  localStorage.getItem('sp_apiKey')  || '',
+    shArtistas:  localStorage.getItem('sp_shArtistas')  || 'Artistas',
+    shProyectos: localStorage.getItem('sp_shProyectos') || 'Proyectos',
+    shFinanzas:  localStorage.getItem('sp_shFinanzas')  || 'Finanzas',
+  };
+}
+function saveConfig() {
+  localStorage.setItem('sp_sheetId',    document.getElementById('cfgSheetId').value.trim());
+  localStorage.setItem('sp_apiKey',     document.getElementById('cfgApiKey').value.trim());
+  localStorage.setItem('sp_shArtistas', document.getElementById('cfgArtistas').value.trim() || 'Artistas');
+  localStorage.setItem('sp_shProyectos',document.getElementById('cfgProyectos').value.trim() || 'Proyectos');
+  localStorage.setItem('sp_shFinanzas', document.getElementById('cfgFinanzas').value.trim() || 'Finanzas');
+  document.getElementById('configPanel').classList.remove('show');
+  document.getElementById('configNotice').classList.remove('show');
+}
+function openConfig() {
+  const cfg = getCfg();
+  document.getElementById('cfgSheetId').value    = cfg.sheetId;
+  document.getElementById('cfgApiKey').value     = cfg.apiKey;
+  document.getElementById('cfgArtistas').value   = cfg.shArtistas;
+  document.getElementById('cfgProyectos').value  = cfg.shProyectos;
+  document.getElementById('cfgFinanzas').value   = cfg.shFinanzas;
+  document.getElementById('configPanel').classList.add('show');
+}
+
+// ═══════════════════════════════════════
+// SHEETS API
+// ═══════════════════════════════════════
+async function fetchSheet(sheetName) {
+  const cfg = getCfg();
+  if (!cfg.sheetId || !cfg.apiKey) return null;
+  const url = `https://sheets.googleapis.com/v4/spreadsheets/${cfg.sheetId}/values/${encodeURIComponent(sheetName)}?key=${cfg.apiKey}`;
+  try {
+    const r = await fetch(url);
+    if (!r.ok) return null;
+    const d = await r.json();
+    if (!d.values || d.values.length < 2) return [];
+    const [headers, ...rows] = d.values;
+    return rows.map(row => {
+      const obj = {};
+      headers.forEach((h, i) => { obj[h.trim()] = (row[i] || '').trim(); });
+      return obj;
+    });
+  } catch { return null; }
+}
+
+// ═══════════════════════════════════════
+// DEMO DATA
+// ═══════════════════════════════════════
+const DEMO_ARTIST = {
+  ArtistaID:'Art2', Nombre:'Geovanni Berzunza', AKA:'Flare PTG',
+  Correo:'flarerap@gmail.com', Telefono:'9995516669',
+  CodigoAcceso:'1234', Tipo:'Público', Imagen:'',
+};
+const DEMO_PROYECTOS = [
+  { ID:'Proyec01', 'Nombre del proyecto':'Comer', Cliente:'Art2', 'Tipo de servicio':'Grabación, Mezcla', 'Fecha inicio':'02/02/2025', 'Fecha entrega':'15/02/2025', 'Estado proyecto':'03 | Finalizado', 'Archivos entregados':'', Notas:'', Bonos:'1000' },
+  { ID:'Proyec05', 'Nombre del proyecto':'Pa\'las plebes v2', Cliente:'Art2', 'Tipo de servicio':'Mezcla, Masterización', 'Fecha inicio':'10/03/2025', 'Fecha entrega':'', 'Estado proyecto':'01 | En proceso', 'Archivos entregados':'', Notas:'Revisión pendiente', Bonos:'500' },
+];
+const DEMO_FINANZAS = [
+  { ID:'DEMO01', Concepto:'Deposito Convenio', Tipo:'Ingreso', Monto:'1000', Fecha:'11 de febrero de 2025', Proyecto:'Proyec01', Cliente:'Art2', Estado:'Pagado' },
+  { ID:'DEMO02', Concepto:'Anticipo Pa\'las plebes v2', Tipo:'Ingreso', Monto:'500', Fecha:'10 de marzo de 2025', Proyecto:'Proyec05', Cliente:'Art2', Estado:'Pagado' },
+  { ID:'DEMO03', Concepto:'Saldo pendiente', Tipo:'Ingreso', Monto:'500', Fecha:'—', Proyecto:'Proyec05', Cliente:'Art2', Estado:'Pendiente' },
+];
+
+// ═══════════════════════════════════════
+// STATE
+// ═══════════════════════════════════════
+let currentArtist = null;
+let allProyectos  = [];
+let allFinanzas   = [];
+let isDemoMode    = false;
+
+// ═══════════════════════════════════════
+// CURSOR
+// ═══════════════════════════════════════
+const cur = document.getElementById('cursor');
+const ring = document.getElementById('cursorRing');
+let mx=0,my=0,rx=0,ry=0;
+document.addEventListener('mousemove', e => { mx=e.clientX; my=e.clientY; cur.style.left=mx+'px'; cur.style.top=my+'px'; });
+(function animRing(){ rx+=(mx-rx)*.12; ry+=(my-ry)*.12; ring.style.left=rx+'px'; ring.style.top=ry+'px'; requestAnimationFrame(animRing); })();
+document.addEventListener('mouseover', e => {
+  if(e.target.closest('a,button,input')) { cur.style.width='5px'; cur.style.height='5px'; ring.style.width='48px'; ring.style.height='48px'; }
+  else { cur.style.width='10px'; cur.style.height='10px'; ring.style.width='32px'; ring.style.height='32px'; }
+});
+
+// ═══════════════════════════════════════
+// INIT
+// ═══════════════════════════════════════
+window.addEventListener('load', () => {
+  const cfg = getCfg();
+  if (!cfg.sheetId || !cfg.apiKey) {
+    document.getElementById('configNotice').classList.add('show');
+  }
+  document.getElementById('welcomeDate').textContent =
+    '// ' + new Date().toLocaleDateString('es-MX',{weekday:'long',year:'numeric',month:'long',day:'numeric'});
+});
+
+// ═══════════════════════════════════════
+// LOGIN
+// ═══════════════════════════════════════
+async function doLogin() {
+  const code = document.getElementById('accessCode').value.trim();
+  if (!code) return;
+  const btn = document.getElementById('loginBtn');
+  btn.textContent = 'Verificando...';
+  btn.classList.add('loading');
+
+  const cfg = getCfg();
+  let artist = null;
+
+  if (cfg.sheetId && cfg.apiKey) {
+    const artistas = await fetchSheet(cfg.shArtistas);
+    if (artistas) {
+      artist = artistas.find(a => a['CodigoAcceso'] === code || a['Codigo Acceso'] === code);
+    }
+  }
+
+  // fallback demo
+  if (!artist && code === DEMO_MODE_CODE) {
+    artist = DEMO_ARTIST;
+    isDemoMode = true;
+  }
+
+  btn.textContent = 'Acceder →';
+  btn.classList.remove('loading');
+
+  if (!artist) {
+    document.getElementById('loginError').style.display = 'block';
+    document.getElementById('accessCode').value = '';
+    setTimeout(() => { document.getElementById('loginError').style.display = 'none'; }, 3000);
+    return;
+  }
+
+  currentArtist = artist;
+  await loadPortal();
+}
+
+async function loadPortal() {
+  document.getElementById('loginScreen').style.display = 'none';
+  document.getElementById('portalScreen').style.display = 'block';
+
+  const nombre = currentArtist['Nombre'] || currentArtist['nombre'] || 'Artista';
+  const aka    = currentArtist['AKA'] || currentArtist['aka'] || '';
+  const id     = currentArtist['ArtistaID'] || currentArtist['ID'] || '';
+
+  document.getElementById('navArtistName').textContent = aka || nombre;
+  document.getElementById('welcomeName').textContent   = (aka || nombre).toUpperCase();
+  document.getElementById('welcomeAka').textContent    = aka ? `// ${nombre}` : '';
+
+  // Load data
+  const cfg = getCfg();
+  let proyectos = null, finanzas = null;
+
+  if (!isDemoMode && cfg.sheetId && cfg.apiKey) {
+    [proyectos, finanzas] = await Promise.all([
+      fetchSheet(cfg.shProyectos),
+      fetchSheet(cfg.shFinanzas),
+    ]);
+  }
+
+  // Filter by artist
+  allProyectos = (proyectos || DEMO_PROYECTOS).filter(p =>
+    (p['Cliente']||'').toLowerCase() === id.toLowerCase() ||
+    (p['Cliente']||'').toLowerCase() === nombre.toLowerCase()
+  );
+  allFinanzas  = (finanzas || DEMO_FINANZAS).filter(f =>
+    (f['Cliente']||'').toLowerCase() === id.toLowerCase() ||
+    (f['Cliente']||'').toLowerCase() === nombre.toLowerCase()
+  );
+
+  renderStats();
+  renderProyectos();
+  renderFinanzas();
+  renderArchivos();
+  renderPerfil();
+
+  // Reveal
+  setTimeout(() => {
+    document.querySelectorAll('.reveal').forEach((el,i) => {
+      setTimeout(() => el.classList.add('visible'), i*80);
+    });
+  }, 100);
+}
+
+// ═══════════════════════════════════════
+// STATS
+// ═══════════════════════════════════════
+function renderStats() {
+  const total      = allProyectos.length;
+  const activos    = allProyectos.filter(p => !/finalizado/i.test(p['Estado proyecto']||'')).length;
+  const finalizados= allProyectos.filter(p =>  /finalizado/i.test(p['Estado proyecto']||'')).length;
+  const pagado     = allFinanzas
+    .filter(f => /ingreso/i.test(f['Tipo']||'') && /pagado/i.test(f['Estado']||''))
+    .reduce((s,f) => s + (parseFloat(f['Monto'])||0), 0);
+
+  document.getElementById('statProyectos').textContent  = total || '0';
+  document.getElementById('statActivos').textContent    = activos || '0';
+  document.getElementById('statPagado').textContent     = pagado ? `$${pagado.toLocaleString()}` : '$0';
+  document.getElementById('statFinalizados').textContent= finalizados || '0';
+}
+
+// ═══════════════════════════════════════
+// PROYECTOS
+// ═══════════════════════════════════════
+function getStatusBadge(estado) {
+  if (!estado) return '<span class="badge badge-pending">Sin estado</span>';
+  if (/finalizado/i.test(estado)) return '<span class="badge badge-done">Finalizado</span>';
+  if (/proceso/i.test(estado))    return '<span class="badge badge-active">En proceso</span>';
+  if (/mezcla/i.test(estado))     return '<span class="badge badge-pending">Mezcla</span>';
+  if (/revision/i.test(estado))   return '<span class="badge badge-pending">Revisión</span>';
+  return `<span class="badge badge-pending">${estado.replace(/^\d+\s*\|\s*/,'')}</span>`;
+}
+
+function renderProyectos() {
+  const c = document.getElementById('proyectosContainer');
+  if (!allProyectos.length) {
+    c.innerHTML = '<div class="empty-state">// No hay proyectos registrados aún.</div>';
+    return;
+  }
+  c.innerHTML = `
+    <table class="projects-table">
+      <thead>
+        <tr>
+          <th>Proyecto</th>
+          <th>Servicio</th>
+          <th>Inicio</th>
+          <th>Entrega</th>
+          <th>Estado</th>
+          <th>Bonos</th>
+        </tr>
+      </thead>
+      <tbody>
+        ${allProyectos.map(p => `
+          <tr>
+            <td>
+              <div class="project-name">${p['Nombre del proyecto']||'—'}</div>
+              <div class="project-service">${p['ID']||''}</div>
+            </td>
+            <td><span style="font-family:'DM Mono',monospace;font-size:.7rem;color:var(--muted)">${p['Tipo de servicio']||'—'}</span></td>
+            <td><span style="font-family:'DM Mono',monospace;font-size:.7rem;color:var(--muted)">${p['Fecha inicio']||'—'}</span></td>
+            <td><span style="font-family:'DM Mono',monospace;font-size:.7rem;color:var(--muted)">${p['Fecha entrega']||'—'}</span></td>
+            <td>${getStatusBadge(p['Estado proyecto'])}</td>
+            <td><span style="font-family:'Bebas Neue',sans-serif;color:var(--purple-light);font-size:1.1rem">${p['Bonos']||p['Bonos incluidos']||'—'}</span></td>
+          </tr>
+        `).join('')}
+      </tbody>
+    </table>
+  `;
+}
+
+// ═══════════════════════════════════════
+// FINANZAS
+// ═══════════════════════════════════════
+function renderFinanzas() {
+  const c = document.getElementById('finanzasContainer');
+  if (!allFinanzas.length) {
+    c.innerHTML = '<div class="empty-state">// No hay movimientos registrados aún.</div>';
+    return;
+  }
+  c.innerHTML = `<div class="finance-grid">${allFinanzas.map(f => {
+    const isIncome = /ingreso/i.test(f['Tipo']||'');
+    const isPaid   = /pagado/i.test(f['Estado']||'');
+    const monto    = parseFloat(f['Monto'])||0;
+    return `
+      <div class="finance-card">
+        <div class="finance-card-top">
+          <div class="finance-id">${f['ID']||''}</div>
+          ${isPaid
+            ? '<span class="badge badge-paid">Pagado</span>'
+            : '<span class="badge badge-unpaid">Pendiente</span>'}
+        </div>
+        <div class="finance-concept">${f['Concepto']||'—'}</div>
+        <div class="finance-date">${f['Fecha']||'—'}</div>
+        <div class="finance-amount ${isIncome?'income':'expense'}">
+          ${isIncome?'+':'-'}$${monto.toLocaleString()} MXN
+        </div>
+      </div>
+    `;
+  }).join('')}</div>`;
+}
+
+// ═══════════════════════════════════════
+// ARCHIVOS
+// ═══════════════════════════════════════
+function renderArchivos() {
+  const c = document.getElementById('archivosContainer');
+  const withFiles = allProyectos.filter(p => p['Archivos entregados'] && p['Archivos entregados'].startsWith('http'));
+  if (!withFiles.length) {
+    c.innerHTML = `<div class="files-notice">
+      Aquí aparecerán los links de descarga de tus archivos.<br>
+      El estudio los agrega directamente en tu hoja de Proyectos.<br><br>
+      <span style="color:var(--muted2)">// Agrega links de Google Drive en la columna "Archivos entregados"</span>
+    </div>`;
+    return;
+  }
+  c.innerHTML = `<div style="display:flex;flex-direction:column;gap:1px;border:1px solid var(--border)">
+    ${withFiles.map(p => `
+      <div style="display:flex;justify-content:space-between;align-items:center;padding:1.2rem 1.5rem;background:var(--surface)">
+        <div>
+          <div style="font-weight:600;margin-bottom:.3rem">${p['Nombre del proyecto']}</div>
+          <div style="font-family:'DM Mono',monospace;font-size:.65rem;color:var(--muted)">${p['Tipo de servicio']||''}</div>
+        </div>
+        <a href="${p['Archivos entregados']}" target="_blank"
+          style="font-family:'DM Mono',monospace;font-size:.7rem;letter-spacing:.1em;text-transform:uppercase;
+                 color:var(--purple-light);border:1px solid var(--purple-dim);padding:.5rem 1.2rem;text-decoration:none;
+                 transition:background .2s"
+          onmouseover="this.style.background='var(--purple)';this.style.color='#fff'"
+          onmouseout="this.style.background='';this.style.color='var(--purple-light)'">
+          Descargar →
+        </a>
+      </div>
+    `).join('')}
+  </div>`;
+}
+
+// ═══════════════════════════════════════
+// PERFIL
+// ═══════════════════════════════════════
+function renderPerfil() {
+  const c  = document.getElementById('perfilContainer');
+  const a  = currentArtist;
+  const initials = (a['Nombre']||'?').split(' ').map(w=>w[0]).join('').slice(0,2).toUpperCase();
+  const imgSrc = a['Imagen'] || '';
+  c.innerHTML = `
+    <div class="profile-card">
+      <div class="profile-avatar">
+        ${imgSrc ? `<img src="${imgSrc}" alt="${a['Nombre']}"/>` : initials}
+      </div>
+      <div>
+        <div class="profile-name">${a['Nombre']||'—'}</div>
+        ${a['AKA'] ? `<div class="profile-aka">// ${a['AKA']}</div>` : ''}
+        <div class="profile-meta">
+          ${a['Correo']    ? `<div class="profile-meta-item">Correo &nbsp;<strong>${a['Correo']}</strong></div>`    : ''}
+          ${a['Telefono']  ? `<div class="profile-meta-item">Tel &nbsp;<strong>${a['Telefono']}</strong></div>`     : ''}
+          ${a['Tipo']      ? `<div class="profile-meta-item">Tipo &nbsp;<strong>${a['Tipo']}</strong></div>`        : ''}
+          ${a['ArtistaID'] ? `<div class="profile-meta-item">ID &nbsp;<strong>${a['ArtistaID']}</strong></div>`     : ''}
+        </div>
+      </div>
+    </div>
+    ${isDemoMode ? `<div style="margin-top:1rem;padding:1rem;border:1px solid var(--purple-dim);font-family:'DM Mono',monospace;font-size:.65rem;color:var(--purple-light);letter-spacing:.08em;line-height:1.6">
+      // Modo demo activo. <a href="#" onclick="openConfig()" style="color:var(--purple-light)">Conecta tu Google Sheets</a> para ver datos reales.
+    </div>` : ''}
+  `;
+}
+
+// ═══════════════════════════════════════
+// TABS
+// ═══════════════════════════════════════
+function switchTab(name) {
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+  event.target.classList.add('active');
+  document.getElementById('tab-'+name).classList.add('active');
+}
+
+// ═══════════════════════════════════════
+// LOGOUT
+// ═══════════════════════════════════════
+function doLogout() {
+  currentArtist = null; allProyectos = []; allFinanzas = []; isDemoMode = false;
+  document.getElementById('portalScreen').style.display = 'none';
+  document.getElementById('loginScreen').style.display  = 'flex';
+  document.getElementById('accessCode').value = '';
+}
+</script>
+</body>
+</html>
