@@ -290,7 +290,7 @@ body::before{content:'';position:fixed;inset:0;background-image:url("data:image/
           <input class="filter-input" id="searchArtistas" placeholder="// Buscar artista..." oninput="renderArtistas()"/>
           <select class="filter-select" id="filterTipoArt" onchange="renderArtistas()">
             <option value="">Todos los niveles</option>
-            <option>Público</option><option>Membresía Core</option><option>Pro</option><option>Cliente regular</option>
+            <option>Estándar</option><option>Miembro</option><option>Pro</option><option>Estándar</option>
           </select>
         </div>
         <div id="artistasContainer"><div class="loading-state"><div class="spinner"></div>Cargando artistas...</div></div>
@@ -378,7 +378,7 @@ body::before{content:'';position:fixed;inset:0;background-image:url("data:image/
           <input class="filter-input" id="searchCursos" placeholder="// Buscar curso..." oninput="renderCursosAdmin()"/>
           <select class="filter-select" id="filterTipoCurso" onchange="renderCursosAdmin()">
             <option value="">Todos los niveles</option>
-            <option value="Público">Público</option>
+            <option value="Estándar">Estándar</option>
             <option value="User">Miembros</option>
             <option value="Pro">Pro</option>
           </select>
@@ -400,7 +400,7 @@ body::before{content:'';position:fixed;inset:0;background-image:url("data:image/
                 <option>Paquete Esencia Privada</option><option>Paquete Experiencia Elevada</option>
                 <option>Grabación, Mezcla, Masterización</option><option>Grabación, Mezcla</option>
                 <option>Mezcla, Masterización</option><option>Solo Mezcla</option><option>Solo Masterización</option>
-                <option>Beat Presencial</option><option>Beat por encargo</option><option>Membresía Core</option><option>Pro</option>
+                <option>Beat Presencial</option><option>Beat por encargo</option><option>Miembro</option><option>Pro</option>
               </select>
             </div>
             <div class="form-group"><label class="form-label">Estado inicial</label>
@@ -445,7 +445,7 @@ body::before{content:'';position:fixed;inset:0;background-image:url("data:image/
         <div class="form-group"><label class="form-label">Código de acceso</label><input class="form-input" id="maCodigo" placeholder="ej: SNOKI2026"/></div>
         <div class="form-group"><label class="form-label">Nivel</label>
           <select class="form-input" id="maTipo">
-            <option>Público</option><option>Membresía Core</option><option>Pro</option><option>Cliente regular</option>
+            <option>Estándar</option><option>Miembro</option><option>Pro</option><option>Estándar</option>
           </select>
         </div>
         <div class="form-group full"><label class="form-label">Link imagen (Drive: lh3.googleusercontent.com/d/ID)</label><input class="form-input" id="maImagen" placeholder="https://lh3.googleusercontent.com/d/..."/></div>
@@ -473,6 +473,7 @@ body::before{content:'';position:fixed;inset:0;background-image:url("data:image/
         <div class="form-group"><label class="form-label">Tipo de servicio</label><input class="form-input" id="mpServicio"/></div>
         <div class="form-group"><label class="form-label">Estado</label>
           <select class="form-input" id="mpEstado">
+            <option value="00 | En espera">En espera</option>
             <option value="01 | En proceso">En proceso</option><option value="02 | En mezcla">En mezcla</option>
             <option value="03 | En revisión">En revisión</option><option value="04 | Finalizado">Finalizado</option>
             <option value="05 | Cancelado">Cancelado</option>
@@ -540,7 +541,7 @@ body::before{content:'';position:fixed;inset:0;background-image:url("data:image/
         <div class="form-group full"><label class="form-label">Título</label><input class="form-input" id="curTitulo" placeholder="Nombre del curso"/></div>
         <div class="form-group"><label class="form-label">Nivel de acceso</label>
           <select class="form-input" id="curTipo">
-            <option value="Público">Público — todos lo ven</option>
+            <option value="Estándar">Estándar — todos lo ven</option>
             <option value="User">Miembros — Core y Pro</option>
             <option value="Pro">Pro — solo Pro</option>
           </select>
@@ -804,6 +805,7 @@ function getBadge(e){
   if(/proceso/i.test(e))return'<span class="badge badge-active">En proceso</span>';
   if(/mezcla/i.test(e))return'<span class="badge badge-pending">En mezcla</span>';
   if(/revision/i.test(e))return'<span class="badge badge-pending">Revisión</span>';
+  if(/espera/i.test(e))return'<span class="badge" style="background:rgba(251,191,36,.1);color:var(--yellow);border:1px solid rgba(251,191,36,.3);">En espera</span>';
   if(/cancelado/i.test(e))return'<span class="badge badge-unpaid">Cancelado</span>';
   return`<span class="badge badge-pending">${e.replace(/^\d+\s*\|\s*/,'')}</span>`;
 }
@@ -929,7 +931,7 @@ function editArtista(rowNum){
   document.getElementById('maTel').value=a['Telefono']||'';
   document.getElementById('maCorreo').value=a['Correo']||'';
   document.getElementById('maCodigo').value=a['CodigoAcceso']||'';
-  document.getElementById('maTipo').value=a['Tipo']||'Público';
+  document.getElementById('maTipo').value=a['Tipo']||'Estándar';
   document.getElementById('maImagen').value=a['Imagen']||'';
   openModal('modalArtista');
 }
@@ -1023,7 +1025,7 @@ function renderProyectos(){
     const arch=p['Archivos entregados']||'';
     const solicitado=parseFloat(p['Solicitado'])||0;
     const cobradoProy=allFinanzas
-      .filter(f=>f['Proyecto']===p['ID']&&(f['Tipo']||'').toLowerCase()==='ingreso')
+      .filter(f=>f['Proyecto']===p['ID']&&(f['Tipo']||'').toLowerCase()==='ingreso'&&/pagado/i.test(f['Estado']||''))
       .reduce((s,f)=>s+(parseFloat(f['Monto'])||0),0);
     let liqHtml='<span style="color:var(--muted2)">—</span>';
     if(solicitado>0){
@@ -1430,7 +1432,7 @@ function renderCursosAdmin(){
   const nivelBadge=(tipo)=>{
     if(tipo==='Pro') return'<span class="badge" style="background:rgba(251,191,36,.1);color:var(--yellow);border:1px solid rgba(251,191,36,.2);">Pro</span>';
     if(tipo==='User') return'<span class="badge badge-active">Miembros</span>';
-    return'<span class="badge badge-paid">Público</span>';
+    return'<span class="badge badge-paid">Estándar</span>';
   };
 
   container.innerHTML=`<table class="data-table"><thead><tr>
@@ -1438,7 +1440,7 @@ function renderCursosAdmin(){
   </tr></thead><tbody>${list.map(c=>`<tr>
     <td style="font-family:DM Mono,monospace;font-size:.65rem;color:var(--muted2)">${c['CursoID']||'—'}</td>
     <td style="font-weight:600">${c['Titulo']||'—'}</td>
-    <td>${nivelBadge(c['TipoCurso']||'Público')}</td>
+    <td>${nivelBadge(c['TipoCurso']||'Estándar')}</td>
     <td>${c['Video']?`<a href="${c['Video']}" target="_blank" style="font-family:DM Mono,monospace;font-size:.65rem;color:var(--purple-light);text-decoration:none;">▶ Ver</a>`:'—'}</td>
     <td style="font-family:DM Mono,monospace;font-size:.68rem;color:var(--muted);max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${c['Descripcion']||'—'}</td>
     <td><div class="td-actions">
@@ -1454,7 +1456,7 @@ function editCurso(rowNum){
   document.getElementById('modalCursoTitle').textContent='EDITAR CURSO';
   document.getElementById('curRowNum').value=rowNum;
   document.getElementById('curTitulo').value=c['Titulo']||'';
-  document.getElementById('curTipo').value=c['TipoCurso']||'Público';
+  document.getElementById('curTipo').value=c['TipoCurso']||'Estándar';
   document.getElementById('curVideo').value=c['Video']||'';
   document.getElementById('curDesc').value=c['Descripcion']||'';
   openModal('modalCurso');
