@@ -799,12 +799,12 @@
 // ═══════════════════════════════════════
 // CONFIG
 // ═══════════════════════════════════════
-const DEMO_MODE_CODE = '1234';
+const DEMO_MODE_CODE = '300209';
 
 function getCfg() {
   return {
-    sheetId:    localStorage.getItem('sp_sheetId') || '18-hf-2pCs1UhUUi66Ke_JmheavXk_V-Enus0p3yfNd0',
-    apiKey:     localStorage.getItem('sp_apiKey')  || 'AIzaSyC6K7d8zJc2TVrchsJQeIAfHEGJ5drA74c',
+    sheetId: localStorage.getItem('sp_sheetId') || '',
+    apiKey:  localStorage.getItem('sp_apiKey')  || '',
     shArtistas:  localStorage.getItem('sp_shArtistas')  || 'Artistas',
     shProyectos: localStorage.getItem('sp_shProyectos') || 'Proyectos',
     shFinanzas:  localStorage.getItem('sp_shFinanzas')  || 'Finanzas',
@@ -1065,7 +1065,7 @@ function renderProyectos() {
         </tr>
       </thead>
       <tbody>
-        ${allProyectos.map(p => `
+        ${[...allProyectos].reverse().map(p => `
           <tr>
             <td>
               <div class="project-name">${p['Nombre del proyecto']||'—'}</div>
@@ -1092,12 +1092,20 @@ function renderFinanzas() {
     c.innerHTML = '<div class="empty-state">// No hay movimientos registrados aún.</div>';
     return;
   }
-  c.innerHTML = `<div class="finance-grid">${allFinanzas.map(f => {
+  const pendientes = allFinanzas.filter(f => !/pagado/i.test(f['Estado']||''));
+  const pagados    = [...allFinanzas.filter(f => /pagado/i.test(f['Estado']||''))].reverse();
+  const totalPend  = pendientes.reduce((s,f) => s+(parseFloat(f['Monto'])||0), 0);
+  const alertHtml  = pendientes.length
+    ? `<div style="background:rgba(248,113,113,.08);border:1px solid rgba(248,113,113,.3);padding:1rem 1.5rem;margin-bottom:1.5rem;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:.5rem;">
+        <div style="font-family:'DM Mono',monospace;font-size:.7rem;color:var(--red);letter-spacing:.1em;">// ${pendientes.length} pago${pendientes.length>1?'s':''} pendiente${pendientes.length>1?'s':''}</div>
+        <div style="font-family:'Bebas Neue',sans-serif;font-size:1.6rem;color:var(--red);">$${totalPend.toLocaleString()} MXN por saldar</div>
+      </div>` : '';
+  c.innerHTML = alertHtml + `<div class="finance-grid">${[...pendientes, ...pagados].map(f => {
     const isIncome = /ingreso/i.test(f['Tipo']||'');
     const isPaid   = /pagado/i.test(f['Estado']||'');
     const monto    = parseFloat(f['Monto'])||0;
     return `
-      <div class="finance-card">
+      <div class="finance-card" style="${!isPaid?'border:1px solid rgba(248,113,113,.25);':''}">
         <div class="finance-card-top">
           <div class="finance-id">${f['ID']||''}</div>
           ${isPaid
@@ -1119,7 +1127,7 @@ function renderFinanzas() {
 // ═══════════════════════════════════════
 function renderArchivos() {
   const c = document.getElementById('archivosContainer');
-  const withFiles = allProyectos.filter(p => p['Archivos entregados'] && p['Archivos entregados'].startsWith('http'));
+  const withFiles = [...allProyectos].reverse().filter(p => p['Archivos entregados'] && p['Archivos entregados'].startsWith('http'));
   if (!withFiles.length) {
     c.innerHTML = `<div class="files-notice">
       Aquí aparecerán los links de descarga de tus archivos.<br>
@@ -1167,8 +1175,7 @@ function renderPerfil() {
         <div class="profile-meta">
           ${a['Correo']    ? `<div class="profile-meta-item">Correo &nbsp;<strong>${a['Correo']}</strong></div>`    : ''}
           ${a['Telefono']  ? `<div class="profile-meta-item">Tel &nbsp;<strong>${a['Telefono']}</strong></div>`     : ''}
-          ${a['Tipo']      ? `<div class="profile-meta-item">Tipo &nbsp;<strong>${a['Tipo']}</strong></div>`        : ''}
-          ${a['ArtistaID'] ? `<div class="profile-meta-item">ID &nbsp;<strong>${a['ArtistaID']}</strong></div>`     : ''}
+          ${a['Tipo']      ? `<div class="profile-meta-item">Nivel &nbsp;<strong>${a['Tipo']}</strong></div>`        : ''}
         </div>
       </div>
     </div>
