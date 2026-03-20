@@ -1048,9 +1048,9 @@ function renderFinanzas(){
     return m&&e;
   });
   // Calcular stats globales (sobre TODOS los registros, no solo la vista)
-  const allIngresosCobrados=allFinanzas.filter(f=>/ingreso/i.test(f['Tipo']||'')&&/pagado/i.test(f['Estado']||'')).reduce((s,f)=>s+(parseFloat(f['Monto'])||0),0);
-  const allPorCobrar=allFinanzas.filter(f=>/ingreso/i.test(f['Tipo']||'')&&/pendiente/i.test(f['Estado']||'')).reduce((s,f)=>s+(parseFloat(f['Monto'])||0),0);
-  const allGastos=allFinanzas.filter(f=>/gasto/i.test(f['Tipo']||'')).reduce((s,f)=>s+(parseFloat(f['Monto'])||0),0);
+  const allIngresosCobrados=allFinanzas.filter(f=>(f['Tipo']||'').toLowerCase()==='ingreso'&&/pagado/i.test(f['Estado']||'')).reduce((s,f)=>s+(parseFloat(f['Monto'])||0),0);
+  const allPorCobrar=allFinanzas.filter(f=>(f['Tipo']||'').toLowerCase()==='ingreso'&&/pendiente/i.test(f['Estado']||'')).reduce((s,f)=>s+(parseFloat(f['Monto'])||0),0);
+  const allGastos=allFinanzas.filter(f=>(f['Tipo']||'').toLowerCase()==='gasto').reduce((s,f)=>s+(parseFloat(f['Monto'])||0),0);
   const balance=allIngresosCobrados-allGastos;
   document.getElementById('finCobrado').textContent=fmt(allIngresosCobrados);
   document.getElementById('finPend').textContent=fmt(allPorCobrar);
@@ -1113,7 +1113,8 @@ async function guardarPago(){
   const rowNum=parseInt(document.getElementById('fpRowNum').value)||0;
   const concepto=document.getElementById('fpConcepto').value.trim();
   if(!concepto){toast('Concepto requerido','error');return;}
-  const tipo=document.getElementById('fpTipo').value||'Ingreso';
+  const tipo=document.getElementById('fpTipo').value;
+  if(!tipo){toast('El tipo es obligatorio (Ingreso o Gasto)','error');return;}
   const artista=document.getElementById('fpArtista').value||'';
   const monto=Math.abs(parseFloat(document.getElementById('fpMonto').value)||0).toString();
   const rawFecha=document.getElementById('fpFecha').value||'';
