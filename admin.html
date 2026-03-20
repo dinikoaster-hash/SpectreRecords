@@ -440,12 +440,12 @@ body::before{content:'';position:fixed;inset:0;background-image:url("data:image/
       <div class="form-grid">
         <div class="form-group"><label class="form-label">Nombre completo</label><input class="form-input" id="maNombre" placeholder="Nombre real"/></div>
         <div class="form-group"><label class="form-label">AKA / Nombre artístico</label><input class="form-input" id="maAka" placeholder="Nombre artístico"/></div>
-        <div class="form-group"><label class="form-label">Teléfono</label><input class="form-input" id="maTel" placeholder="9991234567"/></div>
         <div class="form-group"><label class="form-label">Correo</label><input class="form-input" id="maCorreo" placeholder="artista@email.com"/></div>
+        <div class="form-group"><label class="form-label">Teléfono</label><input class="form-input" id="maTel" placeholder="9991234567"/></div>
         <div class="form-group"><label class="form-label">Código de acceso</label><input class="form-input" id="maCodigo" placeholder="ej: SNOKI2026"/></div>
         <div class="form-group"><label class="form-label">Nivel</label>
           <select class="form-input" id="maTipo">
-            <option>Estándar</option><option>Miembro</option><option>Pro</option><option>Estándar</option>
+            <option>Estándar</option><option>Miembro</option><option>Pro</option>
           </select>
         </div>
         <div class="form-group full"><label class="form-label">Link imagen (Drive: lh3.googleusercontent.com/d/ID)</label><input class="form-input" id="maImagen" placeholder="https://lh3.googleusercontent.com/d/..."/></div>
@@ -959,12 +959,13 @@ async function guardarArtista(){
   if(!nombre){toast('Nombre requerido','error');return;}
   const existingArtista=rowNum?allArtistas.find(a=>a._rowNumber===rowNum):null;
   const newId=existingArtista?existingArtista['ArtistaID']||'':nextId(allArtistas,'ArtistaID','Art');
+  // Sheet columns: ArtistaID|Nombre|AKA|Correo|Telefono|CodigoAcceso|Tipo|Imagen
   const values=[
     newId,
     nombre,
     document.getElementById('maAka').value.trim(),
-    document.getElementById('maTel').value.trim(),
     document.getElementById('maCorreo').value.trim(),
+    document.getElementById('maTel').value.trim(),
     document.getElementById('maCodigo').value.trim(),
     document.getElementById('maTipo').value,
     document.getElementById('maImagen').value.trim(),
