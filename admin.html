@@ -259,6 +259,7 @@ body::before{content:'';position:fixed;inset:0;background-image:url("data:image/
           <div class="stat-card"><div class="stat-label">Cobrado</div><div class="stat-value sv-green" id="stCobrado">—</div></div>
           <div class="stat-card"><div class="stat-label">Por cobrar</div><div class="stat-value sv-red" id="stPendiente">—</div></div>
           <div class="stat-card"><div class="stat-label">Finalizados</div><div class="stat-value sv-green" id="stFinalizados">—</div></div>
+          <div class="stat-card"><div class="stat-label">Cancelados</div><div class="stat-value sv-red" id="stCancelados">—</div></div>
         </div>
         <div class="dash-section">
           <div class="dash-eyebrow">// Proyectos en curso</div>
@@ -276,7 +277,10 @@ body::before{content:'';position:fixed;inset:0;background-image:url("data:image/
       <div class="page" id="page-artistas">
         <div class="page-header">
           <div><div class="page-eyebrow">// Directorio</div><div class="page-title">ARTISTAS</div></div>
-          <button class="btn btn-gold" onclick="openModal('modalArtista')">+ Nuevo artista</button>
+          <div style="display:flex;gap:.6rem;">
+            <button class="btn btn-ghost" onclick="loadAdmin()" style="font-size:.65rem;padding:.6rem 1.2rem;">⟳ Actualizar</button>
+            <button class="btn btn-gold" onclick="openModal('modalArtista')">+ Nuevo artista</button>
+          </div>
         </div>
         <div class="filter-bar">
           <input class="filter-input" id="searchArtistas" placeholder="// Buscar artista..." oninput="renderArtistas()"/>
@@ -292,7 +296,10 @@ body::before{content:'';position:fixed;inset:0;background-image:url("data:image/
       <div class="page" id="page-proyectos">
         <div class="page-header">
           <div><div class="page-eyebrow">// Todos los proyectos</div><div class="page-title">PROYECTOS</div></div>
-          <button class="btn btn-gold" onclick="showPage('nuevo',document.querySelector('.nav-item:nth-child(5)'))">+ Nuevo</button>
+          <div style="display:flex;gap:.6rem;">
+            <button class="btn btn-ghost" onclick="loadAdmin()" style="font-size:.65rem;padding:.6rem 1.2rem;">⟳ Actualizar</button>
+            <button class="btn btn-gold" onclick="showPage('nuevo',document.querySelector('.nav-item:nth-child(5)'))">+ Nuevo</button>
+          </div>
         </div>
         <div class="filter-bar">
           <input class="filter-input" id="searchProyectos" placeholder="// Buscar proyecto o artista..." oninput="renderProyectos()"/>
@@ -308,7 +315,10 @@ body::before{content:'';position:fixed;inset:0;background-image:url("data:image/
       <div class="page" id="page-finanzas">
         <div class="page-header">
           <div><div class="page-eyebrow">// Flujo de caja</div><div class="page-title">FINANZAS</div></div>
-          <button class="btn btn-gold" onclick="openModal('modalPago')">+ Nuevo pago</button>
+          <div style="display:flex;gap:.6rem;">
+            <button class="btn btn-ghost" onclick="loadAdmin()" style="font-size:.65rem;padding:.6rem 1.2rem;">⟳ Actualizar</button>
+            <button class="btn btn-gold" onclick="openModal('modalPago')">+ Nuevo pago</button>
+          </div>
         </div>
         <div class="fin-summary">
           <div class="fin-card"><div class="fin-label">Cobrado</div><div class="fin-val" style="color:var(--green)" id="finCobrado">$0</div></div>
@@ -409,12 +419,13 @@ body::before{content:'';position:fixed;inset:0;background-image:url("data:image/
       <input type="hidden" id="mpRowNum"/>
       <div class="form-grid">
         <div class="form-group"><label class="form-label">Nombre del proyecto</label><input class="form-input" id="mpNombre"/></div>
-        <div class="form-group"><label class="form-label">Artista (ID)</label><input class="form-input" id="mpCliente"/></div>
+        <div class="form-group"><label class="form-label">Artista</label><select class="form-input" id="mpCliente"><option value="">Seleccionar artista...</option></select></div>
         <div class="form-group"><label class="form-label">Tipo de servicio</label><input class="form-input" id="mpServicio"/></div>
         <div class="form-group"><label class="form-label">Estado</label>
           <select class="form-input" id="mpEstado">
             <option value="01 | En proceso">En proceso</option><option value="02 | En mezcla">En mezcla</option>
             <option value="03 | En revisión">En revisión</option><option value="04 | Finalizado">Finalizado</option>
+            <option value="05 | Cancelado">Cancelado</option>
           </select>
         </div>
         <div class="form-group"><label class="form-label">Fecha inicio</label><input class="form-input" id="mpFechaI"/></div>
@@ -525,7 +536,9 @@ function doLogout(){
   document.getElementById('adminScreen').style.display='none';
   document.getElementById('loginScreen').style.display='flex';
   document.getElementById('adminPass').value='';
-  oauthToken=null; updateOAuthUI(false);
+  oauthToken=null;
+  sessionStorage.removeItem('adm_oauth_token');
+  updateOAuthUI(false);
 }
 
 // ════════════════════════════════════════════
@@ -539,6 +552,7 @@ function iniciarOAuth(){
       callback:(resp)=>{
         if(resp.error){toast('Error OAuth: '+resp.error,'error');return;}
         oauthToken=resp.access_token;
+        sessionStorage.setItem('adm_oauth_token', oauthToken);
         updateOAuthUI(true);
         toast('✓ Google Sheets conectado — escritura activa','success');
       }
@@ -645,6 +659,11 @@ async function uploadToDrive(file){
 // LOAD
 // ════════════════════════════════════════════
 async function loadAdmin(){
+  // Restore OAuth token from session if available
+  if(!oauthToken){
+    const saved=sessionStorage.getItem('adm_oauth_token');
+    if(saved){ oauthToken=saved; updateOAuthUI(true); }
+  }
   [allArtistas,allProyectos,allFinanzas]=await Promise.all([
     fetchSheet(SH.artistas),fetchSheet(SH.proyectos),fetchSheet(SH.finanzas)
   ]);
@@ -671,6 +690,7 @@ function getBadge(e){
   if(/proceso/i.test(e))return'<span class="badge badge-active">En proceso</span>';
   if(/mezcla/i.test(e))return'<span class="badge badge-pending">En mezcla</span>';
   if(/revision/i.test(e))return'<span class="badge badge-pending">Revisión</span>';
+  if(/cancelado/i.test(e))return'<span class="badge badge-unpaid">Cancelado</span>';
   return`<span class="badge badge-pending">${e.replace(/^\d+\s*\|\s*/,'')}</span>`;
 }
 function fmt(n){return n?'$'+parseFloat(n).toLocaleString('es-MX'):'$0';}
@@ -679,18 +699,21 @@ function fmt(n){return n?'$'+parseFloat(n).toLocaleString('es-MX'):'$0';}
 // DASHBOARD
 // ════════════════════════════════════════════
 function renderDashboard(){
-  const activos=allProyectos.filter(p=>!/finalizado/i.test(p['Estado proyecto']||'')).length;
+  const activos=allProyectos.filter(p=>!/finalizado|cancelado/i.test(p['Estado proyecto']||'')).length;
   const fin=allProyectos.filter(p=>/finalizado/i.test(p['Estado proyecto']||'')).length;
+  const cancelados=allProyectos.filter(p=>/cancelado/i.test(p['Estado proyecto']||'')).length;
   const cobrado=allFinanzas.filter(f=>/pagado/i.test(f['Estado']||'')).reduce((s,f)=>s+(parseFloat(f['Monto'])||0),0);
   const pend=allFinanzas.filter(f=>/pendiente/i.test(f['Estado']||'')).reduce((s,f)=>s+(parseFloat(f['Monto'])||0),0);
   document.getElementById('stArtistas').textContent=allArtistas.length||'0';
   document.getElementById('stActivos').textContent=activos||'0';
   document.getElementById('stFinalizados').textContent=fin||'0';
+  const stCan=document.getElementById('stCancelados');
+  if(stCan) stCan.textContent=cancelados||'0';
   document.getElementById('stCobrado').textContent=fmt(cobrado);
   document.getElementById('stPendiente').textContent=fmt(pend);
   document.getElementById('stTotal').textContent=fmt(cobrado+pend);
 
-  const al=allProyectos.filter(p=>!/finalizado/i.test(p['Estado proyecto']||''));
+  const al=allProyectos.filter(p=>!/finalizado|cancelado/i.test(p['Estado proyecto']||''));
   document.getElementById('dashProyectos').innerHTML=al.length
     ?`<div class="table-wrap"><table class="data-table"><thead><tr><th>Proyecto</th><th>Artista</th><th>Servicio</th><th>Estado</th></tr></thead><tbody>
       ${al.slice(-10).reverse().map(p=>{const a=getArtista(p['Cliente']);return`<tr>
@@ -845,6 +868,7 @@ function editProyecto(rowNum){
   if(!p) return;
   document.getElementById('mpRowNum').value=rowNum;
   document.getElementById('mpNombre').value=p['Nombre del proyecto']||'';
+  // Set after populate — value is ArtistaID
   document.getElementById('mpCliente').value=p['Cliente']||'';
   document.getElementById('mpServicio').value=p['Tipo de servicio']||'';
   document.getElementById('mpEstado').value=p['Estado proyecto']||'01 | En proceso';
@@ -870,7 +894,7 @@ async function actualizarProyecto(){
   const values=[
     p['ID']||'',
     document.getElementById('mpNombre').value.trim(),
-    document.getElementById('mpCliente').value.trim(),
+    document.getElementById('mpCliente').value,
     document.getElementById('mpServicio').value.trim(),
     document.getElementById('mpFechaI').value.trim(),
     document.getElementById('mpFechaE').value.trim(),
@@ -904,7 +928,10 @@ function renderFinanzas(){
   document.getElementById('finTotal2').textContent=fmt(cobrado+pend);
   document.getElementById('finMovs').textContent=list.length;
   if(!list.length){document.getElementById('finanzasContainer').innerHTML='<div class="empty-state">// No se encontraron movimientos</div>';return;}
-  const sorted=[...list.filter(f=>/pendiente/i.test(f['Estado']||'')),...list.filter(f=>/pagado/i.test(f['Estado']||'')).reverse()];
+  // Pendientes primero (más recientes arriba), luego pagados (más recientes arriba)
+  const pendList=[...list.filter(f=>/pendiente/i.test(f['Estado']||''))].reverse();
+  const pagList=[...list.filter(f=>/pagado/i.test(f['Estado']||''))].reverse();
+  const sorted=[...pendList,...pagList];
   document.getElementById('finanzasContainer').innerHTML=`<table class="data-table"><thead><tr>
     <th>Concepto</th><th>Artista</th><th>Fecha</th><th>Monto</th><th>Estado</th><th>Acciones</th>
   </tr></thead><tbody>${sorted.map(f=>{
@@ -969,7 +996,7 @@ async function guardarPago(){
 // NUEVO PROYECTO
 // ════════════════════════════════════════════
 function populateArtistSelects(){
-  ['npArtista','fpArtista'].forEach(selId=>{
+  ['npArtista','fpArtista','mpCliente'].forEach(selId=>{
     const sel=document.getElementById(selId);
     if(!sel) return;
     const cur=sel.value;
