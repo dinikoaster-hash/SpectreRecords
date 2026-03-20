@@ -577,17 +577,27 @@ function updateOAuthUI(on){
 // ════════════════════════════════════════════
 async function fetchSheet(name){
   try{
-    const r=await fetch(`https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}/values/${encodeURIComponent(name)}?key=${API_KEY}`);
-    if(!r.ok) return [];
+    // Cache buster para forzar datos frescos de Google Sheets
+    const ts=Date.now();
+    const url=`https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}/values/${encodeURIComponent(name)}?key=${API_KEY}&_=${ts}`;
+    const r=await fetch(url, {cache:'no-store'});
+    if(!r.ok){
+      console.error('fetchSheet error:', name, r.status, await r.text());
+      return [];
+    }
     const d=await r.json();
+    console.log(`fetchSheet ${name}:`, d.values ? d.values.length-1 : 0, 'filas');
     if(!d.values||d.values.length<2) return [];
     const[headers,...rows]=d.values;
-    return rows.map((row,i)=>{
-      const o={_rowNumber:i+2}; // 1-indexed, +1 for header row
-      headers.forEach((h,j)=>{o[h.trim()]=(row[j]||'').trim();});
-      return o;
-    });
-  }catch{return [];}
+    return rows
+      .map((row,i)=>({row,actualIndex:i+2})) // preserve real row number before filter
+      .filter(({row})=>row.some(cell=>cell&&cell.trim()!=='')) // skip empty rows
+      .map(({row,actualIndex})=>{
+        const o={_rowNumber:actualIndex};
+        headers.forEach((h,j)=>{o[h.trim()]=(row[j]||'').trim();});
+        return o;
+      });
+  }catch(e){console.error('fetchSheet exception:',e);return [];}
 }
 
 // ════════════════════════════════════════════
@@ -664,12 +674,14 @@ async function uploadToDrive(file){
 // ════════════════════════════════════════════
 // LOAD
 // ════════════════════════════════════════════
-async function loadAdmin(){
+async function loadAdmin(delay=0){
   // Restore OAuth token from session if available
   if(!oauthToken){
     const saved=sessionStorage.getItem('adm_oauth_token');
     if(saved){ oauthToken=saved; updateOAuthUI(true); }
   }
+  // Small delay after writes so Sheets API returns fresh data
+  if(delay>0) await new Promise(r=>setTimeout(r,delay));
   [allArtistas,allProyectos,allFinanzas]=await Promise.all([
     fetchSheet(SH.artistas),fetchSheet(SH.proyectos),fetchSheet(SH.finanzas)
   ]);
@@ -808,9 +820,16 @@ function nextId(list, field, prefix){
   const nums=list.map(item=>{
     const v=(item[field]||'').replace(new RegExp('^'+prefix,'i'),'');
     return parseInt(v)||0;
-  });
+  }).filter(n=>!isNaN(n)&&n>0);
   const max=nums.length?Math.max(...nums):0;
-  return prefix+(max+1);
+  const next=max+1;
+  // Decide zero-padding based on prefix style
+  // HEAVEN → HEAVEN01 (2 digits), Art → Art1 (no pad), Proyec → Proyec01, Curs → Curs01
+  if(prefix==='HEAVEN') return prefix+String(next).padStart(2,'0');
+  if(prefix==='Art')    return prefix+next;
+  if(prefix==='Proyec') return prefix+String(next).padStart(2,'0');
+  if(prefix==='Curs')   return prefix+String(next).padStart(2,'0');
+  return prefix+String(next).padStart(2,'0');
 }
 
 async function guardarArtista(){
@@ -1006,7 +1025,7 @@ async function guardarPago(){
   const fecha=document.getElementById('fpFecha').value||'—';
   const estado=document.getElementById('fpEstado').value||'Pagado';
   const existingF=rowNum?allFinanzas.find(x=>x._rowNumber===rowNum):null;
-  const newId=existingF?existingF['ID']||'':nextId(allFinanzas,'ID','Fin');
+  const newId=existingF?existingF['ID']||'':nextId(allFinanzas,'ID','HEAVEN');
   // Columns: ID | Concepto | Tipo | Monto | Fecha | Proyecto | Cliente | Estado
   const values=[newId, concepto, tipo, monto, fecha, '', artista, estado];
   let ok=false;
@@ -1022,7 +1041,7 @@ async function guardarPago(){
     document.getElementById('fpTipo').value='Ingreso';
     document.getElementById('fpEstado').value='Pagado';
     document.getElementById('modalPagoTitle').textContent='NUEVO PAGO';
-    await loadAdmin();
+    await loadAdmin(1200);
   } else { toast('// Error al guardar — activa OAuth primero','error'); }
 }
 
@@ -1067,18 +1086,18 @@ async function guardarProyecto(){
   const fe=fechaE?new Date(fechaE).toLocaleDateString('es-MX'):'';
   let archLink='';
   if(file){ archLink=await uploadToDrive(file)||''; }
-  const id=nextId(allProyectos,'ID','Proy');
+  const id=nextId(allProyectos,'ID','Proyec');
   const ok=await appendRow(SH.proyectos,[id,nombre,artista,servicio,fi,fe,estado,bonos,notas,archLink]);
   if(!ok){toast('Error al guardar proyecto','error');return;}
   const saldo=monto-anticipo;
   if(anticipo>0){
-    const finId1=nextId(allFinanzas,'ID','Fin');
+    const finId1=nextId(allFinanzas,'ID','HEAVEN');
     await appendRow(SH.finanzas,[finId1,'Anticipo '+nombre,'Ingreso',anticipo,fi,'',artista,'Pagado']);
   }
   if(saldo>0){
     // Reload to get updated count for next ID
     const tmpFin=await fetchSheet(SH.finanzas);
-    const finId2=nextId(tmpFin.length?tmpFin:allFinanzas,'ID','Fin');
+    const finId2=nextId(tmpFin.length?tmpFin:allFinanzas,'ID','HEAVEN');
     await appendRow(SH.finanzas,[finId2,'Saldo '+nombre,'Ingreso',saldo,'—','',artista,'Pendiente']);
   }
   toast('✓ Proyecto guardado en Sheets','success');
@@ -1086,7 +1105,7 @@ async function guardarProyecto(){
   res.style.display='block';
   res.textContent=`✓ ${nombre} guardado — ID: ${id}${archLink?' | Archivo: '+archLink:''}`;
   limpiarNP();
-  await loadAdmin();
+  await loadAdmin(1200);
 }
 
 function limpiarNP(){
