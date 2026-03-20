@@ -1066,62 +1066,90 @@ function setFinView(view){
 }
 
 function renderFinanzas(){
-  const q=(document.getElementById('searchFinanzas').value||'').toLowerCase();
-  const est=document.getElementById('filterPagoEstado').value;
-  const list=allFinanzas.filter(f=>{
-    const a=getArtista(f['Cliente']);
-    const na=a?(a['AKA']||a['Nombre']||''):f['Cliente']||'';
-    // Search in concepto, artista name, or artista ID
-    const m=!q
-      ||(f['Concepto']||'').toLowerCase().includes(q)
-      ||na.toLowerCase().includes(q)
-      ||(f['Cliente']||'').toLowerCase().includes(q)
-      ||(f['ID']||'').toLowerCase().includes(q);
-    const e=!est||(f['Estado']||'').toLowerCase().includes(est);
-    return m&&e;
-  });
-  // Calcular stats globales (sobre TODOS los registros, no solo la vista)
+  // ── Stats globales (siempre sobre todos) ──
   const allIngresosCobrados=allFinanzas.filter(f=>(f['Tipo']||'').toLowerCase()==='ingreso'&&/pagado/i.test(f['Estado']||'')).reduce((s,f)=>s+(parseFloat(f['Monto'])||0),0);
   const allPorCobrar=allFinanzas.filter(f=>(f['Tipo']||'').toLowerCase()==='ingreso'&&/pendiente/i.test(f['Estado']||'')).reduce((s,f)=>s+(parseFloat(f['Monto'])||0),0);
   const allGastos=allFinanzas.filter(f=>(f['Tipo']||'').toLowerCase()==='gasto').reduce((s,f)=>s+(parseFloat(f['Monto'])||0),0);
   const balance=allIngresosCobrados-allGastos;
   document.getElementById('finCobrado').textContent=fmt(allIngresosCobrados);
   document.getElementById('finPend').textContent=fmt(allPorCobrar);
-  const elGastos=document.getElementById('finGastos');
-  if(elGastos) elGastos.textContent=fmt(allGastos);
-  const elTotal=document.getElementById('finTotal2');
-  if(elTotal){ elTotal.textContent=fmt(Math.abs(balance)); elTotal.style.color=balance>=0?'var(--green)':'var(--red)'; }
+  const elG=document.getElementById('finGastos'); if(elG) elG.textContent=fmt(allGastos);
+  const elT=document.getElementById('finTotal2'); if(elT){elT.textContent=fmt(Math.abs(balance));elT.style.color=balance>=0?'var(--green)':'var(--red)';}
 
-  // Filtrar por vista actual (ingresos o gastos)
-  const viewList = finView === 'gastos'
-    ? list.filter(f=>/gasto/i.test(f['Tipo']||''))
-    : list.filter(f=>!/gasto/i.test(f['Tipo']||''));
-
-  document.getElementById('finMovs') && (document.getElementById('finMovs').textContent=viewList.length);
-  // (empty state handled per-view below)
-  // Pendientes primero (más recientes arriba), luego pagados (más recientes arriba)
-  const pendList=[...list.filter(f=>/pendiente/i.test(f['Estado']||''))].reverse();
-  const pagList=[...list.filter(f=>/pagado/i.test(f['Estado']||''))].reverse();
-  const sorted=[...pendList,...pagList];
-  document.getElementById('finanzasContainer').innerHTML=`<table class="data-table"><thead><tr>
-    <th>Concepto</th><th>Artista</th><th>Fecha</th><th>Monto</th><th>Estado</th><th>Acciones</th>
-  </tr></thead><tbody>${sorted.map(f=>{
+  // ── Filtro búsqueda ──
+  const q=(document.getElementById('searchFinanzas').value||'').toLowerCase();
+  const est=document.getElementById('filterPagoEstado').value;
+  const base=allFinanzas.filter(f=>{
     const a=getArtista(f['Cliente']);
-    const na=a?(a['AKA']||a['Nombre']||clienteId):(clienteId?'':'—');
-    const paid=/pagado/i.test(f['Estado']||'');
-    return`<tr>
-      <td style="font-weight:600">${f['Concepto']||'—'}</td>
-      <td style="font-family:'DM Mono',monospace;font-size:.72rem;color:var(--purple-light)">${na}</td>
-      <td style="font-family:'DM Mono',monospace;font-size:.68rem;color:var(--muted)">${f['Fecha']||'—'}</td>
-      <td style="font-family:'Bebas Neue',sans-serif;font-size:1.1rem;color:${paid?'var(--green)':'var(--red)'}">${fmt(f['Monto'])}</td>
-      <td>${paid?'<span class="badge badge-paid">Pagado</span>':'<span class="badge badge-unpaid">Pendiente</span>'}</td>
-      <td><div class="td-actions">
-        <button class="btn-xs btn-xs-edit" onclick="editPago(${f._rowNumber})">Editar</button>
-        <button class="btn-xs btn-xs-del" onclick="confirmDelete('pago',${f._rowNumber},'${(f['Concepto']||'').replace(/'/g,"\\'")}')">Borrar</button>
-      </div></td>
-    </tr>`;
-  }).join('')}</tbody></table>`;
+    const na=a?(a['AKA']||a['Nombre']||''):f['Cliente']||'';
+    const m=!q||(f['Concepto']||'').toLowerCase().includes(q)||na.toLowerCase().includes(q)||(f['ID']||'').toLowerCase().includes(q);
+    const e=!est||(f['Estado']||'').toLowerCase().includes(est);
+    return m&&e;
+  });
+
+  // ── Filtro por vista (ESTRICTO) ──
+  const viewList = finView==='gastos'
+    ? base.filter(f=>(f['Tipo']||'').toLowerCase()==='gasto')
+    : base.filter(f=>(f['Tipo']||'').toLowerCase()!=='gasto');
+
+  if(!viewList.length){
+    document.getElementById('finanzasContainer').innerHTML=`<div class="empty-state">// No hay ${finView==='gastos'?'gastos':'ingresos'} registrados</div>`;
+    return;
+  }
+
+  // ── Ordenar ──
+  const sortDesc=(a,b)=>{
+    const da=parseFecha(a['Fecha']||''), db=parseFecha(b['Fecha']||'');
+    if(!da&&!db)return 0; if(!da)return 1; if(!db)return -1; return db-da;
+  };
+
+  let html='';
+
+  if(finView==='ingresos'){
+    const pendSinF=viewList.filter(f=>!parseFecha(f['Fecha']||'')&&/pendiente/i.test(f['Estado']||''));
+    const pendConF=viewList.filter(f=>parseFecha(f['Fecha']||'')&&/pendiente/i.test(f['Estado']||'')).sort(sortDesc);
+    const pagados=viewList.filter(f=>/pagado/i.test(f['Estado']||'')).sort(sortDesc);
+
+    if(pendConF.length){
+      html+=`<tr><td colspan="7" style="background:rgba(248,113,113,.05);padding:.65rem 1rem;font-family:'DM Mono',monospace;font-size:.58rem;letter-spacing:.18em;text-transform:uppercase;color:var(--red);border-bottom:1px solid rgba(248,113,113,.15);">// Pendientes de cobro — $${viewList.filter(f=>/pendiente/i.test(f['Estado']||'')).reduce((s,f)=>s+(parseFloat(f['Monto'])||0),0).toLocaleString()} por cobrar</td></tr>`;
+      html+=pendConF.map(f=>renderFinRow(f)).join('');
+    }
+    if(pagados.length){
+      const grupos={};
+      pagados.forEach(f=>{const d=parseFecha(f['Fecha']||'');const k=d?mesLabel(d):'Sin fecha';if(!grupos[k])grupos[k]=[];grupos[k].push(f);});
+      Object.entries(grupos).forEach(([mes,rows])=>{
+        const tot=rows.reduce((s,f)=>s+(parseFloat(f['Monto'])||0),0);
+        html+=`<tr><td colspan="7" style="background:var(--surface2);padding:.65rem 1rem;font-family:'DM Mono',monospace;font-size:.58rem;letter-spacing:.18em;text-transform:uppercase;color:var(--gold);border-bottom:1px solid var(--border);">// ${mes} &nbsp;<span style="color:var(--green)">+${fmt(tot)}</span></td></tr>`;
+        html+=rows.map(f=>renderFinRow(f)).join('');
+      });
+    }
+    if(pendSinF.length){
+      html+=`<tr><td colspan="7" style="padding:.65rem 1rem;font-family:'DM Mono',monospace;font-size:.58rem;letter-spacing:.18em;text-transform:uppercase;color:var(--muted2);border-bottom:1px solid var(--border);">// Sin fecha asignada</td></tr>`;
+      html+=pendSinF.map(f=>renderFinRow(f)).join('');
+    }
+  } else {
+    const conF=viewList.filter(f=>parseFecha(f['Fecha']||'')).sort(sortDesc);
+    const sinF=viewList.filter(f=>!parseFecha(f['Fecha']||''));
+    if(conF.length){
+      const grupos={};
+      conF.forEach(f=>{const d=parseFecha(f['Fecha']||'');const k=d?mesLabel(d):'Sin fecha';if(!grupos[k])grupos[k]=[];grupos[k].push(f);});
+      Object.entries(grupos).forEach(([mes,rows])=>{
+        const tot=rows.reduce((s,f)=>s+(parseFloat(f['Monto'])||0),0);
+        html+=`<tr><td colspan="7" style="background:var(--surface2);padding:.65rem 1rem;font-family:'DM Mono',monospace;font-size:.58rem;letter-spacing:.18em;text-transform:uppercase;color:var(--red);border-bottom:1px solid var(--border);">// ${mes} &nbsp;<span style="color:var(--red)">−${fmt(tot)}</span></td></tr>`;
+        html+=rows.map(f=>renderFinRow(f)).join('');
+      });
+    }
+    if(sinF.length){
+      html+=`<tr><td colspan="7" style="padding:.65rem 1rem;font-family:'DM Mono',monospace;font-size:.58rem;letter-spacing:.18em;text-transform:uppercase;color:var(--muted2);border-bottom:1px solid var(--border);">// Sin fecha asignada</td></tr>`;
+      html+=sinF.map(f=>renderFinRow(f)).join('');
+    }
+  }
+
+  document.getElementById('finanzasContainer').innerHTML=`<table class="data-table"><thead><tr>
+    <th>Concepto</th><th>Tipo</th><th>Artista</th><th>Proyecto</th><th>Fecha</th><th>Monto</th><th>Acciones</th>
+  </tr></thead><tbody>${html}</tbody></table>`;
 }
+
 
 function editPago(rowNum){
   const f=allFinanzas.find(x=>x._rowNumber===rowNum);
