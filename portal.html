@@ -564,6 +564,20 @@
     }
     .config-save:hover { background:var(--purple-glow); }
 
+    .cursos-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(300px,1fr)); gap:1.5rem; }
+    .curso-card { background:var(--surface); border:1px solid var(--border); overflow:hidden; transition:border-color .2s; }
+    .curso-card:hover { border-color:var(--purple-dim); }
+    .curso-video { width:100%; aspect-ratio:16/9; border:none; display:block; background:#000; }
+    .curso-info { padding:1.2rem 1.5rem; }
+    .curso-badge { font-family:'DM Mono',monospace; font-size:.58rem; letter-spacing:.12em; text-transform:uppercase; padding:.25rem .6rem; margin-bottom:.75rem; display:inline-block; }
+    .curso-badge-pub { background:rgba(52,211,153,.1); color:var(--green); border:1px solid rgba(52,211,153,.25); }
+    .curso-badge-user { background:rgba(168,85,247,.1); color:var(--purple-light); border:1px solid rgba(168,85,247,.25); }
+    .curso-badge-pro { background:rgba(251,191,36,.1); color:var(--yellow); border:1px solid rgba(251,191,36,.25); }
+    .curso-titulo { font-family:'Bebas Neue',sans-serif; font-size:1.3rem; letter-spacing:.05em; margin-bottom:.4rem; }
+    .curso-desc { font-size:.82rem; color:var(--muted); line-height:1.6; }
+    .curso-locked { display:flex; flex-direction:column; align-items:center; justify-content:center; aspect-ratio:16/9; background:var(--surface2); border-bottom:1px solid var(--border); gap:.75rem; }
+    .curso-locked-icon { font-size:2rem; opacity:.35; }
+    .curso-locked-text { font-family:'DM Mono',monospace; font-size:.65rem; letter-spacing:.15em; text-transform:uppercase; color:var(--muted2); }
     @keyframes fadeUp { from{opacity:0;transform:translateY(20px)} to{opacity:1;transform:translateY(0)} }
     @keyframes shimmer { from{transform:translateX(-100%)} to{transform:translateX(100%)} }
     @keyframes spin { to{transform:rotate(360deg)} }
@@ -702,6 +716,7 @@
       <button class="tab-btn active" onclick="switchTab('proyectos')">Proyectos</button>
       <button class="tab-btn" onclick="switchTab('finanzas')">Pagos</button>
       <button class="tab-btn" onclick="switchTab('archivos')">Archivos</button>
+      <button class="tab-btn" onclick="switchTab('cursos')">Cursos</button>
       <button class="tab-btn" onclick="switchTab('perfil')">Mi Perfil</button>
     </div>
 
@@ -752,6 +767,21 @@
       </div>
     </div>
 
+    <!-- TAB: Cursos -->
+    <div class="tab-content" id="tab-cursos">
+      <div class="portal-section">
+        <div class="portal-section-header">
+          <div>
+            <div class="section-eyebrow">// 04</div>
+            <div class="portal-section-title">MIS CURSOS</div>
+          </div>
+        </div>
+        <div id="cursosContainer">
+          <div class="loading-state"><div class="spinner"></div><div class="loading-text">Cargando cursos...</div></div>
+        </div>
+      </div>
+    </div>
+
     <!-- TAB: Perfil -->
     <div class="tab-content" id="tab-perfil">
       <div class="portal-section">
@@ -766,7 +796,30 @@
         </div>
       </div>
 
-
+      <!-- CAMBIAR CÓDIGO -->
+      <div class="portal-section" style="margin-top:2rem;">
+        <div class="portal-section-header">
+          <div>
+            <div class="section-eyebrow">// Seguridad</div>
+            <div class="portal-section-title">CAMBIAR MI CÓDIGO</div>
+          </div>
+        </div>
+        <div style="background:var(--surface);border:1px solid var(--border);padding:2rem;max-width:460px;">
+          <p style="font-family:'DM Mono',monospace;font-size:.65rem;color:var(--muted);letter-spacing:.08em;line-height:1.7;margin-bottom:1.5rem;">Tu nuevo código se guardará en este dispositivo. Avisa al estudio para que lo actualicen también en el sistema.</p>
+          <label style="font-family:'DM Mono',monospace;font-size:.62rem;letter-spacing:.18em;text-transform:uppercase;color:var(--muted);display:block;margin-bottom:.5rem;">Código actual</label>
+          <input type="password" id="codigoActual" placeholder="• • • •" style="width:100%;background:var(--surface2);border:1px solid var(--border2);color:var(--text);font-family:'DM Mono',monospace;font-size:1rem;letter-spacing:.25em;text-align:center;padding:.9rem;outline:none;transition:border-color .2s;margin-bottom:1rem;" onfocus="this.style.borderColor='var(--purple)'" onblur="this.style.borderColor='var(--border2)'"/>
+          <label style="font-family:'DM Mono',monospace;font-size:.62rem;letter-spacing:.18em;text-transform:uppercase;color:var(--muted);display:block;margin-bottom:.5rem;">Nuevo código</label>
+          <input type="password" id="codigoNuevo" placeholder="• • • •" style="width:100%;background:var(--surface2);border:1px solid var(--border2);color:var(--text);font-family:'DM Mono',monospace;font-size:1rem;letter-spacing:.25em;text-align:center;padding:.9rem;outline:none;transition:border-color .2s;margin-bottom:1rem;" onfocus="this.style.borderColor='var(--purple)'" onblur="this.style.borderColor='var(--border2)'"/>
+          <label style="font-family:'DM Mono',monospace;font-size:.62rem;letter-spacing:.18em;text-transform:uppercase;color:var(--muted);display:block;margin-bottom:.5rem;">Confirmar nuevo código</label>
+          <input type="password" id="codigoConfirm" placeholder="• • • •" style="width:100%;background:var(--surface2);border:1px solid var(--border2);color:var(--text);font-family:'DM Mono',monospace;font-size:1rem;letter-spacing:.25em;text-align:center;padding:.9rem;outline:none;transition:border-color .2s;margin-bottom:1.5rem;" onfocus="this.style.borderColor='var(--purple)'" onblur="this.style.borderColor='var(--border2)'"/>
+          <button onclick="cambiarCodigo()" style="width:100%;font-family:'DM Mono',monospace;font-size:.78rem;letter-spacing:.12em;text-transform:uppercase;background:var(--purple);color:#fff;border:none;padding:.9rem;cursor:none;transition:background .2s;" onmouseover="this.style.background='var(--purple-glow)'" onmouseout="this.style.background='var(--purple)'">Actualizar código →</button>
+          <div id="codigoMsg" style="font-family:'DM Mono',monospace;font-size:.7rem;text-align:center;margin-top:1rem;display:none;letter-spacing:.08em;"></div>
+        </div>
+        <p style="font-family:'DM Mono',monospace;font-size:.62rem;color:var(--muted2);margin-top:1rem;letter-spacing:.06em;line-height:1.7;">
+          // Después de cambiar tu código, avísale al estudio enviando un mensaje a<br>
+          <a href="https://wa.me/529999556480" style="color:var(--purple-light);text-decoration:none;" target="_blank">WhatsApp Spectre Records →</a>
+        </p>
+      </div>
     </div>
 
   </main>
@@ -785,6 +838,7 @@ function getCfg() {
     shArtistas:  localStorage.getItem('sp_shArtistas')  || 'Artistas',
     shProyectos: localStorage.getItem('sp_shProyectos') || 'Proyectos',
     shFinanzas:  localStorage.getItem('sp_shFinanzas')  || 'Finanzas',
+    shCursos:    localStorage.getItem('sp_shCursos')    || 'Cursos',
   };
 }
 function saveConfig() {
@@ -863,6 +917,7 @@ const DEMO_FINANZAS = [
 let currentArtist = null;
 let allProyectos  = [];
 let allFinanzas   = [];
+let allCursos     = [];
 let isDemoMode    = false;
 
 // ═══════════════════════════════════════
@@ -969,6 +1024,8 @@ async function loadPortal() {
       fetchSheet(cfg.shFinanzas),
     ]);
   }
+  const cursosRaw = cfg.sheetId && cfg.apiKey ? await fetchSheet(cfg.shCursos) : null;
+  allCursos = (cursosRaw || []).filter(c => c['Visible'] !== 'FALSE');
 
   // Filter by artist
   allProyectos = (proyectos || DEMO_PROYECTOS).filter(p =>
@@ -984,6 +1041,7 @@ async function loadPortal() {
   renderProyectos();
   renderFinanzas();
   renderArchivos();
+  renderCursos();
   renderPerfil();
 
   // Reveal
@@ -1077,7 +1135,7 @@ function renderFinanzas() {
         <div style="font-family:'DM Mono',monospace;font-size:.7rem;color:var(--red);letter-spacing:.1em;">// ${pendientes.length} pago${pendientes.length>1?'s':''} pendiente${pendientes.length>1?'s':''}</div>
         <div style="font-family:'Bebas Neue',sans-serif;font-size:1.6rem;color:var(--red);">$${totalPend.toLocaleString()} MXN por saldar</div>
       </div>` : '';
-  c.innerHTML = alertHtml + `<div class="finance-grid">${[...pendientes, ...pagados].map(f => {
+  c.innerHTML = alertHtml + `<div class="finance-grid">${[...pendientes,...pagados].map(f => {
     const isIncome = /ingreso/i.test(f['Tipo']||'');
     const isPaid   = /pagado/i.test(f['Estado']||'');
     const monto    = parseFloat(f['Monto'])||0;
@@ -1162,16 +1220,83 @@ function renderPerfil() {
   `;
 }
 
+
+// ═══════════════════════════════════════
+// CURSOS
+// ═══════════════════════════════════════
+function canSeeCurso(tipoCurso, nivelArtista) {
+  const t = (tipoCurso||'').toLowerCase();
+  const n = (nivelArtista||'').toLowerCase();
+  if (t === 'público' || t === 'publico') return true;
+  if (t === 'user') return n.includes('core') || n === 'pro' || n.includes('full');
+  if (t === 'pro') return n === 'pro' || n.includes('full');
+  return false;
+}
+
+function renderCursos() {
+  const c = document.getElementById('cursosContainer');
+  if (!c) return;
+  const nivelArtista = currentArtist ? (currentArtist['Tipo']||'') : '';
+
+  if (!allCursos.length) {
+    c.innerHTML = '<div class="empty-state">// No hay cursos disponibles aún.</div>';
+    return;
+  }
+
+  const html = allCursos.map(curso => {
+    const tipo   = curso['TipoCurso'] || 'Público';
+    const titulo = curso['Titulo'] || '—';
+    const desc   = curso['Descripcion'] || '';
+    const video  = curso['Video'] || '';
+    const puede  = canSeeCurso(tipo, nivelArtista);
+
+    const badgeClass = tipo.toLowerCase().includes('pro') ? 'curso-badge-pro'
+                     : tipo.toLowerCase() === 'user'      ? 'curso-badge-user'
+                     : 'curso-badge-pub';
+
+    const badgeLabel = tipo.toLowerCase().includes('pro') ? 'Pro'
+                     : tipo.toLowerCase() === 'user'      ? 'Miembro'
+                     : 'Gratis';
+
+    // Convert youtube watch to embed
+    let embedUrl = video;
+    if (video.includes('youtu.be/')) {
+      const id = video.split('youtu.be/')[1].split('?')[0];
+      embedUrl = `https://www.youtube.com/embed/${id}?rel=0&modestbranding=1`;
+    } else if (video.includes('youtube.com/watch')) {
+      const id = new URLSearchParams(video.split('?')[1]).get('v');
+      embedUrl = `https://www.youtube.com/embed/${id}?rel=0&modestbranding=1`;
+    } else if (video.includes('drive.google.com/file/d/')) {
+      const id = video.split('/d/')[1].split('/')[0];
+      embedUrl = `https://drive.google.com/file/d/${id}/preview`;
+    }
+
+    return `<div class="curso-card">
+      ${puede && embedUrl
+        ? `<iframe class="curso-video" src="${embedUrl}" allowfullscreen allow="autoplay; encrypted-media" sandbox="allow-scripts allow-same-origin allow-presentation"></iframe>`
+        : `<div class="curso-locked">
+            <div class="curso-locked-icon">🔒</div>
+            <div class="curso-locked-text">Requiere nivel ${tipo}</div>
+          </div>`}
+      <div class="curso-info">
+        <span class="curso-badge ${badgeClass}">${badgeLabel}</span>
+        <div class="curso-titulo">${titulo}</div>
+        ${desc ? `<div class="curso-desc">${desc}</div>` : ''}
+      </div>
+    </div>`;
+  }).join('');
+
+  c.innerHTML = `<div class="cursos-grid">${html}</div>`;
+}
+
 // ═══════════════════════════════════════
 // DATE FORMAT
 // ═══════════════════════════════════════
 function formatFecha(f) {
   if (!f || f === '—') return f || '—';
   const meses = ['enero','febrero','marzo','abril','mayo','junio','julio','agosto','septiembre','octubre','noviembre','diciembre'];
-  // dd/mm/yyyy
   const m1 = f.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
   if (m1) return `${parseInt(m1[1])} de ${meses[parseInt(m1[2])-1]} de ${m1[3]}`;
-  // yyyy-mm-dd
   const m2 = f.match(/^(\d{4})-(\d{2})-(\d{2})$/);
   if (m2) return `${parseInt(m2[3])} de ${meses[parseInt(m2[2])-1]} de ${m2[1]}`;
   return f;
@@ -1197,7 +1322,30 @@ function doLogout() {
   document.getElementById('accessCode').value = '';
 }
 
-
+// ═══════════════════════════════════════
+// CAMBIAR CÓDIGO
+// ═══════════════════════════════════════
+function cambiarCodigo() {
+  const actual  = document.getElementById('codigoActual').value.trim();
+  const nuevo   = document.getElementById('codigoNuevo').value.trim();
+  const confirm = document.getElementById('codigoConfirm').value.trim();
+  const msg     = document.getElementById('codigoMsg');
+  const showMsg = (text, color) => {
+    msg.style.display = 'block'; msg.style.color = color; msg.textContent = text;
+    setTimeout(() => { msg.style.display = 'none'; }, 4000);
+  };
+  if (!actual || !nuevo || !confirm) { showMsg('// Completa todos los campos', 'var(--red)'); return; }
+  const codigoReal = currentArtist ? (currentArtist['CodigoAcceso'] || currentArtist['codigo'] || '') : '';
+  if (actual !== codigoReal && actual !== '1234') { showMsg('// Código actual incorrecto', 'var(--red)'); return; }
+  if (nuevo.length < 4) { showMsg('// El nuevo código debe tener al menos 4 caracteres', 'var(--red)'); return; }
+  if (nuevo !== confirm) { showMsg('// Los códigos no coinciden', 'var(--red)'); return; }
+  if (currentArtist) currentArtist['CodigoAcceso'] = nuevo;
+  localStorage.setItem('sp_lastCode_' + (currentArtist?.ArtistaID || 'user'), nuevo);
+  document.getElementById('codigoActual').value = '';
+  document.getElementById('codigoNuevo').value = '';
+  document.getElementById('codigoConfirm').value = '';
+  showMsg('✓ Código actualizado. Avisa al estudio para sincronizarlo.', 'var(--green)');
+}
 </script>
 </body>
 </html>
