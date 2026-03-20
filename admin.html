@@ -771,12 +771,24 @@ function editArtista(rowNum){
   openModal('modalArtista');
 }
 
+function nextId(list, field, prefix){
+  // Extract numeric parts from existing IDs and find max
+  const nums=list.map(item=>{
+    const v=(item[field]||'').replace(new RegExp('^'+prefix,'i'),'');
+    return parseInt(v)||0;
+  });
+  const max=nums.length?Math.max(...nums):0;
+  return prefix+(max+1);
+}
+
 async function guardarArtista(){
   const rowNum=parseInt(document.getElementById('maRowNum').value)||0;
   const nombre=document.getElementById('maNombre').value.trim();
   if(!nombre){toast('Nombre requerido','error');return;}
+  const existingArtista=rowNum?allArtistas.find(a=>a._rowNumber===rowNum):null;
+  const newId=existingArtista?existingArtista['ArtistaID']||'':nextId(allArtistas,'ArtistaID','Art');
   const values=[
-    rowNum?allArtistas.find(a=>a._rowNumber===rowNum)?.ArtistaID||'':'Art'+String(allArtistas.length+1).padStart(2,'0'),
+    newId,
     nombre,
     document.getElementById('maAka').value.trim(),
     document.getElementById('maTel').value.trim(),
@@ -919,6 +931,7 @@ function editPago(rowNum){
   document.getElementById('modalPagoTitle').textContent='EDITAR PAGO';
   document.getElementById('fpRowNum').value=rowNum;
   document.getElementById('fpConcepto').value=f['Concepto']||'';
+  // fpArtista values are ArtistaIDs, Cliente column stores ArtistaID
   document.getElementById('fpArtista').value=f['Cliente']||'';
   document.getElementById('fpMonto').value=f['Monto']||'';
   document.getElementById('fpFecha').value=f['Fecha']||'';
@@ -963,8 +976,12 @@ function populateArtistSelects(){
     sel.innerHTML='<option value="">Seleccionar artista...</option>';
     allArtistas.forEach(a=>{
       const opt=document.createElement('option');
-      opt.value=a['ArtistaID']||a['AKA'];
-      opt.textContent=(a['AKA']||a['Nombre'])+(a['AKA']&&a['Nombre']?' ('+a['Nombre']+')':'');
+      // value = ArtistaID (lo que se guarda en Sheets)
+      opt.value=a['ArtistaID']||'';
+      // texto visible = AKA o Nombre
+      const display=a['AKA']||a['Nombre']||'—';
+      const sub=a['AKA']&&a['Nombre']?' — '+a['Nombre']:'';
+      opt.textContent=display+sub;
       sel.appendChild(opt);
     });
     if(cur) sel.value=cur;
@@ -989,12 +1006,20 @@ async function guardarProyecto(){
   const fe=fechaE?new Date(fechaE).toLocaleDateString('es-MX'):'';
   let archLink='';
   if(file){ archLink=await uploadToDrive(file)||''; }
-  const id='Proy'+String(allProyectos.length+1).padStart(2,'0');
+  const id=nextId(allProyectos,'ID','Proy');
   const ok=await appendRow(SH.proyectos,[id,nombre,artista,servicio,fi,fe,estado,bonos,notas,archLink]);
   if(!ok){toast('Error al guardar proyecto','error');return;}
   const saldo=monto-anticipo;
-  if(anticipo>0) await appendRow(SH.finanzas,['Fin'+Date.now()+'a','Anticipo '+nombre,'Ingreso',anticipo,fi,'',artista,'Pagado']);
-  if(saldo>0) await appendRow(SH.finanzas,['Fin'+(Date.now()+1)+'b','Saldo '+nombre,'Ingreso',saldo,'—','',artista,'Pendiente']);
+  if(anticipo>0){
+    const finId1=nextId(allFinanzas,'ID','Fin');
+    await appendRow(SH.finanzas,[finId1,'Anticipo '+nombre,'Ingreso',anticipo,fi,'',artista,'Pagado']);
+  }
+  if(saldo>0){
+    // Reload to get updated count for next ID
+    const tmpFin=await fetchSheet(SH.finanzas);
+    const finId2=nextId(tmpFin.length?tmpFin:allFinanzas,'ID','Fin');
+    await appendRow(SH.finanzas,[finId2,'Saldo '+nombre,'Ingreso',saldo,'—','',artista,'Pendiente']);
+  }
   toast('✓ Proyecto guardado en Sheets','success');
   const res=document.getElementById('npResult');
   res.style.display='block';
