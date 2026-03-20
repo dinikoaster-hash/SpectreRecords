@@ -878,10 +878,25 @@ function renderArtistas(){
 
 function openModal(id){
   document.getElementById(id).classList.add('show');
-  // Re-populate selects every time modal opens to ensure fresh data
   if(id==='modalPago'){
     populateArtistSelects();
-    populateProyectoSelects();
+    // Populate proyecto select with all projects
+    const sel=document.getElementById('fpProyecto');
+    if(sel){
+      const cur=sel.value;
+      sel.innerHTML='<option value="">Sin proyecto...</option>';
+      [...allProyectos].reverse().forEach(p=>{
+        const opt=document.createElement('option');
+        opt.value=p['ID']||'';
+        const nombre=p['Nombre del proyecto']||'—';
+        const id=p['ID']||'';
+        const art=getArtista(p['Cliente']);
+        const aka=art?art['AKA']||art['Nombre']:'';
+        opt.textContent=`${nombre} (${id})${aka?' — '+aka:''}`;
+        sel.appendChild(opt);
+      });
+      if(cur) sel.value=cur;
+    }
   }
   if(id==='modalArtista'||id==='modalProyecto'){
     populateArtistSelects();
@@ -985,19 +1000,20 @@ function editProyecto(rowNum){
   if(!p) return;
   document.getElementById('mpRowNum').value=rowNum;
   document.getElementById('mpNombre').value=p['Nombre del proyecto']||'';
-  // Set after populate — value is ArtistaID
-  document.getElementById('mpCliente').value=p['Cliente']||'';
   document.getElementById('mpServicio').value=p['Tipo de servicio']||'';
   document.getElementById('mpEstado').value=p['Estado proyecto']||'01 | En proceso';
   const toInputDate=s=>{ if(!s) return ''; const m=s.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/); return m?m[3]+'-'+m[2].padStart(2,'0')+'-'+m[1].padStart(2,'0'):''; };
   document.getElementById('mpFechaI').value=toInputDate(p['Fecha inicio']||'');
   document.getElementById('mpFechaE').value=toInputDate(p['Fecha entrega']||'');
-  document.getElementById('mpBonos').value=p['Bonos']||p['Bonos incluidos']||'';
-  document.getElementById('mpNotas').value=p['Notas']||p['Notas del proyecto']||'';
+  document.getElementById('mpBonos').value=p['Bonos incluidos']||p['Bonos']||'';
+  document.getElementById('mpNotas').value=p['Notas del proyecto']||p['Notas']||'';
   document.getElementById('mpSolicitado').value=p['Solicitado']||'';
   document.getElementById('mpArchivos').value=p['Archivos entregados']||'';
-  document.getElementById('mpArchivo').value='';
+  // Set artista after modal opens (select needs to be populated first)
   openModal('modalProyecto');
+  setTimeout(()=>{ document.getElementById('mpCliente').value=p['Cliente']||''; },50);
+  return; // skip the openModal below
+  document.getElementById('mpArchivo').value='';
 }
 
 async function actualizarProyecto(){
@@ -1010,19 +1026,20 @@ async function actualizarProyecto(){
     const link=await uploadToDrive(file);
     if(link) archLink=link;
   }
+  const fmtDate2=d=>{if(!d)return'';const[y,m,dd]=d.split('-');return dd&&m&&y?dd+'/'+m+'/'+y:d;};
   const values=[
-    p['ID']||'',
-    document.getElementById('mpNombre').value.trim(),
-    document.getElementById('mpCliente').value,
-    document.getElementById('mpServicio').value.trim(),
-    p['Fecha sesión']||p['Fecha sesion']||'',
-    document.getElementById('mpFechaI').value.trim(),
-    document.getElementById('mpFechaE').value.trim(),
-    document.getElementById('mpBonos').value.trim(),
-    document.getElementById('mpEstado').value,
-    archLink,
-    document.getElementById('mpNotas').value.trim(),
-    document.getElementById('mpSolicitado').value||'',
+    p['ID']||'',                                          // A: ID
+    document.getElementById('mpNombre').value.trim(),     // B: Nombre del proyecto
+    document.getElementById('mpCliente').value,           // C: Cliente
+    document.getElementById('mpServicio').value.trim(),   // D: Tipo de servicio
+    p['Fecha sesión']||p['Fecha sesion']||'',             // E: Fecha sesión
+    fmtDate2(document.getElementById('mpFechaI').value),  // F: Fecha inicio
+    fmtDate2(document.getElementById('mpFechaE').value),  // G: Fecha entrega
+    document.getElementById('mpBonos').value.trim(),      // H: Bonos incluidos
+    document.getElementById('mpEstado').value,            // I: Estado proyecto
+    archLink,                                             // J: Archivos entregados
+    document.getElementById('mpNotas').value.trim(),      // K: Notas del proyecto
+    document.getElementById('mpSolicitado').value||'',    // L: Solicitado
   ];
   const ok=await updateRow(SH.proyectos,rowNum,values);
   if(ok){ toast('✓ Proyecto actualizado','success'); closeModal('modalProyecto'); await loadAdmin(); }
@@ -1203,8 +1220,8 @@ async function guardarProyecto(){
   let archLink='';
   if(file){ archLink=await uploadToDrive(file)||''; }
   const id=nextId(allProyectos,'ID','Proyec');
-  // Columns: ID|Nombre|Cliente|Tipo servicio|Fecha sesion|Fecha inicio|Fecha entrega|Bonos|Estado|Archivos|Notas|Solicitado
-  const ok=await appendRow(SH.proyectos,[id,nombre,artista,servicio,'',fi,fe,bonos,estado,archLink,notas,monto]);
+  // Columns: ID|Nombre del proyecto|Cliente|Tipo de servicio|Fecha sesión|Fecha inicio|Fecha entrega|Bonos incluidos|Estado proyecto|Archivos entregados|Notas del proyecto|Solicitado
+  const ok=await appendRow(SH.proyectos,[id,nombre,artista,servicio,'',fi,fe,bonos,estado,archLink,notas,monto||'']);
   if(!ok){toast('Error al guardar proyecto','error');return;}
   toast('✓ Proyecto guardado en Sheets','success');
   const res=document.getElementById('npResult');
