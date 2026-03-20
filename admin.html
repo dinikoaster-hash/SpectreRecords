@@ -231,6 +231,9 @@ body::before{content:'';position:fixed;inset:0;background-image:url("data:image/
           <span class="nav-icon">$</span><span>Finanzas</span>
           <span class="nav-badge" id="badgePend" style="display:none">!</span>
         </button>
+        <button class="nav-item" onclick="showPage('cursos',this)">
+          <span class="nav-icon">▶</span><span>Cursos</span>
+        </button>
         <button class="nav-item" onclick="showPage('nuevo',this)">
           <span class="nav-icon">+</span><span>Nuevo proyecto</span>
         </button>
@@ -335,6 +338,27 @@ body::before{content:'';position:fixed;inset:0;background-image:url("data:image/
         <div class="table-wrap" id="finanzasContainer"><div class="loading-state"><div class="spinner"></div>Cargando...</div></div>
       </div>
 
+      <!-- CURSOS -->
+      <div class="page" id="page-cursos">
+        <div class="page-header">
+          <div><div class="page-eyebrow">// Biblioteca</div><div class="page-title">CURSOS</div></div>
+          <div style="display:flex;gap:.6rem;">
+            <button class="btn btn-ghost" onclick="loadAdmin()" style="font-size:.65rem;padding:.6rem 1.2rem;">⟳ Actualizar</button>
+            <button class="btn btn-gold" onclick="openModal('modalCurso')">+ Nuevo curso</button>
+          </div>
+        </div>
+        <div class="filter-bar">
+          <input class="filter-input" id="searchCursos" placeholder="// Buscar curso..." oninput="renderCursosAdmin()"/>
+          <select class="filter-select" id="filterTipoCurso" onchange="renderCursosAdmin()">
+            <option value="">Todos los niveles</option>
+            <option value="Público">Público</option>
+            <option value="User">Miembros</option>
+            <option value="Pro">Pro</option>
+          </select>
+        </div>
+        <div id="cursosAdminContainer"><div class="loading-state"><div class="spinner"></div>Cargando cursos...</div></div>
+      </div>
+
       <!-- NUEVO PROYECTO -->
       <div class="page" id="page-nuevo">
         <div class="page-header">
@@ -432,6 +456,7 @@ body::before{content:'';position:fixed;inset:0;background-image:url("data:image/
         <div class="form-group"><label class="form-label">Fecha entrega</label><input class="form-input" id="mpFechaE"/></div>
         <div class="form-group full"><label class="form-label">Bonos</label><input class="form-input" id="mpBonos"/></div>
         <div class="form-group full"><label class="form-label">Notas</label><input class="form-input" id="mpNotas"/></div>
+        <div class="form-group"><label class="form-label">Monto solicitado (MXN)</label><input class="form-input" id="mpSolicitado" type="number" placeholder="2500"/></div>
         <div class="form-group full"><label class="form-label">Subir archivo a Drive (reemplaza el actual)</label><input class="form-file" id="mpArchivo" type="file" accept="*/*"/></div>
         <div class="form-group full"><label class="form-label">Link archivos entregados (manual o desde Drive)</label><input class="form-input" id="mpArchivos" placeholder="https://drive.google.com/..."/></div>
       </div>
@@ -461,6 +486,7 @@ body::before{content:'';position:fixed;inset:0;background-image:url("data:image/
           </select>
         </div>
         <div class="form-group"><label class="form-label">Artista (opcional)</label><select class="form-input" id="fpArtista"><option value="">Seleccionar...</option></select></div>
+        <div class="form-group"><label class="form-label">Proyecto (opcional)</label><select class="form-input" id="fpProyecto"><option value="">Sin proyecto...</option></select></div>
         <div class="form-group"><label class="form-label">Monto (MXN)</label><input class="form-input" id="fpMonto" type="number" placeholder="1500"/></div>
         <div class="form-group"><label class="form-label">Fecha</label><input class="form-input" id="fpFecha" type="date"/></div>
         <div class="form-group"><label class="form-label">Estado</label>
@@ -471,6 +497,35 @@ body::before{content:'';position:fixed;inset:0;background-image:url("data:image/
     <div class="modal-footer">
       <button class="btn btn-green" id="fpGuardarBtn" onclick="guardarPago()">Guardar →</button>
       <button class="btn btn-ghost" onclick="closeModal('modalPago')">Cancelar</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL: CURSO -->
+<div class="modal-overlay" id="modalCurso">
+  <div class="modal" style="max-width:560px;">
+    <div class="modal-header">
+      <div class="modal-title" id="modalCursoTitle">NUEVO CURSO</div>
+      <button class="modal-close" onclick="closeModal('modalCurso')">✕ Cerrar</button>
+    </div>
+    <div class="modal-body">
+      <input type="hidden" id="curRowNum"/>
+      <div class="form-grid">
+        <div class="form-group full"><label class="form-label">Título</label><input class="form-input" id="curTitulo" placeholder="Nombre del curso"/></div>
+        <div class="form-group"><label class="form-label">Nivel de acceso</label>
+          <select class="form-input" id="curTipo">
+            <option value="Público">Público — todos lo ven</option>
+            <option value="User">Miembros — Core y Pro</option>
+            <option value="Pro">Pro — solo Pro</option>
+          </select>
+        </div>
+        <div class="form-group"><label class="form-label">Link del video (YouTube o Drive)</label><input class="form-input" id="curVideo" placeholder="https://youtu.be/..."/></div>
+        <div class="form-group full"><label class="form-label">Descripción</label><input class="form-input" id="curDesc" placeholder="De qué trata el curso..."/></div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-green" onclick="guardarCurso()">Guardar →</button>
+      <button class="btn btn-ghost" onclick="closeModal('modalCurso')">Cancelar</button>
     </div>
   </div>
 </div>
@@ -497,11 +552,11 @@ const OAUTH_CLIENT_ID = '517201895021-4q6nl7376jgag4bmrrqbo9t141n81v93.apps.goog
 const SHEET_ID        = '18-hf-2pCs1UhUUi66Ke_JmheavXk_V-Enus0p3yfNd0';
 const API_KEY         = 'AIzaSyC6K7d8zJc2TVrchsJQeIAfHEGJ5drA74c';
 const DRIVE_FOLDER_ID = ''; // Optional: set a folder ID to upload files there
-const SH = { artistas:'Artistas', proyectos:'Proyectos', finanzas:'Finanzas' };
+const SH = { artistas:'Artistas', proyectos:'Proyectos', finanzas:'Finanzas', cursos:'Cursos' };
 const DEFAULT_PASS    = 'heaven2025';
 
 let oauthToken  = null;
-let allArtistas = [], allProyectos = [], allFinanzas = [];
+let allArtistas = [], allProyectos = [], allFinanzas = [], allCursos = [];
 
 // ════════════════════════════════════════════
 // CURSOR
@@ -682,14 +737,16 @@ async function loadAdmin(delay=0){
   }
   // Small delay after writes so Sheets API returns fresh data
   if(delay>0) await new Promise(r=>setTimeout(r,delay));
-  [allArtistas,allProyectos,allFinanzas]=await Promise.all([
-    fetchSheet(SH.artistas),fetchSheet(SH.proyectos),fetchSheet(SH.finanzas)
+  [allArtistas,allProyectos,allFinanzas,allCursos]=await Promise.all([
+    fetchSheet(SH.artistas),fetchSheet(SH.proyectos),fetchSheet(SH.finanzas),fetchSheet(SH.cursos)
   ]);
   renderDashboard();
   renderArtistas();
   renderProyectos();
   renderFinanzas();
+  renderCursosAdmin();
   populateArtistSelects();
+  populateProyectoSelects();
   updateBadges();
 }
 
@@ -903,7 +960,8 @@ function editProyecto(rowNum){
   document.getElementById('mpFechaI').value=p['Fecha inicio']||'';
   document.getElementById('mpFechaE').value=p['Fecha entrega']||'';
   document.getElementById('mpBonos').value=p['Bonos']||p['Bonos incluidos']||'';
-  document.getElementById('mpNotas').value=p['Notas']||'';
+  document.getElementById('mpNotas').value=p['Notas']||p['Notas del proyecto']||'';
+  document.getElementById('mpSolicitado').value=p['Solicitado']||'';
   document.getElementById('mpArchivos').value=p['Archivos entregados']||'';
   document.getElementById('mpArchivo').value='';
   openModal('modalProyecto');
@@ -924,12 +982,14 @@ async function actualizarProyecto(){
     document.getElementById('mpNombre').value.trim(),
     document.getElementById('mpCliente').value,
     document.getElementById('mpServicio').value.trim(),
+    p['Fecha sesión']||p['Fecha sesion']||'',
     document.getElementById('mpFechaI').value.trim(),
     document.getElementById('mpFechaE').value.trim(),
-    document.getElementById('mpEstado').value,
     document.getElementById('mpBonos').value.trim(),
-    document.getElementById('mpNotas').value.trim(),
+    document.getElementById('mpEstado').value,
     archLink,
+    document.getElementById('mpNotas').value.trim(),
+    document.getElementById('mpSolicitado').value||'',
   ];
   const ok=await updateRow(SH.proyectos,rowNum,values);
   if(ok){ toast('✓ Proyecto actualizado','success'); closeModal('modalProyecto'); await loadAdmin(); }
@@ -1027,7 +1087,8 @@ async function guardarPago(){
   const existingF=rowNum?allFinanzas.find(x=>x._rowNumber===rowNum):null;
   const newId=existingF?existingF['ID']||'':nextId(allFinanzas,'ID','HEAVEN');
   // Columns: ID | Concepto | Tipo | Monto | Fecha | Proyecto | Cliente | Estado
-  const values=[newId, concepto, tipo, monto, fecha, '', artista, estado];
+  const proyecto=document.getElementById('fpProyecto').value||'';
+  const values=[newId, concepto, tipo, monto, fecha, proyecto, artista, estado];
   let ok=false;
   if(rowNum){ ok=await updateRow(SH.finanzas,rowNum,values); }
   else      { ok=await appendRow(SH.finanzas,values); }
@@ -1078,7 +1139,7 @@ async function guardarProyecto(){
   const fechaI=document.getElementById('npFechaI').value;
   const fechaE=document.getElementById('npFechaE').value;
   const monto=parseFloat(document.getElementById('npMonto').value)||0;
-  const anticipo=parseFloat(document.getElementById('npAnticipo').value)||0;
+  const anticipo=0;
   const bonos=document.getElementById('npBonos').value.trim();
   const notas=document.getElementById('npNotas').value.trim();
   const file=document.getElementById('npArchivo').files[0];
@@ -1087,19 +1148,9 @@ async function guardarProyecto(){
   let archLink='';
   if(file){ archLink=await uploadToDrive(file)||''; }
   const id=nextId(allProyectos,'ID','Proyec');
-  const ok=await appendRow(SH.proyectos,[id,nombre,artista,servicio,fi,fe,estado,bonos,notas,archLink]);
+  // Columns: ID|Nombre|Cliente|Tipo servicio|Fecha sesion|Fecha inicio|Fecha entrega|Bonos|Estado|Archivos|Notas|Solicitado
+  const ok=await appendRow(SH.proyectos,[id,nombre,artista,servicio,'',fi,fe,bonos,estado,archLink,notas,monto]);
   if(!ok){toast('Error al guardar proyecto','error');return;}
-  const saldo=monto-anticipo;
-  if(anticipo>0){
-    const finId1=nextId(allFinanzas,'ID','HEAVEN');
-    await appendRow(SH.finanzas,[finId1,'Anticipo '+nombre,'Ingreso',anticipo,fi,'',artista,'Pagado']);
-  }
-  if(saldo>0){
-    // Reload to get updated count for next ID
-    const tmpFin=await fetchSheet(SH.finanzas);
-    const finId2=nextId(tmpFin.length?tmpFin:allFinanzas,'ID','HEAVEN');
-    await appendRow(SH.finanzas,[finId2,'Saldo '+nombre,'Ingreso',saldo,'—','',artista,'Pendiente']);
-  }
   toast('✓ Proyecto guardado en Sheets','success');
   const res=document.getElementById('npResult');
   res.style.display='block';
@@ -1109,7 +1160,7 @@ async function guardarProyecto(){
 }
 
 function limpiarNP(){
-  ['npNombre','npBonos','npNotas','npFechaI','npFechaE','npMonto','npAnticipo'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
+  ['npNombre','npBonos','npNotas','npFechaI','npFechaE','npMonto'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
   const sel=document.getElementById('npArtista');if(sel)sel.value='';
   const fi=document.getElementById('npArchivo');if(fi)fi.value='';
 }
@@ -1120,7 +1171,7 @@ function limpiarNP(){
 function confirmDelete(tipo,rowNum,nombre){
   document.getElementById('confirmMsg').textContent=`¿Eliminar "${nombre}"? Esta acción no se puede deshacer.`;
   document.getElementById('confirmOkBtn').onclick=async()=>{
-    const sheet=tipo==='artista'?SH.artistas:tipo==='proyecto'?SH.proyectos:SH.finanzas;
+    const sheet=tipo==='artista'?SH.artistas:tipo==='proyecto'?SH.proyectos:tipo==='curso'?SH.cursos:SH.finanzas;
     const ok=await deleteRow(sheet,rowNum);
     if(ok){ toast('✓ Eliminado','success'); closeModal('modalConfirm'); await loadAdmin(); }
     else  { toast('Error al eliminar — asegúrate de tener OAuth activo','error'); closeModal('modalConfirm'); }
@@ -1131,6 +1182,77 @@ function confirmDelete(tipo,rowNum,nombre){
 // ════════════════════════════════════════════
 // NAVIGATION
 // ════════════════════════════════════════════
+// ════════════════════════════════════════════
+// CURSOS ADMIN
+// ════════════════════════════════════════════
+function renderCursosAdmin(){
+  const q=(document.getElementById('searchCursos')?.value||'').toLowerCase();
+  const tipo=document.getElementById('filterTipoCurso')?.value||'';
+  const list=allCursos.filter(c=>{
+    const m=!q||(c['Titulo']||'').toLowerCase().includes(q)||(c['Descripcion']||'').toLowerCase().includes(q);
+    const t=!tipo||(c['TipoCurso']||'')===tipo;
+    return m&&t;
+  });
+  const container=document.getElementById('cursosAdminContainer');
+  if(!container) return;
+  if(!list.length){container.innerHTML='<div class="empty-state">// No hay cursos registrados aún</div>';return;}
+
+  const nivelBadge=(tipo)=>{
+    if(tipo==='Pro') return'<span class="badge" style="background:rgba(251,191,36,.1);color:var(--yellow);border:1px solid rgba(251,191,36,.2);">Pro</span>';
+    if(tipo==='User') return'<span class="badge badge-active">Miembros</span>';
+    return'<span class="badge badge-paid">Público</span>';
+  };
+
+  container.innerHTML=`<table class="data-table"><thead><tr>
+    <th>ID</th><th>Título</th><th>Nivel</th><th>Video</th><th>Descripción</th><th>Acciones</th>
+  </tr></thead><tbody>${list.map(c=>`<tr>
+    <td style="font-family:'DM Mono',monospace;font-size:.65rem;color:var(--muted2)">${c['CursoID']||'—'}</td>
+    <td style="font-weight:600">${c['Titulo']||'—'}</td>
+    <td>${nivelBadge(c['TipoCurso']||'Público')}</td>
+    <td>${c['Video']?`<a href="${c['Video']}" target="_blank" style="font-family:'DM Mono',monospace;font-size:.65rem;color:var(--purple-light);text-decoration:none;">▶ Ver</a>`:'—'}</td>
+    <td style="font-family:'DM Mono',monospace;font-size:.68rem;color:var(--muted);max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${c['Descripcion']||'—'}</td>
+    <td><div class="td-actions">
+      <button class="btn-xs btn-xs-edit" onclick="editCurso(${c._rowNumber})">Editar</button>
+      <button class="btn-xs btn-xs-del" onclick="confirmDelete('curso',${c._rowNumber},'${(c['Titulo']||'').replace(/'/g,"\'")}')">Borrar</button>
+    </div></td>
+  </tr>`).join('')}</tbody></table>`;
+}
+
+function editCurso(rowNum){
+  const c=allCursos.find(x=>x._rowNumber===rowNum);
+  if(!c) return;
+  document.getElementById('modalCursoTitle').textContent='EDITAR CURSO';
+  document.getElementById('curRowNum').value=rowNum;
+  document.getElementById('curTitulo').value=c['Titulo']||'';
+  document.getElementById('curTipo').value=c['TipoCurso']||'Público';
+  document.getElementById('curVideo').value=c['Video']||'';
+  document.getElementById('curDesc').value=c['Descripcion']||'';
+  openModal('modalCurso');
+}
+
+async function guardarCurso(){
+  const rowNum=parseInt(document.getElementById('curRowNum').value)||0;
+  const titulo=document.getElementById('curTitulo').value.trim();
+  if(!titulo){toast('Título requerido','error');return;}
+  const tipo=document.getElementById('curTipo').value;
+  const video=document.getElementById('curVideo').value.trim();
+  const desc=document.getElementById('curDesc').value.trim();
+  const existingC=rowNum?allCursos.find(c=>c._rowNumber===rowNum):null;
+  const id=existingC?existingC['CursoID']||'':nextId(allCursos,'CursoID','Curs');
+  const values=[id,titulo,tipo,video,desc];
+  let ok=false;
+  if(rowNum){ ok=await updateRow(SH.cursos,rowNum,values); }
+  else      { ok=await appendRow(SH.cursos,values); }
+  if(ok){
+    toast('✓ Curso guardado','success');
+    closeModal('modalCurso');
+    document.getElementById('curRowNum').value='';
+    document.getElementById('modalCursoTitle').textContent='NUEVO CURSO';
+    ['curTitulo','curVideo','curDesc'].forEach(id=>{document.getElementById(id).value='';});
+    await loadAdmin(800);
+  } else { toast('Error al guardar — activa OAuth primero','error'); }
+}
+
 function showPage(name,el){
   document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
   document.querySelectorAll('.nav-item').forEach(b=>b.classList.remove('active'));
@@ -1141,6 +1263,7 @@ function showPage(name,el){
   if(name==='proyectos') renderProyectos();
   if(name==='artistas') renderArtistas();
   if(name==='dashboard') renderDashboard();
+  if(name==='cursos') renderCursosAdmin();
 }
 
 // ════════════════════════════════════════════
