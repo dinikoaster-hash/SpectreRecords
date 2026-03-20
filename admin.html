@@ -453,8 +453,14 @@ body::before{content:'';position:fixed;inset:0;background-image:url("data:image/
     <div class="modal-body">
       <input type="hidden" id="fpRowNum"/>
       <div class="form-grid">
-        <div class="form-group full"><label class="form-label">Concepto</label><input class="form-input" id="fpConcepto" placeholder="Anticipo, Saldo, Membresía..."/></div>
-        <div class="form-group"><label class="form-label">Artista (ID o AKA)</label><select class="form-input" id="fpArtista"><option value="">Seleccionar...</option></select></div>
+        <div class="form-group full"><label class="form-label">Concepto</label><input class="form-input" id="fpConcepto" placeholder="Anticipo, Saldo, Gasto estudio..."/></div>
+        <div class="form-group"><label class="form-label">Tipo</label>
+          <select class="form-input" id="fpTipo">
+            <option value="Ingreso">Ingreso</option>
+            <option value="Gasto">Gasto</option>
+          </select>
+        </div>
+        <div class="form-group"><label class="form-label">Artista (opcional)</label><select class="form-input" id="fpArtista"><option value="">Seleccionar...</option></select></div>
         <div class="form-group"><label class="form-label">Monto (MXN)</label><input class="form-input" id="fpMonto" type="number" placeholder="1500"/></div>
         <div class="form-group"><label class="form-label">Fecha</label><input class="form-input" id="fpFecha" type="date"/></div>
         <div class="form-group"><label class="form-label">Estado</label>
@@ -702,8 +708,9 @@ function renderDashboard(){
   const activos=allProyectos.filter(p=>!/finalizado|cancelado/i.test(p['Estado proyecto']||'')).length;
   const fin=allProyectos.filter(p=>/finalizado/i.test(p['Estado proyecto']||'')).length;
   const cancelados=allProyectos.filter(p=>/cancelado/i.test(p['Estado proyecto']||'')).length;
-  const cobrado=allFinanzas.filter(f=>/pagado/i.test(f['Estado']||'')).reduce((s,f)=>s+(parseFloat(f['Monto'])||0),0);
-  const pend=allFinanzas.filter(f=>/pendiente/i.test(f['Estado']||'')).reduce((s,f)=>s+(parseFloat(f['Monto'])||0),0);
+  const signMonto=(f)=>/gasto/i.test(f['Tipo']||'')?(-(parseFloat(f['Monto'])||0)):(parseFloat(f['Monto'])||0);
+  const cobrado=allFinanzas.filter(f=>/pagado/i.test(f['Estado']||'')).reduce((s,f)=>s+signMonto(f),0);
+  const pend=allFinanzas.filter(f=>/pendiente/i.test(f['Estado']||'')).reduce((s,f)=>s+signMonto(f),0);
   document.getElementById('stArtistas').textContent=allArtistas.length||'0';
   document.getElementById('stActivos').textContent=activos||'0';
   document.getElementById('stFinalizados').textContent=fin||'0';
@@ -921,12 +928,28 @@ function renderFinanzas(){
     const e=!est||(f['Estado']||'').toLowerCase().includes(est);
     return m&&e;
   });
-  const cobrado=list.filter(f=>/pagado/i.test(f['Estado']||'')).reduce((s,f)=>s+(parseFloat(f['Monto'])||0),0);
-  const pend=list.filter(f=>/pendiente/i.test(f['Estado']||'')).reduce((s,f)=>s+(parseFloat(f['Monto'])||0),0);
-  document.getElementById('finCobrado').textContent=fmt(cobrado);
-  document.getElementById('finPend').textContent=fmt(pend);
-  document.getElementById('finTotal2').textContent=fmt(cobrado+pend);
+  // Ingresos suman, Gastos restan
+  const signedMonto=(f)=>/gasto/i.test(f['Tipo']||'')
+    ? -(parseFloat(f['Monto'])||0)
+    :  (parseFloat(f['Monto'])||0);
+  const cobrado=list.filter(f=>/pagado/i.test(f['Estado']||'')).reduce((s,f)=>s+signedMonto(f),0);
+  const pend=list.filter(f=>/pendiente/i.test(f['Estado']||'')).reduce((s,f)=>s+signedMonto(f),0);
+  const ingresos=list.filter(f=>/ingreso/i.test(f['Tipo']||'')&&/pagado/i.test(f['Estado']||'')).reduce((s,f)=>s+(parseFloat(f['Monto'])||0),0);
+  const gastos=list.filter(f=>/gasto/i.test(f['Tipo']||'')).reduce((s,f)=>s+(parseFloat(f['Monto'])||0),0);
+  document.getElementById('finCobrado').textContent=fmt(ingresos);
+  document.getElementById('finPend').textContent=fmt(pend<0?Math.abs(pend):pend);
+  document.getElementById('finTotal2').textContent=fmt(cobrado);
   document.getElementById('finMovs').textContent=list.length;
+  // Update labels
+  const lCobrado=document.querySelector('#page-finanzas .fin-card:nth-child(1) .fin-label');
+  const lPend=document.querySelector('#page-finanzas .fin-card:nth-child(2) .fin-label');
+  const lTotal=document.querySelector('#page-finanzas .fin-card:nth-child(3) .fin-label');
+  if(lCobrado) lCobrado.textContent='Ingresos cobrados';
+  if(lPend) lPend.textContent='Por cobrar / gastos';
+  if(lTotal) lTotal.textContent='Balance neto';
+  // Color balance
+  const elTotal=document.getElementById('finTotal2');
+  if(elTotal) elTotal.style.color=cobrado>=0?'var(--green)':'var(--red)';
   if(!list.length){document.getElementById('finanzasContainer').innerHTML='<div class="empty-state">// No se encontraron movimientos</div>';return;}
   // Pendientes primero (más recientes arriba), luego pagados (más recientes arriba)
   const pendList=[...list.filter(f=>/pendiente/i.test(f['Estado']||''))].reverse();
@@ -1083,6 +1106,11 @@ function showPage(name,el){
   document.querySelectorAll('.nav-item').forEach(b=>b.classList.remove('active'));
   document.getElementById('page-'+name).classList.add('active');
   if(el) el.classList.add('active');
+  // Re-render current page with latest data
+  if(name==='finanzas') renderFinanzas();
+  if(name==='proyectos') renderProyectos();
+  if(name==='artistas') renderArtistas();
+  if(name==='dashboard') renderDashboard();
 }
 
 // ════════════════════════════════════════════
