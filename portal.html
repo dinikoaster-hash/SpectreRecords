@@ -1049,8 +1049,8 @@ function renderProyectos() {
               <div class="project-service">${p['ID']||''}</div>
             </td>
             <td><span style="font-family:'DM Mono',monospace;font-size:.7rem;color:var(--muted)">${p['Tipo de servicio']||'—'}</span></td>
-            <td><span style="font-family:'DM Mono',monospace;font-size:.7rem;color:var(--muted)">${p['Fecha inicio']||'—'}</span></td>
-            <td><span style="font-family:'DM Mono',monospace;font-size:.7rem;color:var(--muted)">${p['Fecha entrega']||'—'}</span></td>
+            <td><span style="font-family:'DM Mono',monospace;font-size:.7rem;color:var(--muted)">${formatFecha(p['Fecha inicio'])}</span></td>
+            <td><span style="font-family:'DM Mono',monospace;font-size:.7rem;color:var(--muted)">${formatFecha(p['Fecha entrega'])}</span></td>
             <td>${getStatusBadge(p['Estado proyecto'])}</td>
             <td><span style="font-family:'Bebas Neue',sans-serif;color:var(--purple-light);font-size:1.1rem">${p['Bonos']||p['Bonos incluidos']||'—'}</span></td>
           </tr>
@@ -1090,7 +1090,7 @@ function renderFinanzas() {
             : '<span class="badge badge-unpaid">Pendiente</span>'}
         </div>
         <div class="finance-concept">${f['Concepto']||'—'}</div>
-        <div class="finance-date">${f['Fecha']||'—'}</div>
+        <div class="finance-date">${formatFecha(f['Fecha'])}</div>
         <div class="finance-amount ${isIncome?'income':'expense'}">
           ${isIncome?'+':'-'}$${monto.toLocaleString()} MXN
         </div>
@@ -1160,6 +1160,21 @@ function renderPerfil() {
       // Modo demo activo. <a href="#" onclick="openConfig()" style="color:var(--purple-light)">Conecta tu Google Sheets</a> para ver datos reales.
     </div>` : ''}
   `;
+}
+
+// ═══════════════════════════════════════
+// DATE FORMAT
+// ═══════════════════════════════════════
+function formatFecha(f) {
+  if (!f || f === '—') return f || '—';
+  const meses = ['enero','febrero','marzo','abril','mayo','junio','julio','agosto','septiembre','octubre','noviembre','diciembre'];
+  // dd/mm/yyyy
+  const m1 = f.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
+  if (m1) return `${parseInt(m1[1])} de ${meses[parseInt(m1[2])-1]} de ${m1[3]}`;
+  // yyyy-mm-dd
+  const m2 = f.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+  if (m2) return `${parseInt(m2[3])} de ${meses[parseInt(m2[2])-1]} de ${m2[1]}`;
+  return f;
 }
 
 // ═══════════════════════════════════════
