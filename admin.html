@@ -775,7 +775,13 @@ function updateBadges(){
 }
 
 function getArtista(id){
-  return allArtistas.find(a=>a['ArtistaID']===id||a['AKA']===id||a['Nombre']===id);
+  if(!id||id.trim()==='') return null;
+  return allArtistas.find(a=>
+    a['ArtistaID']===id ||
+    a['AKA']===id ||
+    a['Nombre']===id ||
+    (a['ArtistaID']||'').toLowerCase()===(id||'').toLowerCase()
+  ) || null;
 }
 function getBadge(e){
   if(!e)return'<span class="badge badge-pending">Sin estado</span>';
@@ -1068,7 +1074,7 @@ function renderFinanzas(){
     <th>Concepto</th><th>Artista</th><th>Fecha</th><th>Monto</th><th>Estado</th><th>Acciones</th>
   </tr></thead><tbody>${sorted.map(f=>{
     const a=getArtista(f['Cliente']);
-    const na=a?a['AKA']||a['Nombre']:f['Cliente']||'—';
+    const na=a?(a['AKA']||a['Nombre']||clienteId):(clienteId?'':'—');
     const paid=/pagado/i.test(f['Estado']||'');
     return`<tr>
       <td style="font-weight:600">${f['Concepto']||'—'}</td>
@@ -1118,6 +1124,7 @@ async function guardarPago(){
   const newId=existingF?existingF['ID']||'':nextId(allFinanzas,'ID','HEAVEN');
   // Columns: ID | Concepto | Tipo | Monto | Fecha | Proyecto | Cliente | Estado
   const proyecto=document.getElementById('fpProyecto').value||'';
+  // Exact column order: ID | Concepto | Tipo | Monto | Fecha | Proyecto | Cliente | Estado
   const values=[newId, concepto, tipo, monto, fecha, proyecto, artista, estado];
   let ok=false;
   if(rowNum){ ok=await updateRow(SH.finanzas,rowNum,values); }
