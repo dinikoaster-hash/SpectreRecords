@@ -226,6 +226,7 @@ body::before{content:'';position:fixed;inset:0;background-image:url("data:image/
         </button>
         <button class="nav-item" onclick="showPage('proyectos',this)">
           <span class="nav-icon">◎</span><span>Proyectos</span>
+          <span class="nav-badge purple" id="badgeEspera" style="display:none">!</span>
         </button>
         <button class="nav-item" onclick="showPage('finanzas',this)">
           <span class="nav-icon">$</span><span>Finanzas</span>
@@ -304,12 +305,23 @@ body::before{content:'';position:fixed;inset:0;background-image:url("data:image/
             <button class="btn btn-gold" onclick="showPage('nuevo',document.querySelector('.nav-item:nth-child(5)'))">+ Nuevo</button>
           </div>
         </div>
+        <!-- Toggle grupos -->
+        <div style="display:flex;gap:0;border:1px solid var(--border);margin-bottom:1.2rem;width:fit-content;">
+          <button id="toggleActivos" onclick="setPrjView('activos')"
+            style="font-family:DM Mono,monospace;font-size:.68rem;letter-spacing:.12em;text-transform:uppercase;padding:.7rem 1.6rem;border:none;cursor:none;transition:background .2s,color .2s;background:var(--purple);color:#fff;">
+            ◎ Activos
+          </button>
+          <button id="toggleFinalizados" onclick="setPrjView('finalizados')"
+            style="font-family:DM Mono,monospace;font-size:.68rem;letter-spacing:.12em;text-transform:uppercase;padding:.7rem 1.6rem;border:none;cursor:none;transition:background .2s,color .2s;background:var(--surface2);color:var(--muted);">
+            ✓ Finalizados
+          </button>
+          <button id="toggleCancelados" onclick="setPrjView('cancelados')"
+            style="font-family:DM Mono,monospace;font-size:.68rem;letter-spacing:.12em;text-transform:uppercase;padding:.7rem 1.6rem;border:none;cursor:none;transition:background .2s,color .2s;background:var(--surface2);color:var(--muted);">
+            ✗ Cancelados
+          </button>
+        </div>
         <div class="filter-bar">
           <input class="filter-input" id="searchProyectos" placeholder="// Buscar proyecto o artista..." oninput="renderProyectos()"/>
-          <select class="filter-select" id="filterEstado" onchange="renderProyectos()">
-            <option value="">Todos</option><option value="proceso">En proceso</option>
-            <option value="mezcla">En mezcla</option><option value="revision">Revisión</option><option value="finalizado">Finalizados</option>
-          </select>
         </div>
         <div class="table-wrap" id="proyectosContainer"><div class="loading-state"><div class="spinner"></div>Cargando...</div></div>
       </div>
@@ -572,6 +584,7 @@ const DEFAULT_PASS    = 'heaven2025';
 let oauthToken  = null;
 let allArtistas = [], allProyectos = [], allFinanzas = [], allCursos = [];
 let finView = 'ingresos'; // 'ingresos' | 'gastos'
+let prjView = 'activos';  // 'activos' | 'finalizados' | 'cancelados'
 
 // ════════════════════════════════════════════
 // CURSOR
@@ -766,11 +779,14 @@ async function loadAdmin(delay=0){
 }
 
 function updateBadges(){
+  // Finanzas pendientes badge
   const pend=allFinanzas.filter(f=>/pendiente/i.test(f['Estado']||'')).length;
-  // Debug: log total finanzas count
-  console.log('allFinanzas total:', allFinanzas.length, '| pendientes:', pend);
   const b=document.getElementById('badgePend');
   if(b){ b.style.display=pend>0?'inline':'none'; b.textContent=pend; }
+  // Proyectos en espera badge
+  const espera=allProyectos.filter(p=>/espera/i.test(p['Estado proyecto']||'')).length;
+  const be=document.getElementById('badgeEspera');
+  if(be){ be.style.display=espera>0?'inline':'none'; be.textContent=espera; }
 }
 
 function getArtista(id){
@@ -961,20 +977,46 @@ async function guardarArtista(){
 // ════════════════════════════════════════════
 // PROYECTOS
 // ════════════════════════════════════════════
+function setPrjView(view){
+  prjView=view;
+  const btns={
+    activos:   document.getElementById('toggleActivos'),
+    finalizados: document.getElementById('toggleFinalizados'),
+    cancelados:  document.getElementById('toggleCancelados')
+  };
+  const colors={activos:'var(--purple)',finalizados:'var(--green)',cancelados:'var(--red)'};
+  Object.entries(btns).forEach(([k,btn])=>{
+    if(!btn) return;
+    if(k===view){ btn.style.background=colors[k]; btn.style.color='#fff'; }
+    else { btn.style.background='var(--surface2)'; btn.style.color='var(--muted)'; }
+  });
+  renderProyectos();
+}
+
 function renderProyectos(){
   const q=(document.getElementById('searchProyectos').value||'').toLowerCase();
-  const est=document.getElementById('filterEstado').value;
-  const list=allProyectos.filter(p=>{
+
+  // Categorize
+  const isActivo=p=>!/finalizado|cancelado/i.test(p['Estado proyecto']||'');
+  const isFinalizado=p=>/finalizado/i.test(p['Estado proyecto']||'');
+  const isCancelado=p=>/cancelado/i.test(p['Estado proyecto']||'');
+
+  const allBase=allProyectos.filter(p=>{
     const a=getArtista(p['Cliente']);
     const na=a?(a['AKA']||a['Nombre']||''):p['Cliente']||'';
-    const m=!q||(p['Nombre del proyecto']||'').toLowerCase().includes(q)||na.toLowerCase().includes(q);
-    const e=!est||(p['Estado proyecto']||'').toLowerCase().includes(est);
-    return m&&e;
-  }).slice().reverse();
+    return !q||(p['Nombre del proyecto']||'').toLowerCase().includes(q)||na.toLowerCase().includes(q);
+  });
+
+  const list=[...allBase.filter(
+    prjView==='activos'?isActivo:prjView==='finalizados'?isFinalizado:isCancelado
+  )].reverse();
+
   if(!list.length){
-    document.getElementById('proyectosContainer').innerHTML='<div class="empty-state">// No se encontraron proyectos</div>';
+    document.getElementById('proyectosContainer').innerHTML=
+      '<div class="empty-state">// No hay proyectos '+prjView+' en este momento</div>';
     return;
   }
+
   const rows=list.map(p=>{
     const a=getArtista(p['Cliente']);
     const na=a?a['AKA']||a['Nombre']:p['Cliente']||'—';
@@ -985,22 +1027,17 @@ function renderProyectos(){
       .reduce((s,f)=>s+(parseFloat(f['Monto'])||0),0);
     let liqHtml='<span style="color:var(--muted2)">—</span>';
     if(solicitado>0){
-      if(cobradoProy>=solicitado){
-        liqHtml='<span style="color:var(--green);font-size:1.4rem;font-weight:900">&#10003;</span>';
-      } else {
-        const falta=solicitado-cobradoProy;
-        liqHtml=`<span style="color:var(--red);font-family:monospace;font-size:.65rem">&#10007; $${falta.toLocaleString()}</span>`;
-      }
+      liqHtml=cobradoProy>=solicitado
+        ?'<span style="color:var(--green);font-size:1.4rem;font-weight:900">&#10003;</span>'
+        :`<span style="color:var(--red);font-size:.65rem">&#10007; $${(solicitado-cobradoProy).toLocaleString()}</span>`;
     }
     const archHtml=arch
-      ? `<a href="${arch}" target="_blank" style="font-size:.6rem;color:var(--green);text-decoration:none;">&#9654; Ver</a>`
-      : '<span style="color:var(--muted2)">—</span>';
-    const nombre=p['Nombre del proyecto']||'—';
-    const pid=p['ID']||'';
+      ?`<a href="${arch}" target="_blank" style="font-size:.6rem;color:var(--green);text-decoration:none;">&#9654; Ver</a>`
+      :'<span style="color:var(--muted2)">—</span>';
     const rn=p._rowNumber;
-    const ne=nombre;
+    const nombre=p['Nombre del proyecto']||'—';
     return `<tr>
-      <td><div style="font-weight:600;font-size:.85rem">${nombre}</div><div style="font-size:.6rem;color:var(--muted2)">${pid}</div></td>
+      <td><div style="font-weight:600;font-size:.85rem">${nombre}</div><div style="font-size:.6rem;color:var(--muted2)">${p['ID']||''}</div></td>
       <td style="font-size:.72rem;color:var(--purple-light)">${na}</td>
       <td style="font-size:.68rem;color:var(--muted)">${p['Tipo de servicio']||'—'}</td>
       <td style="font-size:.68rem;color:var(--muted)">${p['Fecha inicio']||'—'}</td>
@@ -1010,10 +1047,11 @@ function renderProyectos(){
       <td>${archHtml}</td>
       <td><div class="td-actions">
         <button class="btn-xs btn-xs-edit" onclick="editProyecto(${rn})">Editar</button>
-        <button class="btn-xs btn-xs-del" onclick="confirmDelete('proyecto',${rn},this.dataset.n)" data-n="${ne}">Borrar</button>
+        <button class="btn-xs btn-xs-del" onclick="confirmDelete('proyecto',${rn},this.dataset.n)" data-n="${nombre.replace(/"/g,'&quot;')}">Borrar</button>
       </div></td>
     </tr>`;
   }).join('');
+
   document.getElementById('proyectosContainer').innerHTML=`<table class="data-table"><thead><tr>
     <th>Proyecto</th><th>Artista</th><th>Servicio</th><th>Inicio</th><th>Estado</th>
     <th>Cobrado</th><th>Liq.</th><th>Archivos</th><th>Acciones</th>
@@ -1452,7 +1490,7 @@ function showPage(name,el){
   if(el) el.classList.add('active');
   // Re-render current page with latest data
   if(name==='finanzas') renderFinanzas();
-  if(name==='proyectos') renderProyectos();
+  if(name==='proyectos'){ setPrjView(prjView); }
   if(name==='artistas') renderArtistas();
   if(name==='dashboard') renderDashboard();
   if(name==='cursos') renderCursosAdmin();
