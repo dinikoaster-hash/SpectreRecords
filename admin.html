@@ -683,6 +683,8 @@ async function loadAdmin(){
 
 function updateBadges(){
   const pend=allFinanzas.filter(f=>/pendiente/i.test(f['Estado']||'')).length;
+  // Debug: log total finanzas count
+  console.log('allFinanzas total:', allFinanzas.length, '| pendientes:', pend);
   const b=document.getElementById('badgePend');
   if(b){ b.style.display=pend>0?'inline':'none'; b.textContent=pend; }
 }
@@ -924,7 +926,12 @@ function renderFinanzas(){
   const list=allFinanzas.filter(f=>{
     const a=getArtista(f['Cliente']);
     const na=a?(a['AKA']||a['Nombre']||''):f['Cliente']||'';
-    const m=!q||(f['Concepto']||'').toLowerCase().includes(q)||na.toLowerCase().includes(q);
+    // Search in concepto, artista name, or artista ID
+    const m=!q
+      ||(f['Concepto']||'').toLowerCase().includes(q)
+      ||na.toLowerCase().includes(q)
+      ||(f['Cliente']||'').toLowerCase().includes(q)
+      ||(f['ID']||'').toLowerCase().includes(q);
     const e=!est||(f['Estado']||'').toLowerCase().includes(est);
     return m&&e;
   });
@@ -993,26 +1000,30 @@ async function guardarPago(){
   const rowNum=parseInt(document.getElementById('fpRowNum').value)||0;
   const concepto=document.getElementById('fpConcepto').value.trim();
   if(!concepto){toast('Concepto requerido','error');return;}
-  const artista=document.getElementById('fpArtista').value;
-  const monto=document.getElementById('fpMonto').value.trim();
-  const fecha=document.getElementById('fpFecha').value;
-  const estado=document.getElementById('fpEstado').value;
-  const f=rowNum?allFinanzas.find(x=>x._rowNumber===rowNum):null;
-  const values=[
-    f?f['ID']||'':'Fin'+Date.now(),
-    concepto,'Ingreso',monto,fecha,'',artista,estado
-  ];
+  const tipo=document.getElementById('fpTipo').value||'Ingreso';
+  const artista=document.getElementById('fpArtista').value||'';
+  const monto=Math.abs(parseFloat(document.getElementById('fpMonto').value)||0).toString();
+  const fecha=document.getElementById('fpFecha').value||'—';
+  const estado=document.getElementById('fpEstado').value||'Pagado';
+  const existingF=rowNum?allFinanzas.find(x=>x._rowNumber===rowNum):null;
+  const newId=existingF?existingF['ID']||'':nextId(allFinanzas,'ID','Fin');
+  // Columns: ID | Concepto | Tipo | Monto | Fecha | Proyecto | Cliente | Estado
+  const values=[newId, concepto, tipo, monto, fecha, '', artista, estado];
   let ok=false;
   if(rowNum){ ok=await updateRow(SH.finanzas,rowNum,values); }
   else      { ok=await appendRow(SH.finanzas,values); }
   if(ok){
-    toast('✓ Pago guardado','success');
+    toast('✓ Pago guardado en Sheets','success');
     closeModal('modalPago');
-    // Reset for next use
     document.getElementById('fpRowNum').value='';
+    document.getElementById('fpConcepto').value='';
+    document.getElementById('fpMonto').value='';
+    document.getElementById('fpFecha').value='';
+    document.getElementById('fpTipo').value='Ingreso';
+    document.getElementById('fpEstado').value='Pagado';
     document.getElementById('modalPagoTitle').textContent='NUEVO PAGO';
     await loadAdmin();
-  } else { toast('Error al guardar','error'); }
+  } else { toast('// Error al guardar — activa OAuth primero','error'); }
 }
 
 // ════════════════════════════════════════════
