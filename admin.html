@@ -323,12 +323,27 @@ body::before{content:'';position:fixed;inset:0;background-image:url("data:image/
             <button class="btn btn-gold" onclick="openModal('modalPago')">+ Nuevo pago</button>
           </div>
         </div>
+
+        <!-- Stats globales -->
         <div class="fin-summary">
-          <div class="fin-card"><div class="fin-label">Cobrado</div><div class="fin-val" style="color:var(--green)" id="finCobrado">$0</div></div>
-          <div class="fin-card"><div class="fin-label">Por cobrar</div><div class="fin-val" style="color:var(--red)" id="finPend">$0</div></div>
-          <div class="fin-card"><div class="fin-label">Total facturado</div><div class="fin-val" style="color:var(--gold)" id="finTotal2">$0</div></div>
-          <div class="fin-card"><div class="fin-label">Movimientos</div><div class="fin-val" style="color:var(--purple-light)" id="finMovs">0</div></div>
+          <div class="fin-card"><div class="fin-label">Ingresos cobrados</div><div class="fin-val" style="color:var(--green)" id="finCobrado">$0</div></div>
+          <div class="fin-card"><div class="fin-label">Por cobrar</div><div class="fin-val" style="color:var(--yellow)" id="finPend">$0</div></div>
+          <div class="fin-card"><div class="fin-label">Gastos</div><div class="fin-val" style="color:var(--red)" id="finGastos">$0</div></div>
+          <div class="fin-card"><div class="fin-label">Balance neto</div><div class="fin-val" style="color:var(--gold)" id="finTotal2">$0</div></div>
         </div>
+
+        <!-- Toggle Ingresos / Gastos -->
+        <div style="display:flex;gap:0;border:1px solid var(--border);margin-bottom:1.5rem;width:fit-content;">
+          <button id="toggleIngresos" onclick="setFinView('ingresos')"
+            style="font-family:'DM Mono',monospace;font-size:.68rem;letter-spacing:.12em;text-transform:uppercase;padding:.7rem 1.8rem;border:none;cursor:none;transition:background .2s,color .2s;background:var(--purple);color:#fff;">
+            ↑ Ingresos
+          </button>
+          <button id="toggleGastos" onclick="setFinView('gastos')"
+            style="font-family:'DM Mono',monospace;font-size:.68rem;letter-spacing:.12em;text-transform:uppercase;padding:.7rem 1.8rem;border:none;cursor:none;transition:background .2s,color .2s;background:var(--surface2);color:var(--muted);">
+            ↓ Gastos
+          </button>
+        </div>
+
         <div class="filter-bar">
           <input class="filter-input" id="searchFinanzas" placeholder="// Buscar concepto o artista..." oninput="renderFinanzas()"/>
           <select class="filter-select" id="filterPagoEstado" onchange="renderFinanzas()">
@@ -452,8 +467,8 @@ body::before{content:'';position:fixed;inset:0;background-image:url("data:image/
             <option value="05 | Cancelado">Cancelado</option>
           </select>
         </div>
-        <div class="form-group"><label class="form-label">Fecha inicio</label><input class="form-input" id="mpFechaI"/></div>
-        <div class="form-group"><label class="form-label">Fecha entrega</label><input class="form-input" id="mpFechaE"/></div>
+        <div class="form-group"><label class="form-label">Fecha inicio</label><input class="form-input" id="mpFechaI" type="date"/></div>
+        <div class="form-group"><label class="form-label">Fecha entrega</label><input class="form-input" id="mpFechaE" type="date"/></div>
         <div class="form-group full"><label class="form-label">Bonos</label><input class="form-input" id="mpBonos"/></div>
         <div class="form-group full"><label class="form-label">Notas</label><input class="form-input" id="mpNotas"/></div>
         <div class="form-group"><label class="form-label">Monto solicitado (MXN)</label><input class="form-input" id="mpSolicitado" type="number" placeholder="2500"/></div>
@@ -557,6 +572,7 @@ const DEFAULT_PASS    = 'heaven2025';
 
 let oauthToken  = null;
 let allArtistas = [], allProyectos = [], allFinanzas = [], allCursos = [];
+let finView = 'ingresos'; // 'ingresos' | 'gastos'
 
 // ════════════════════════════════════════════
 // CURSOR
@@ -854,7 +870,17 @@ function renderArtistas(){
   }).join('')}</div>`;
 }
 
-function openModal(id){document.getElementById(id).classList.add('show');}
+function openModal(id){
+  document.getElementById(id).classList.add('show');
+  // Re-populate selects every time modal opens to ensure fresh data
+  if(id==='modalPago'){
+    populateArtistSelects();
+    populateProyectoSelects();
+  }
+  if(id==='modalArtista'||id==='modalProyecto'){
+    populateArtistSelects();
+  }
+}
 function closeModal(id){document.getElementById(id).classList.remove('show');}
 
 function editArtista(rowNum){
@@ -957,8 +983,9 @@ function editProyecto(rowNum){
   document.getElementById('mpCliente').value=p['Cliente']||'';
   document.getElementById('mpServicio').value=p['Tipo de servicio']||'';
   document.getElementById('mpEstado').value=p['Estado proyecto']||'01 | En proceso';
-  document.getElementById('mpFechaI').value=p['Fecha inicio']||'';
-  document.getElementById('mpFechaE').value=p['Fecha entrega']||'';
+  const toInputDate=s=>{ if(!s) return ''; const m=s.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/); return m?m[3]+'-'+m[2].padStart(2,'0')+'-'+m[1].padStart(2,'0'):''; };
+  document.getElementById('mpFechaI').value=toInputDate(p['Fecha inicio']||'');
+  document.getElementById('mpFechaE').value=toInputDate(p['Fecha entrega']||'');
   document.getElementById('mpBonos').value=p['Bonos']||p['Bonos incluidos']||'';
   document.getElementById('mpNotas').value=p['Notas']||p['Notas del proyecto']||'';
   document.getElementById('mpSolicitado').value=p['Solicitado']||'';
@@ -1014,29 +1041,25 @@ function renderFinanzas(){
     const e=!est||(f['Estado']||'').toLowerCase().includes(est);
     return m&&e;
   });
-  // Ingresos suman, Gastos restan
-  const signedMonto=(f)=>/gasto/i.test(f['Tipo']||'')
-    ? -(parseFloat(f['Monto'])||0)
-    :  (parseFloat(f['Monto'])||0);
-  const cobrado=list.filter(f=>/pagado/i.test(f['Estado']||'')).reduce((s,f)=>s+signedMonto(f),0);
-  const pend=list.filter(f=>/pendiente/i.test(f['Estado']||'')).reduce((s,f)=>s+signedMonto(f),0);
-  const ingresos=list.filter(f=>/ingreso/i.test(f['Tipo']||'')&&/pagado/i.test(f['Estado']||'')).reduce((s,f)=>s+(parseFloat(f['Monto'])||0),0);
-  const gastos=list.filter(f=>/gasto/i.test(f['Tipo']||'')).reduce((s,f)=>s+(parseFloat(f['Monto'])||0),0);
-  document.getElementById('finCobrado').textContent=fmt(ingresos);
-  document.getElementById('finPend').textContent=fmt(pend<0?Math.abs(pend):pend);
-  document.getElementById('finTotal2').textContent=fmt(cobrado);
-  document.getElementById('finMovs').textContent=list.length;
-  // Update labels
-  const lCobrado=document.querySelector('#page-finanzas .fin-card:nth-child(1) .fin-label');
-  const lPend=document.querySelector('#page-finanzas .fin-card:nth-child(2) .fin-label');
-  const lTotal=document.querySelector('#page-finanzas .fin-card:nth-child(3) .fin-label');
-  if(lCobrado) lCobrado.textContent='Ingresos cobrados';
-  if(lPend) lPend.textContent='Por cobrar / gastos';
-  if(lTotal) lTotal.textContent='Balance neto';
-  // Color balance
+  // Calcular stats globales (sobre TODOS los registros, no solo la vista)
+  const allIngresosCobrados=allFinanzas.filter(f=>/ingreso/i.test(f['Tipo']||'')&&/pagado/i.test(f['Estado']||'')).reduce((s,f)=>s+(parseFloat(f['Monto'])||0),0);
+  const allPorCobrar=allFinanzas.filter(f=>/ingreso/i.test(f['Tipo']||'')&&/pendiente/i.test(f['Estado']||'')).reduce((s,f)=>s+(parseFloat(f['Monto'])||0),0);
+  const allGastos=allFinanzas.filter(f=>/gasto/i.test(f['Tipo']||'')).reduce((s,f)=>s+(parseFloat(f['Monto'])||0),0);
+  const balance=allIngresosCobrados-allGastos;
+  document.getElementById('finCobrado').textContent=fmt(allIngresosCobrados);
+  document.getElementById('finPend').textContent=fmt(allPorCobrar);
+  const elGastos=document.getElementById('finGastos');
+  if(elGastos) elGastos.textContent=fmt(allGastos);
   const elTotal=document.getElementById('finTotal2');
-  if(elTotal) elTotal.style.color=cobrado>=0?'var(--green)':'var(--red)';
-  if(!list.length){document.getElementById('finanzasContainer').innerHTML='<div class="empty-state">// No se encontraron movimientos</div>';return;}
+  if(elTotal){ elTotal.textContent=fmt(Math.abs(balance)); elTotal.style.color=balance>=0?'var(--green)':'var(--red)'; }
+
+  // Filtrar por vista actual (ingresos o gastos)
+  const viewList = finView === 'gastos'
+    ? list.filter(f=>/gasto/i.test(f['Tipo']||''))
+    : list.filter(f=>!/gasto/i.test(f['Tipo']||''));
+
+  document.getElementById('finMovs') && (document.getElementById('finMovs').textContent=viewList.length);
+  // (empty state handled per-view below)
   // Pendientes primero (más recientes arriba), luego pagados (más recientes arriba)
   const pendList=[...list.filter(f=>/pendiente/i.test(f['Estado']||''))].reverse();
   const pagList=[...list.filter(f=>/pagado/i.test(f['Estado']||''))].reverse();
@@ -1070,7 +1093,8 @@ function editPago(rowNum){
   // fpArtista values are ArtistaIDs, Cliente column stores ArtistaID
   document.getElementById('fpArtista').value=f['Cliente']||'';
   document.getElementById('fpMonto').value=f['Monto']||'';
-  document.getElementById('fpFecha').value=f['Fecha']||'';
+  const toInput=s=>{ if(!s||s==='—') return ''; const m=s.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/); if(m) return m[3]+'-'+m[2].padStart(2,'0')+'-'+m[1].padStart(2,'0'); const m2=s.match(/^(\d{1,2})\s+de\s+(\w+)\s+de\s+(\d{4})$/i); if(m2){const mes={enero:'01',febrero:'02',marzo:'03',abril:'04',mayo:'05',junio:'06',julio:'07',agosto:'08',septiembre:'09',octubre:'10',noviembre:'11',diciembre:'12'}; return m2[3]+'-'+(mes[m2[2].toLowerCase()]||'01')+'-'+m2[1].padStart(2,'0');} return ''; };
+  document.getElementById('fpFecha').value=toInput(f['Fecha']||'');
   document.getElementById('fpEstado').value=f['Estado']||'Pendiente';
   openModal('modalPago');
 }
@@ -1082,7 +1106,9 @@ async function guardarPago(){
   const tipo=document.getElementById('fpTipo').value||'Ingreso';
   const artista=document.getElementById('fpArtista').value||'';
   const monto=Math.abs(parseFloat(document.getElementById('fpMonto').value)||0).toString();
-  const fecha=document.getElementById('fpFecha').value||'—';
+  const rawFecha=document.getElementById('fpFecha').value||'';
+  const fmtD=d=>{ if(!d) return '—'; const[y,m,dd]=d.split('-'); return dd+'/'+m+'/'+y; };
+  const fecha=fmtD(rawFecha);
   const estado=document.getElementById('fpEstado').value||'Pagado';
   const existingF=rowNum?allFinanzas.find(x=>x._rowNumber===rowNum):null;
   const newId=existingF?existingF['ID']||'':nextId(allFinanzas,'ID','HEAVEN');
@@ -1143,8 +1169,9 @@ async function guardarProyecto(){
   const bonos=document.getElementById('npBonos').value.trim();
   const notas=document.getElementById('npNotas').value.trim();
   const file=document.getElementById('npArchivo').files[0];
-  const fi=fechaI?new Date(fechaI).toLocaleDateString('es-MX'):'';
-  const fe=fechaE?new Date(fechaE).toLocaleDateString('es-MX'):'';
+  const fmtDate=d=>{ if(!d) return ''; const[y,m,dd]=d.split('-'); return dd+'/'+m+'/'+y; };
+  const fi=fmtDate(fechaI);
+  const fe=fmtDate(fechaE);
   let archLink='';
   if(file){ archLink=await uploadToDrive(file)||''; }
   const id=nextId(allProyectos,'ID','Proyec');
