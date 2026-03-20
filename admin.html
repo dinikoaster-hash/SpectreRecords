@@ -784,10 +784,10 @@ function updateBadges(){
   const pend=allFinanzas.filter(f=>/pendiente/i.test(f['Estado']||'')).length;
   const b=document.getElementById('badgePend');
   if(b){ b.style.display=pend>0?'inline':'none'; b.textContent=pend; }
-  // Proyectos en espera badge
-  const espera=allProyectos.filter(p=>/espera/i.test(p['Estado proyecto']||'')).length;
+  // Proyectos activos badge (en proceso, mezcla, revisión, espera — todo lo que no es finalizado ni cancelado)
+  const activos=allProyectos.filter(p=>!/finalizado|cancelado/i.test(p['Estado proyecto']||'')).length;
   const be=document.getElementById('badgeEspera');
-  if(be){ be.style.display=espera>0?'inline':'none'; be.textContent=espera; }
+  if(be){ be.style.display=activos>0?'inline':'none'; be.textContent=activos; }
 }
 
 function getArtista(id){
