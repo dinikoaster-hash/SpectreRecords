@@ -1032,6 +1032,22 @@ async function actualizarProyecto(){
 // ════════════════════════════════════════════
 // FINANZAS
 // ════════════════════════════════════════════
+function setFinView(view){
+  finView = view;
+  const btnI = document.getElementById('toggleIngresos');
+  const btnG = document.getElementById('toggleGastos');
+  if(btnI && btnG){
+    if(view === 'ingresos'){
+      btnI.style.background='var(--purple)'; btnI.style.color='#fff';
+      btnG.style.background='var(--surface2)'; btnG.style.color='var(--muted)';
+    } else {
+      btnG.style.background='var(--red)'; btnG.style.color='#fff';
+      btnI.style.background='var(--surface2)'; btnI.style.color='var(--muted)';
+    }
+  }
+  renderFinanzas();
+}
+
 function renderFinanzas(){
   const q=(document.getElementById('searchFinanzas').value||'').toLowerCase();
   const est=document.getElementById('filterPagoEstado').value;
