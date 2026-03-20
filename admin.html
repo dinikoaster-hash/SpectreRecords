@@ -3,51 +3,46 @@
 <head>
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Spectre Records — Admin PRO</title>
+  <title>Spectre Records — Admin</title>
   <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Syne:wght@400;600;800&family=DM+Mono:wght@300;400;500&display=swap" rel="stylesheet"/>
   <script src="https://accounts.google.com/gsi/client" async defer></script>
   <style>
     :root{--bg:#080808;--surface:#0e0e0e;--surface2:#131318;--purple:#7c3aed;--purple-light:#a855f7;--purple-glow:#9333ea;--purple-dim:#2d1b5e;--text:#f0eaf8;--muted:#6b6378;--muted2:#4a4356;--border:#1a1625;--border2:#221e30;--green:#34d399;--yellow:#fbbf24;--red:#f87171;--gold:#C9A84C;}
     *,*::before,*::after{margin:0;padding:0;box-sizing:border-box;}
-    html{scroll-behavior:smooth;}
-    body{background:var(--bg);color:var(--text);font-family:'Syne',sans-serif;overflow-x:hidden;cursor:none;}
+    body{background:var(--bg);color:var(--text);font-family:'Syne',sans-serif;overflow-x:hidden;}
     
-    /* CURSOR */
-    #cursor{width:8px;height:8px;background:var(--purple-light);border-radius:50%;position:fixed;pointer-events:none;z-index:9999;transition:transform .1s;}
-    #cursorRing{width:30px;height:30px;border:1px solid var(--purple-light);border-radius:50%;position:fixed;pointer-events:none;z-index:9998;transition:left .15s ease-out,top .15s ease-out;transform:translate(-11px,-11px);opacity:.4;}
+    /* CURSOR ORIGINAL */
+    #cursor{width:8px;height:8px;background:var(--purple-light);border-radius:50%;position:fixed;pointer-events:none;z-index:9999;}
+    #cursorRing{width:30px;height:30px;border:1px solid var(--purple-light);border-radius:50%;position:fixed;pointer-events:none;z-index:9998;transform:translate(-11px,-11px);opacity:.4;}
 
-    /* LOGIN */
-    #loginScreen{height:100vh;display:flex;align-items:center;justify-content:center;background:radial-gradient(circle at center, #150d25 0%, #080808 100%);}
-    .login-box{background:var(--surface);padding:3rem;border:1px solid var(--border2);border-radius:24px;width:100%;max-width:400px;text-align:center;}
-    .login-box h1{font-family:'Bebas Neue';font-size:3rem;letter-spacing:4px;margin-bottom:2rem;background:linear-gradient(to bottom, #fff, var(--muted));-webkit-background-clip:text;-webkit-text-fill-color:transparent;}
-    input{width:100%;padding:1rem;background:var(--bg);border:1px solid var(--border2);border-radius:12px;color:white;font-family:'DM Mono';margin-bottom:1rem;outline:none;}
-    input:focus{border-color:var(--purple);}
-    button{width:100%;padding:1rem;background:var(--purple);color:white;border:none;border-radius:12px;font-family:'Syne';font-weight:700;cursor:pointer;transition:0.3s;}
-    button:hover{background:var(--purple-light);transform:translateY(-2px);}
+    /* LAYOUT CON BOTONES VERTICALES */
+    .admin-layout{display:flex;min-height:100vh;}
+    .sidebar{width:280px;background:var(--surface);border-right:1px solid var(--border2);padding:2rem;display:flex;flex-direction:column;gap:0.5rem;position:fixed;height:100vh;}
+    .main-content{flex:1;margin-left:280px;padding:3rem;}
 
-    /* DASHBOARD */
-    #adminScreen{display:none;padding:2rem;}
-    .sidebar{position:fixed;left:2rem;top:2rem;bottom:2rem;width:260px;background:var(--surface);border:1px solid var(--border2);border-radius:32px;padding:2rem;display:flex;flex-direction:column;gap:1rem;}
-    .main-content{margin-left:300px;max-width:1200px;}
-    .tab-btn{background:transparent;border:1px solid var(--border2);color:var(--muted);text-align:left;padding:1rem;font-family:'DM Mono';transition:0.3s;}
+    .tab-btn{background:transparent;border:1px solid transparent;color:var(--muted);padding:1rem;text-align:left;cursor:pointer;font-family:'DM Mono';border-radius:12px;transition:0.3s;}
+    .tab-btn:hover{background:var(--surface2);color:var(--text);}
     .tab-btn.active{background:var(--purple-dim);color:var(--purple-light);border-color:var(--purple);}
+
+    /* TABLAS ORIGINALES */
+    .data-table{width:100%;border-collapse:collapse;margin-top:1rem;font-family:'DM Mono';font-size:0.85rem;}
+    .data-table th{text-align:left;padding:1rem;border-bottom:1px solid var(--border2);color:var(--muted);text-transform:uppercase;font-size:0.7rem;}
+    .data-table td{padding:1rem;border-bottom:1px solid var(--border);color:var(--text);}
+
+    /* DASHBOARD CARDS */
+    .stats-grid{display:grid;grid-template-columns:repeat(auto-fit, minmax(200px, 1fr));gap:1.5rem;margin-bottom:3rem;}
+    .stat-card{background:var(--surface);padding:1.5rem;border-radius:20px;border:1px solid var(--border2);}
+    .stat-val{font-family:'Bebas Neue';font-size:2.5rem;color:var(--purple-light);}
+    
+    /* FORMULARIOS */
+    .form-box{background:var(--surface);padding:2rem;border-radius:24px;border:1px solid var(--border2);display:grid;grid-template-columns:1fr 1fr;gap:1rem;}
+    input, select, textarea{background:var(--bg);border:1px solid var(--border2);padding:1rem;border-radius:12px;color:white;font-family:'DM Mono';outline:none;}
+    .full-width{grid-column: span 2;}
+    .btn-save{background:var(--purple);font-weight:700;border:none;padding:1rem;border-radius:12px;cursor:pointer;}
+    
+    #loginScreen{position:fixed;inset:0;background:var(--bg);display:flex;align-items:center;justify-content:center;z-index:10000;}
     .tab-content{display:none;}
-    .tab-content.active{display:block;animation:fadeIn 0.5s ease;}
-
-    /* TABLES & BADGES */
-    .data-table{width:100%;border-collapse:collapse;background:var(--surface);border-radius:16px;overflow:hidden;margin-top:1rem;}
-    .data-table th{padding:1rem;text-align:left;border-bottom:1px solid var(--border2);color:var(--muted);font-size:0.7rem;text-transform:uppercase;}
-    .data-table td{padding:1rem;border-bottom:1px solid var(--border);font-family:'DM Mono';font-size:0.85rem;}
-    .badge{padding:4px 8px;border-radius:6px;font-size:0.7rem;font-weight:700;}
-    .badge-edit{background:var(--purple-dim);color:var(--purple-light);cursor:pointer;border:1px solid var(--purple);}
-
-    /* CONFIG & TOAST */
-    #configPanel{position:fixed;right:-400px;top:0;bottom:0;width:350px;background:var(--surface);border-left:1px solid var(--border2);padding:2rem;transition:0.4s;z-index:1000;}
-    #configPanel.show{right:0;}
-    .toast{position:fixed;bottom:2rem;right:2rem;background:var(--purple);color:white;padding:1rem 2rem;border-radius:12px;box-shadow:0 10px 30px rgba(0,0,0,0.5);z-index:10000;font-weight:600;animation:slideUp 0.3s;}
-
-    @keyframes fadeIn{from{opacity:0;transform:translateY(10px);}to{opacity:1;transform:translateY(0);}}
-    @keyframes slideUp{from{transform:translateY(100%);}to{transform:translateY(0);}}
+    .tab-content.active{display:block;}
   </style>
 </head>
 <body>
@@ -56,264 +51,230 @@
 <div id="cursorRing"></div>
 
 <div id="loginScreen">
-  <div class="login-box">
-    <h1>SPECTRE ADMIN</h1>
-    <input type="password" id="adminPass" placeholder="CONTRASEÑA ACCESS">
-    <button onclick="doAdminLogin()">ENTRAR AL SISTEMA</button>
+  <div style="text-align:center;background:var(--surface);padding:3rem;border-radius:32px;border:1px solid var(--border2);">
+    <h1 style="font-family:'Bebas Neue';font-size:3rem;margin-bottom:2rem;">SPECTRE ADMIN</h1>
+    <input type="password" id="adminPass" placeholder="PASSWORD">
+    <button onclick="doAdminLogin()" class="btn-save" style="width:100%;margin-top:1rem;">ENTRAR</button>
   </div>
 </div>
 
-<div id="adminScreen">
+<div id="adminScreen" class="admin-layout" style="display:none;">
   <div class="sidebar">
-    <div style="font-family:'Bebas Neue';font-size:1.5rem;margin-bottom:2rem;">SPECTRE RECORDS</div>
+    <h2 style="font-family:'Bebas Neue';margin-bottom:2rem;letter-spacing:2px;">SPECTRE RECORDS</h2>
     <button class="tab-btn active" onclick="switchTab('dash', this)">DASHBOARD</button>
     <button class="tab-btn" onclick="switchTab('proyectos', this)">PROYECTOS</button>
+    <button class="tab-btn" onclick="switchTab('finanzas', this)">FINANZAS</button>
     <button class="tab-btn" onclick="switchTab('nuevo', this)">+ NUEVO / EDITAR</button>
-    <button class="tab-btn" onclick="iniciarOAuth()" id="oauthBtn" style="margin-top:auto;border-color:var(--green);color:var(--green)">CONECTAR GOOGLE</button>
-    <button class="tab-btn" onclick="openConfig()">CONFIGURACIÓN</button>
+    <button class="tab-btn" onclick="iniciarOAuth()" id="oauthBtn" style="margin-top:auto;color:var(--green);">CONECTAR GOOGLE</button>
   </div>
 
   <div class="main-content">
     <div id="tab-dash" class="tab-content active">
-      <h2 style="font-family:'Bebas Neue';font-size:3rem;">SISTEMA DE GESTIÓN</h2>
-      <p style="color:var(--muted)">Bienvenido al panel de control de Spectre Records.</p>
+      <h2 style="font-family:'Bebas Neue';font-size:3rem;margin-bottom:1rem;">REPORTE GENERAL</h2>
+      <div class="stats-grid">
+        <div class="stat-card">
+          <div style="color:var(--muted);font-size:0.7rem;">TOTAL GENERADO</div>
+          <div class="stat-val" id="statTotal">$0</div>
+        </div>
+        <div class="stat-card">
+          <div style="color:var(--muted);font-size:0.7rem;">PROYECTOS ACTIVOS</div>
+          <div class="stat-val" id="statProy">0</div>
+        </div>
+        <div class="stat-card">
+          <div style="color:var(--muted);font-size:0.7rem;">ARTISTAS</div>
+          <div class="stat-val" id="statArt">0</div>
+        </div>
+      </div>
     </div>
 
     <div id="tab-proyectos" class="tab-content">
-      <div style="display:flex;justify-content:space-between;align-items:center;">
-        <h2 style="font-family:'Bebas Neue';font-size:2rem;">LISTADO DE PROYECTOS</h2>
-        <input type="text" id="searchProyectos" placeholder="Buscar..." style="width:200px;margin:0;" oninput="renderProyectos()">
-      </div>
+      <h2 style="font-family:'Bebas Neue';font-size:2.5rem;">PROYECTOS</h2>
       <div id="proyectosContainer"></div>
     </div>
 
+    <div id="tab-finanzas" class="tab-content">
+      <h2 style="font-family:'Bebas Neue';font-size:2.5rem;">FINANZAS</h2>
+      <div id="finanzasContainer"></div>
+    </div>
+
     <div id="tab-nuevo" class="tab-content">
-      <h2 id="formTitle" style="font-family:'Bebas Neue';font-size:2rem;">NUEVO PROYECTO</h2>
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;margin-top:1rem;background:var(--surface);padding:2rem;border-radius:24px;">
-        <input type="text" id="npNombre" placeholder="Nombre del Proyecto">
-        <select id="npArtista" style="width:100%;padding:1rem;background:var(--bg);border:1px solid var(--border2);border-radius:12px;color:white;margin-bottom:1rem;outline:none;"></select>
-        <input type="text" id="npServicio" placeholder="Tipo de Servicio">
-        <select id="npEstado" style="width:100%;padding:1rem;background:var(--bg);border:1px solid var(--border2);border-radius:12px;color:white;margin-bottom:1rem;outline:none;">
+      <h2 id="formTitle" style="font-family:'Bebas Neue';font-size:2.5rem;">GESTIÓN DE DATOS</h2>
+      <div class="form-box">
+        <input type="text" id="fId" placeholder="ID (Auto)" readonly>
+        <input type="text" id="fNombre" placeholder="Nombre / Concepto">
+        <select id="fArtista"></select>
+        <select id="fEstado">
           <option value="Pendiente">Pendiente</option>
           <option value="En Proceso">En Proceso</option>
           <option value="Completado">Completado</option>
         </select>
-        <input type="date" id="npFechaI" title="Fecha Inicio">
-        <input type="date" id="npFechaE" title="Fecha Entrega">
-        <textarea id="npNotas" placeholder="Notas adicionales..." style="grid-column: span 2;height:100px;background:var(--bg);color:white;border:1px solid var(--border2);border-radius:12px;padding:1rem;font-family:'DM Mono';"></textarea>
-        <button onclick="guardarProyecto()" style="grid-column: span 2;">GUARDAR EN GOOGLE SHEETS</button>
-        <button onclick="limpiarForm()" style="grid-column: span 2;background:transparent;border:1px solid var(--border2);margin-top:-0.5rem;">CANCELAR / LIMPIAR</button>
+        <input type="number" id="fMonto" placeholder="Monto $">
+        <div class="full-width" style="border:1px dashed var(--muted2);padding:1rem;border-radius:12px;">
+          <label style="font-size:0.7rem;color:var(--muted);display:block;margin-bottom:0.5rem;">SUBIR ARCHIVO A DRIVE (Contratos/Masters)</label>
+          <input type="file" id="fArchivo" style="border:none;padding:0;">
+        </div>
+        <textarea id="fNotas" class="full-width" placeholder="Notas..."></textarea>
+        <button onclick="guardarTodo()" class="btn-save full-width">GUARDAR Y SINCRONIZAR</button>
       </div>
     </div>
   </div>
 </div>
 
-<div id="configPanel">
-  <h3>CONFIGURACIÓN</h3>
-  <label>Sheet ID</label><input id="cfgSheetId" type="text">
-  <label>API Key</label><input id="cfgApiKey" type="text">
-  <button onclick="saveConfig()">GUARDAR CONFIG</button>
-  <button onclick="closeConfig()" style="background:transparent;">CERRAR</button>
-</div>
-
 <script>
-// --- CONFIGURACIÓN Y CREDENCIALES ---
-const OAUTH_CLIENT_ID = '517201895021-4q6nl7376jgag4bmrrqbo9t141n81v93.apps.googleusercontent.com';
-const FIXED_API_KEY   = 'AIzaSyC6K7d8zJc2TVrchsJQeIAfHEGJ5drA74c';
-const FIXED_SHEET_ID = '18-hf-2pCs1UhUUi66Ke_JmheavXk_V-Enus0p3yfNd0';
-const SCOPES          = 'https://www.googleapis.com/auth/spreadsheets';
+const CFG = {
+  sheetId: '18-hf-2pCs1UhUUi66Ke_JmheavXk_V-Enus0p3yfNd0',
+  apiKey: 'AIzaSyC6K7d8zJc2TVrchsJQeIAfHEGJ5drA74c',
+  client_id: '517201895021-4q6nl7376jgag4bmrrqbo9t141n81v93.apps.googleusercontent.com'
+};
 
 let oauthToken = null;
-let allProyectos = [];
-let allArtistas = [];
-let editingRow = null; // Si es null, estamos creando. Si tiene un número, estamos editando esa fila.
+let dataCache = { proyectos: [], artistas: [], finanzas: [] };
+let editingRow = null;
 
-function getCfg(){
-  return {
-    sheetId: localStorage.getItem('adm_sheetId') || FIXED_SHEET_ID,
-    apiKey:  localStorage.getItem('adm_apiKey')  || FIXED_API_KEY,
-    shProyectos: 'Proyectos',
-    shArtistas: 'Artistas'
-  };
-}
-
-// --- LOGIN ---
+// --- INICIO ---
 function doAdminLogin(){
-  const pass = document.getElementById('adminPass').value;
-  if(pass === 'heaven2025' || pass === 'admin'){
-    document.getElementById('loginScreen').style.display = 'none';
-    document.getElementById('adminScreen').style.display = 'block';
-    loadData();
-  } else {
-    showToast('// Acceso Denegado');
+  if(document.getElementById('adminPass').value === 'heaven2025'){
+    document.getElementById('loginScreen').style.display='none';
+    document.getElementById('adminScreen').style.display='flex';
+    loadAllData();
   }
 }
 
-// --- OAUTH ---
 function iniciarOAuth() {
   const client = google.accounts.oauth2.initTokenClient({
-    client_id: OAUTH_CLIENT_ID,
-    scope: SCOPES,
-    callback: (resp) => {
-      if(resp.error) return showToast('Error OAuth');
-      oauthToken = resp.access_token;
-      document.getElementById('oauthBtn').textContent = '✓ GOOGLE CONECTADO';
-      showToast('✓ Permisos de edición activos');
-    },
+    client_id: CFG.client_id,
+    scope: 'https://www.googleapis.com/auth/spreadsheets https://www.googleapis.com/auth/drive.file',
+    callback: (r) => { oauthToken = r.access_token; document.getElementById('oauthBtn').style.color='var(--purple-light)'; }
   });
   client.requestAccessToken();
 }
 
-// --- DATA ENGINE (READ & WRITE) ---
-async function loadData(){
-  const c = getCfg();
-  showToast('Cargando base de datos...');
-  
-  // Cargar Artistas para el select
-  const artData = await fetchSheet(c.shArtistas);
-  allArtistas = artData || [];
-  populateArtistSelect();
-
-  // Cargar Proyectos
-  const proyData = await fetchSheet(c.shProyectos);
-  allProyectos = proyData || [];
-  renderProyectos();
-}
-
-async function fetchSheet(name){
-  const c = getCfg();
-  try {
-    const r = await fetch(`https://sheets.googleapis.com/v4/spreadsheets/${c.sheetId}/values/${name}?key=${c.apiKey}`);
+// --- CARGA DE DATOS Y CÁLCULOS ---
+async function loadAllData(){
+  const fetchSheet = async (name) => {
+    const r = await fetch(`https://sheets.googleapis.com/v4/spreadsheets/${CFG.sheetId}/values/${name}?key=${CFG.apiKey}`);
     const d = await r.json();
     if(!d.values) return [];
-    const [headers, ...rows] = d.values;
+    const [h, ...rows] = d.values;
     return rows.map((row, i) => {
-      const obj = { _rowNumber: i + 2 }; // Sheets es base 1 y saltamos cabecera
-      headers.forEach((h, idx) => obj[h.trim()] = (row[idx] || ''));
-      return obj;
+      const o = { _row: i + 2 };
+      h.forEach((header, idx) => o[header.trim()] = row[idx] || '');
+      return o;
     });
-  } catch(e) { return null; }
-}
-
-async function guardarProyecto(){
-  if(!oauthToken) return showToast('⚠️ Conecta Google primero');
-  
-  const c = getCfg();
-  const data = {
-    id: editingRow ? allProyectos.find(p => p._rowNumber === editingRow).ID : ('Proy' + String(allProyectos.length+1).padStart(2,'0')),
-    nombre: document.getElementById('npNombre').value,
-    artista: document.getElementById('npArtista').value,
-    servicio: document.getElementById('npServicio').value,
-    fechaI: document.getElementById('npFechaI').value,
-    fechaE: document.getElementById('npFechaE').value,
-    estado: document.getElementById('npEstado').value,
-    notas: document.getElementById('npNotas').value
   };
 
-  const values = [data.id, data.nombre, data.artista, data.servicio, data.fechaI, data.fechaE, data.estado, "", data.notas];
+  dataCache.artistas = await fetchSheet('Artistas');
+  dataCache.proyectos = await fetchSheet('Proyectos');
+  dataCache.finanzas = await fetchSheet('Finanzas');
+
+  actualizarDashboard();
+  renderTablas();
+}
+
+function actualizarDashboard(){
+  // Sumar monto de Finanzas
+  const total = dataCache.finanzas.reduce((acc, f) => acc + (parseFloat(f.Monto) || 0), 0);
+  document.getElementById('statTotal').textContent = `$${total.toLocaleString()}`;
+  document.getElementById('statProy').textContent = dataCache.proyectos.length;
+  document.getElementById('statArt').textContent = dataCache.artistas.length;
   
-  let url, method;
-  if(editingRow){
-    // UPDATE
-    url = `https://sheets.googleapis.com/v4/spreadsheets/${c.sheetId}/values/Proyectos!A${editingRow}:I${editingRow}?valueInputOption=USER_ENTERED`;
-    method = 'PUT';
-  } else {
-    // APPEND
-    url = `https://sheets.googleapis.com/v4/spreadsheets/${c.sheetId}/values/Proyectos:append?valueInputOption=USER_ENTERED`;
-    method = 'POST';
+  // Llenar select de artistas
+  const sel = document.getElementById('fArtista');
+  sel.innerHTML = '<option value="">Seleccionar Artista...</option>' + 
+    dataCache.artistas.map(a => `<option value="${a.AKA || a.Nombre}">${a.AKA || a.Nombre}</option>`).join('');
+}
+
+// --- SUBIDA A DRIVE Y GUARDADO ---
+async function uploadToDrive(file) {
+  if(!oauthToken) return "";
+  const metadata = { name: file.name, parents: [] }; // Se guarda en la raíz de tu Drive por defecto
+  const formData = new FormData();
+  formData.append('metadata', new Blob([JSON.stringify(metadata)], { type: 'application/json' }));
+  formData.append('file', file);
+
+  const r = await fetch('https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart', {
+    method: 'POST',
+    headers: { 'Authorization': `Bearer ${oauthToken}` },
+    body: formData
+  });
+  const d = await r.json();
+  return d.id ? `https://drive.google.com/uc?id=${d.id}&export=download` : "";
+}
+
+async function guardarTodo(){
+  if(!oauthToken) return alert("Conecta Google primero");
+  
+  const fileInput = document.getElementById('fArchivo');
+  let fileUrl = "";
+  if(fileInput.files.length > 0) {
+    fileUrl = await uploadToDrive(fileInput.files[0]);
   }
 
-  showToast('Sincronizando con Sheets...');
+  const values = [
+    editingRow ? document.getElementById('fId').value : ('PR' + Date.now().toString().slice(-4)),
+    document.getElementById('fNombre').value,
+    document.getElementById('fArtista').value,
+    "", // Servicio
+    new Date().toLocaleDateString(), // Fecha
+    "", "", 
+    document.getElementById('fEstado').value,
+    document.getElementById('fMonto').value,
+    document.getElementById('fNotas').value,
+    fileUrl // El enlace de Drive se guarda en la última columna
+  ];
+
+  const method = editingRow ? 'PUT' : 'POST';
+  const range = editingRow ? `Proyectos!A${editingRow}:K${editingRow}` : `Proyectos!A:K:append`;
+  const url = `https://sheets.googleapis.com/v4/spreadsheets/${CFG.sheetId}/values/${range}?valueInputOption=USER_ENTERED`;
+
   const res = await fetch(url, {
-    method: method,
+    method: editingRow ? 'PUT' : 'POST',
     headers: { 'Authorization': `Bearer ${oauthToken}`, 'Content-Type': 'application/json' },
     body: JSON.stringify({ values: [values] })
   });
 
-  if(res.ok){
-    showToast('✓ Guardado correctamente');
-    limpiarForm();
-    loadData();
-    switchTab('proyectos', document.querySelector('[onclick*="proyectos"]'));
-  } else {
-    showToast('// Error al guardar');
+  if(res.ok) {
+    alert("✓ Sincronizado");
+    editingRow = null;
+    loadAllData();
   }
 }
 
-// --- INTERFAZ ---
-function renderProyectos(){
-  const search = document.getElementById('searchProyectos').value.toLowerCase();
-  const list = allProyectos.filter(p => (p['Nombre del proyecto'] || '').toLowerCase().includes(search));
-  
-  let html = `<table class="data-table"><thead><tr><th>ID</th><th>Proyecto</th><th>Artista</th><th>Estado</th><th>Acciones</th></tr></thead><tbody>`;
-  list.forEach(p => {
-    html += `<tr>
-      <td>${p.ID}</td>
-      <td style="font-weight:800;color:var(--purple-light)">${p['Nombre del proyecto']}</td>
-      <td>${p['Cliente'] || '---'}</td>
-      <td><span class="badge" style="background:var(--purple-dim)">${p['Estado proyecto']}</span></td>
-      <td><button class="badge badge-edit" onclick="prepareEdit(${p._rowNumber})">MODIFICAR</button></td>
-    </tr>`;
+// --- UI ---
+function renderTablas(){
+  let hP = `<table class="data-table"><thead><tr><th>ID</th><th>PROYECTO</th><th>ARTISTA</th><th>LINK</th><th>ACCION</th></tr></thead><tbody>`;
+  dataCache.proyectos.forEach(p => {
+    hP += `<tr><td>${p.ID}</td><td>${p['Nombre del proyecto']}</td><td>${p.Cliente}</td>
+    <td>${p.Archivos ? `<a href="${p.Archivos}" target="_blank" style="color:var(--green)">Descargar</a>` : '-'}</td>
+    <td><button onclick="prepareEdit(${p._row}, 'proy')" style="color:var(--purple-light);background:none;border:none;cursor:pointer;">EDITAR</button></td></tr>`;
   });
-  document.getElementById('proyectosContainer').innerHTML = html + `</tbody></table>`;
+  document.getElementById('proyectosContainer').innerHTML = hP + `</tbody></table>`;
 }
 
-function prepareEdit(rowNum){
-  const p = allProyectos.find(x => x._rowNumber === rowNum);
-  if(!p) return;
-
-  editingRow = rowNum;
-  document.getElementById('formTitle').textContent = "EDITANDO PROYECTO: " + p.ID;
-  document.getElementById('npNombre').value = p['Nombre del proyecto'];
-  document.getElementById('npArtista').value = p['Cliente'];
-  document.getElementById('npServicio').value = p['Tipo de servicio'];
-  document.getElementById('npEstado').value = p['Estado proyecto'];
-  document.getElementById('npFechaI').value = p['Fecha inicio'];
-  document.getElementById('npFechaE').value = p['Fecha entrega'];
-  document.getElementById('npNotas').value = p['Notas'];
-
+function prepareEdit(row, type){
+  const p = dataCache.proyectos.find(x => x._row === row);
+  editingRow = row;
+  document.getElementById('fId').value = p.ID;
+  document.getElementById('fNombre').value = p['Nombre del proyecto'];
+  document.getElementById('fArtista').value = p.Cliente;
+  document.getElementById('fEstado').value = p['Estado proyecto'];
+  document.getElementById('fMonto').value = p['Bonos'] || 0;
   switchTab('nuevo', document.querySelector('[onclick*="nuevo"]'));
 }
 
-function limpiarForm(){
-  editingRow = null;
-  document.getElementById('formTitle').textContent = "NUEVO PROYECTO";
-  ['npNombre','npServicio','npFechaI','npFechaE','npNotas'].forEach(id => document.getElementById(id).value = '');
-  document.getElementById('npEstado').value = 'Pendiente';
-  showToast('Formulario reseteado');
-}
-
-function populateArtistSelect(){
-  const sel = document.getElementById('npArtista');
-  sel.innerHTML = allArtistas.map(a => `<option value="${a.AKA || a.Nombre}">${a.AKA || a.Nombre}</option>`).join('');
-}
-
-function switchTab(name, el){
+function switchTab(id, btn){
+  document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
   document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-  document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
-  el.classList.add('active');
-  document.getElementById('tab-'+name).classList.add('active');
+  document.getElementById('tab-'+id).classList.add('active');
+  btn.classList.add('active');
 }
 
-function showToast(m){
-  const t = document.createElement('div'); t.className='toast'; t.textContent=m;
-  document.body.appendChild(t); setTimeout(()=>t.remove(),3000);
-}
-
-// CURSOR ANIMATION
+// CURSOR
 const cur=document.getElementById('cursor'), ring=document.getElementById('cursorRing');
 let mx=0, my=0, rx=0, ry=0;
 document.addEventListener('mousemove', e => { mx=e.clientX; my=e.clientY; cur.style.left=mx+'px'; cur.style.top=my+'px'; });
 (function anim(){ rx+=(mx-rx)*.15; ry+=(my-ry)*.15; ring.style.left=rx+'px'; ring.style.top=ry+'px'; requestAnimationFrame(anim); })();
-
-// CONFIG HELPERS
-function openConfig(){ document.getElementById('configPanel').classList.add('show'); }
-function closeConfig(){ document.getElementById('configPanel').classList.remove('show'); }
-function saveConfig(){
-  localStorage.setItem('adm_sheetId', document.getElementById('cfgSheetId').value);
-  localStorage.setItem('adm_apiKey', document.getElementById('cfgApiKey').value);
-  closeConfig(); showToast('Configuración guardada localmente');
-}
 </script>
+
 </body>
 </html>
