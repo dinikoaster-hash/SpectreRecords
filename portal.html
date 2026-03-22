@@ -1185,7 +1185,7 @@ function renderProyectos() {
     <table class="projects-table">
       <thead>
         <tr>
-          <th>Proyecto</th><th>Servicio</th><th>Inicio</th><th>Entrega</th><th>Estado</th><th>Liq.</th>
+          <th>Proyecto</th><th>Servicio</th><th>Inicio</th><th>Entrega</th><th>Estado</th><th>Solicitado</th><th>Liq.</th>
         </tr>
       </thead>
       <tbody>
@@ -1197,6 +1197,7 @@ function renderProyectos() {
             <td><span style="font-family:'DM Mono',monospace;font-size:.7rem;color:var(--muted)">${formatFecha(p['Fecha inicio'])}</span></td>
             <td><span style="font-family:'DM Mono',monospace;font-size:.7rem;color:var(--muted)">${formatFecha(p['Fecha entrega'])}</span></td>
             <td>${getStatusBadge(p['Estado proyecto'])}</td>
+            <td style="font-family:'Bebas Neue',sans-serif;font-size:1.1rem;color:var(--purple-light);text-align:center">${p['Solicitado']?'$'+parseFloat(p['Solicitado']).toLocaleString():'—'}</td>
             <td style="text-align:center">${liq.html}</td>
           </tr>`;
         }).join('')}
@@ -1217,6 +1218,7 @@ function renderProyectos() {
             ${p['Tipo de servicio']?`<span>${p['Tipo de servicio']}</span>`:''}
             ${p['Fecha inicio']?`<span>Inicio: ${formatFecha(p['Fecha inicio'])}</span>`:''}
             ${p['Fecha entrega']?`<span>Entrega: ${formatFecha(p['Fecha entrega'])}</span>`:''}
+            ${p['Solicitado']?`<span style="color:var(--purple-light)">Total: $${parseFloat(p['Solicitado']).toLocaleString()}</span>`:''}
             ${liq.mobile}
           </div>
         </div>`;
