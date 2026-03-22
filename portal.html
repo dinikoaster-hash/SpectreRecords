@@ -222,7 +222,7 @@
     .logout-btn:hover { color:var(--red); border-color:var(--red); }
 
     /* Main layout */
-    .portal-main { padding:2.5rem; max-width:1200px; margin:0 auto; }
+    .portal-main { padding:2.5rem; max-width:1200px; margin:0 auto; overflow-x:hidden; }
 
     /* Welcome */
     .welcome-bar {
@@ -450,7 +450,30 @@
     }
 
     /* Tabs */
-    .tabs { display:flex; gap:0; border-bottom:1px solid var(--border); margin-bottom:2rem; }
+    .tabs {
+      display:flex;
+      gap:0;
+      border-bottom:1px solid var(--border);
+      margin-bottom:2rem;
+      /* Contain horizontal scroll to this element only */
+      overflow-x:auto;
+      overflow-y:visible;
+      -webkit-overflow-scrolling:touch;
+      scrollbar-width:none;
+      /* Prevent page scroll bleed */
+      overscroll-behavior-x:contain;
+      /* Sticky so tabs stay visible when scrolling content */
+      position:sticky;
+      top:0;
+      z-index:10;
+      background:var(--bg);
+      /* Extend to edges on mobile */
+      margin-left:-1rem;
+      margin-right:-1rem;
+      padding-left:1rem;
+      padding-right:1rem;
+    }
+    .tabs::-webkit-scrollbar { display:none; }
     .tab-btn {
       font-family:'DM Mono',monospace;
       font-size:.7rem;
@@ -464,6 +487,9 @@
       cursor:none;
       transition:color .2s, border-color .2s;
       margin-bottom:-1px;
+      /* Don't shrink — keep full width for touch targets */
+      flex-shrink:0;
+      white-space:nowrap;
     }
     .tab-btn:hover { color:var(--text); }
     .tab-btn.active { color:var(--purple-light); border-bottom-color:var(--purple-light); }
@@ -606,21 +632,9 @@
       .stat-card { padding:1.2rem 1rem; }
       .stat-value { font-size:1.7rem; }
 
-      /* Tabs */
-      .tabs-nav {
-        overflow-x:auto;
-        -webkit-overflow-scrolling:touch;
-        scrollbar-width:none;
-        padding-bottom:0;
-        gap:0;
-      }
-      .tabs-nav::-webkit-scrollbar { display:none; }
-      .tab-btn {
-        font-size:.58rem;
-        padding:.9rem .9rem;
-        white-space:nowrap;
-        flex-shrink:0;
-      }
+      /* Tabs — mobile sizing */
+      .tabs { margin-left:-1rem; margin-right:-1rem; padding-left:1rem; }
+      .tab-btn { font-size:.58rem; padding:.85rem .9rem; }
 
       /* Projects table → card list on mobile */
       .projects-table { display:none; }
