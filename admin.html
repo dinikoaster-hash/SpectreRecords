@@ -232,9 +232,6 @@ body::before{content:'';position:fixed;inset:0;background-image:url("data:image/
   .stat-value{font-size:1.6rem;}
   .stat-label{font-size:.55rem;}
 
-  /* Artists */
-  .artists-grid{grid-template-columns:1fr;}
-
   /* Tables */
   .table-wrap{overflow-x:auto;-webkit-overflow-scrolling:touch;width:100%;}
 
@@ -257,6 +254,37 @@ body::before{content:'';position:fixed;inset:0;background-image:url("data:image/
   /* Filter bar */
   .filter-bar{flex-direction:column;}
   .filter-input,.filter-select{width:100%;min-width:unset;box-sizing:border-box;}
+
+  /* Cursos admin — ocultar tabla, mostrar cards */
+  #cursosAdminContainer .data-table thead{display:none;}
+  #cursosAdminContainer .data-table,
+  #cursosAdminContainer .data-table tbody,
+  #cursosAdminContainer .data-table tr{display:block;width:100%;}
+  #cursosAdminContainer .data-table tr{
+    background:var(--surface);
+    border-bottom:1px solid var(--border);
+    padding:.9rem 1rem;
+  }
+  #cursosAdminContainer .data-table td{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    padding:.3rem 0;
+    border:none;
+    font-size:.8rem;
+  }
+  #cursosAdminContainer .data-table td:first-child{
+    font-family:DM Mono,monospace;
+    font-size:.6rem;
+    color:var(--muted2);
+  }
+  #cursosAdminContainer .data-table td:last-child{
+    margin-top:.5rem;
+    padding-top:.5rem;
+    border-top:1px solid var(--border);
+  }
+  /* Artists grid single col */
+  .artists-grid{grid-template-columns:1fr;}
 
   /* Toggle buttons */
   [id^="toggle"]{font-size:.6rem !important;padding:.65rem 1rem !important;}
@@ -285,7 +313,7 @@ body::before{content:'';position:fixed;inset:0;background-image:url("data:image/
 <body>
 <div class="cursor" id="cursor"></div>
 <div class="cursor-ring" id="cursorRing"></div>
-<button class="hamburger" id="hamburger" onclick="toggleSidebar()" aria-label="Menu">☰</button>
+<button class="hamburger" id="hamburger" onclick="toggleSidebar()" aria-label="Menu" style="display:none">☰</button>
 <div class="sidebar-overlay" id="sidebarOverlay" onclick="closeSidebar()"></div>
 
 <!-- LOGIN -->
@@ -719,12 +747,14 @@ async function doAdminLogin(){
   btn.textContent='Acceder →'; btn.classList.remove('loading');
   document.getElementById('loginScreen').style.display='none';
   document.getElementById('adminScreen').style.display='block';
+  document.getElementById('hamburger').style.display='';
   await loadAdmin();
 }
 function doLogout(){
   document.getElementById('adminScreen').style.display='none';
   document.getElementById('loginScreen').style.display='flex';
   document.getElementById('adminPass').value='';
+  document.getElementById('hamburger').style.display='none';
   oauthToken=null;
   sessionStorage.removeItem('adm_oauth_token');
   updateOAuthUI(false);
@@ -1625,4 +1655,3 @@ function toast(msg,type=''){
 </script>
 </body>
 </html>
-
