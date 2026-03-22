@@ -1,10 +1,10 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-<link rel="icon" type="image/png" href="assets/logo_sr.PNG"/>
-<link rel="apple-touch-icon" href="assets/logo_sr.PNG"/>
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<link rel="icon" type="image/png" href="assets/logo_sr.PNG"/>
+<link rel="apple-touch-icon" href="assets/logo_sr.PNG"/>
 <title>Spectre Records — Admin</title>
 <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Syne:wght@400;600;800&family=DM+Mono:wght@300;400;500&display=swap" rel="stylesheet"/>
 <script src="https://accounts.google.com/gsi/client" async defer></script>
@@ -465,7 +465,7 @@ body::before{content:'';position:fixed;inset:0;background-image:url("data:image/
         <div class="fin-summary">
           <div class="fin-card"><div class="fin-label">Ingresos cobrados</div><div class="fin-val" style="color:var(--green)" id="finCobrado">$0</div></div>
           <div class="fin-card"><div class="fin-label">Por cobrar</div><div class="fin-val" style="color:var(--yellow)" id="finPend">$0</div></div>
-          <div class="fin-card"><div class="fin-label">Gastos</div><div class="fin-val" style="color:var(--red)" id="finGastos">$0</div></div>
+          <div class="fin-card"><div class="fin-label">Gastos pagados</div><div class="fin-val" style="color:var(--red)" id="finGastos">$0</div><div id="finGastosPend" style="display:none;font-family:DM Mono,monospace;font-size:.6rem;color:var(--muted);margin-top:.3rem;"></div></div>
           <div class="fin-card"><div class="fin-label">Balance neto</div><div class="fin-val" style="color:var(--gold)" id="finTotal2">$0</div></div>
         </div>
 
@@ -1332,11 +1332,19 @@ function renderFinanzas(){
   // Stats globales
   const allIngresosCobrados=allFinanzas.filter(f=>(f['Tipo']||'').toLowerCase()==='ingreso'&&/pagado/i.test(f['Estado']||'')).reduce((s,f)=>s+(parseFloat(f['Monto'])||0),0);
   const allPorCobrar=allFinanzas.filter(f=>(f['Tipo']||'').toLowerCase()==='ingreso'&&/pendiente/i.test(f['Estado']||'')).reduce((s,f)=>s+(parseFloat(f['Monto'])||0),0);
-  const allGastos=allFinanzas.filter(f=>(f['Tipo']||'').toLowerCase()==='gasto').reduce((s,f)=>s+(parseFloat(f['Monto'])||0),0);
+  // Solo gastos PAGADOS restan del balance — pendientes no cuentan aún
+  const allGastos=allFinanzas.filter(f=>(f['Tipo']||'').toLowerCase()==='gasto'&&/pagado/i.test(f['Estado']||'')).reduce((s,f)=>s+(parseFloat(f['Monto'])||0),0);
+  const allGastosPend=allFinanzas.filter(f=>(f['Tipo']||'').toLowerCase()==='gasto'&&/pendiente/i.test(f['Estado']||'')).reduce((s,f)=>s+(parseFloat(f['Monto'])||0),0);
   const balance=allIngresosCobrados-allGastos;
   document.getElementById('finCobrado').textContent=fmt(allIngresosCobrados);
   document.getElementById('finPend').textContent=fmt(allPorCobrar);
-  const elG=document.getElementById('finGastos');if(elG)elG.textContent=fmt(allGastos);
+  const elG=document.getElementById('finGastos');
+  if(elG){
+    elG.textContent=fmt(allGastos);
+    // Show pending gastos below if any
+    const pendG=document.getElementById('finGastosPend');
+    if(pendG){ pendG.textContent=allGastosPend>0?'+ '+fmt(allGastosPend)+' pendiente':''; pendG.style.display=allGastosPend>0?'block':'none'; }
+  }
   const elT=document.getElementById('finTotal2');if(elT){elT.textContent=fmt(Math.abs(balance));elT.style.color=balance>=0?'var(--green)':'var(--red)';}
 
   // Filtro búsqueda
@@ -1387,21 +1395,40 @@ function renderFinanzas(){
       html+=pendSinF.map(f=>renderFinRow(f)).join('');
     }
   } else {
-    const conF=viewList.filter(f=>parseFecha(f['Fecha']||'')).sort(sortDesc);
-    const sinF=viewList.filter(f=>!parseFecha(f['Fecha']||''));
-    if(conF.length){
+    // Gastos: pendientes primero (no restan aún), luego pagados por mes
+    const gastosPend=viewList.filter(f=>/pendiente/i.test(f['Estado']||'')).sort(sortDesc);
+    const gastosPendSinF=viewList.filter(f=>/pendiente/i.test(f['Estado']||'')&&!parseFecha(f['Fecha']||''));
+    const gastosPendConF=viewList.filter(f=>/pendiente/i.test(f['Estado']||'')&&parseFecha(f['Fecha']||'')).sort(sortDesc);
+    const gastosPagados=viewList.filter(f=>/pagado/i.test(f['Estado']||'')).sort(sortDesc);
+    const totalGPend=gastosPend.reduce((s,f)=>s+(parseFloat(f['Monto'])||0),0);
+
+    // Pendientes arriba
+    if(gastosPendConF.length||gastosPendSinF.length){
+      html+='<tr><td colspan="7" style="background:rgba(248,113,113,.05);padding:.65rem 1rem;font-family:DM Mono,monospace;font-size:.58rem;letter-spacing:.15em;text-transform:uppercase;color:var(--red);border-bottom:1px solid rgba(248,113,113,.2);">// Gastos pendientes — '+fmt(totalGPend)+' por saldar (no restan aún)</td></tr>';
+      html+=gastosPendConF.map(f=>renderFinRow(f)).join('');
+      if(gastosPendSinF.length){
+        html+='<tr><td colspan="7" style="padding:.65rem 1rem;font-family:DM Mono,monospace;font-size:.58rem;letter-spacing:.15em;text-transform:uppercase;color:var(--muted2);border-bottom:1px solid var(--border);">// Sin fecha asignada</td></tr>';
+        html+=gastosPendSinF.map(f=>renderFinRow(f)).join('');
+      }
+    }
+
+    // Pagados agrupados por mes
+    if(gastosPagados.length){
       const grupos={};
-      conF.forEach(f=>{const d=parseFecha(f['Fecha']||'');const k=d?mesLabel(d):'Sin fecha';if(!grupos[k])grupos[k]=[];grupos[k].push(f);});
+      gastosPagados.forEach(f=>{const d=parseFecha(f['Fecha']||'');const k=d?mesLabel(d):'Sin fecha';if(!grupos[k])grupos[k]=[];grupos[k].push(f);});
       Object.entries(grupos).forEach(function(entry){
         const mes=entry[0],rows=entry[1];
         const tot=rows.reduce((s,f)=>s+(parseFloat(f['Monto'])||0),0);
-        html+='<tr><td colspan="7" style="background:var(--surface2);padding:.65rem 1rem;font-family:DM Mono,monospace;font-size:.58rem;letter-spacing:.15em;text-transform:uppercase;color:var(--red);border-bottom:1px solid var(--border);">// '+mes+' &nbsp;<span style="color:var(--red)">&#8722;$'+tot.toLocaleString()+'</span></td></tr>';
+        html+='<tr><td colspan="7" style="background:var(--surface2);padding:.65rem 1rem;font-family:DM Mono,monospace;font-size:.58rem;letter-spacing:.15em;text-transform:uppercase;color:var(--red);border-bottom:1px solid var(--border);">// '+mes+' &nbsp;<span style="color:var(--red)">&#8722;'+fmt(tot)+'</span></td></tr>';
         html+=rows.map(f=>renderFinRow(f)).join('');
       });
     }
-    if(sinF.length){
+
+    // Sin fecha pagados
+    const gastosSinFPag=viewList.filter(f=>/pagado/i.test(f['Estado']||'')&&!parseFecha(f['Fecha']||''));
+    if(gastosSinFPag.length){
       html+='<tr><td colspan="7" style="padding:.65rem 1rem;font-family:DM Mono,monospace;font-size:.58rem;letter-spacing:.15em;text-transform:uppercase;color:var(--muted2);border-bottom:1px solid var(--border);">// Sin fecha asignada</td></tr>';
-      html+=sinF.map(f=>renderFinRow(f)).join('');
+      html+=gastosSinFPag.map(f=>renderFinRow(f)).join('');
     }
   }
 
