@@ -48,6 +48,7 @@
     /* Cursor */
     .cursor { position:fixed; width:10px; height:10px; background:var(--purple-light); border-radius:50%; pointer-events:none; z-index:9999; transform:translate(-50%,-50%); mix-blend-mode:screen; transition:width .15s,height .15s; }
     .cursor-ring { position:fixed; width:32px; height:32px; border:1px solid rgba(168,85,247,.35); border-radius:50%; pointer-events:none; z-index:9998; transform:translate(-50%,-50%); transition:width .3s,height .3s; }
+    @media(hover:none),(pointer:coarse){ .cursor,.cursor-ring{display:none;} body{cursor:auto;} a,button,input{cursor:pointer;} }
 
     /* ─── LOGIN SCREEN ─── */
     #loginScreen {
@@ -585,13 +586,88 @@
     .reveal { opacity:0; transform:translateY(20px); transition:opacity .6s,transform .6s; }
     .reveal.visible { opacity:1; transform:translateY(0); }
 
+    /* ─── RESPONSIVE MOBILE ─── */
     @media(max-width:768px) {
-      .portal-nav { padding:1rem 1.2rem; }
-      .portal-main { padding:1.5rem; }
+      /* Nav */
+      .portal-nav { padding:.9rem 1.2rem; }
+      .portal-nav-logo { font-size:1.2rem; }
+      .portal-nav-right { gap:.8rem; }
+
+      /* Main */
+      .portal-main { padding:1.2rem 1rem; }
+
+      /* Welcome */
+      .welcome-bar { flex-direction:column; align-items:flex-start; gap:.6rem; margin-bottom:1.5rem; padding-bottom:1.2rem; }
+      .welcome-title { font-size:clamp(2rem,10vw,3rem); }
+      .welcome-date { display:none; }
+
+      /* Stats */
+      .stats-row { grid-template-columns:1fr 1fr; gap:1px; margin-bottom:1.5rem; }
+      .stat-card { padding:1.2rem 1rem; }
+      .stat-value { font-size:1.7rem; }
+
+      /* Tabs */
+      .tabs-nav {
+        overflow-x:auto;
+        -webkit-overflow-scrolling:touch;
+        scrollbar-width:none;
+        padding-bottom:0;
+        gap:0;
+      }
+      .tabs-nav::-webkit-scrollbar { display:none; }
+      .tab-btn {
+        font-size:.58rem;
+        padding:.9rem .9rem;
+        white-space:nowrap;
+        flex-shrink:0;
+      }
+
+      /* Projects table → card list on mobile */
+      .projects-table { display:none; }
+      .projects-mobile { display:flex !important; flex-direction:column; gap:1px; border:1px solid var(--border); }
+      .project-mobile-card {
+        background:var(--surface);
+        padding:1.2rem;
+        display:flex;
+        flex-direction:column;
+        gap:.5rem;
+        border-bottom:1px solid var(--border);
+      }
+      .project-mobile-card:last-child { border-bottom:none; }
+      .project-mobile-top { display:flex; justify-content:space-between; align-items:flex-start; gap:.5rem; }
+      .project-mobile-name { font-weight:600; font-size:.9rem; }
+      .project-mobile-meta { font-family:'DM Mono',monospace; font-size:.62rem; color:var(--muted); display:flex; flex-wrap:wrap; gap:.4rem .8rem; margin-top:.2rem; }
+
+      /* Finance grid */
+      .finance-grid { grid-template-columns:1fr; }
+      .finance-card { padding:1.1rem; }
+      .finance-amount { font-size:1.3rem; }
+
+      /* Files */
+      .files-row { flex-direction:column !important; align-items:flex-start !important; gap:.8rem !important; }
+      .files-row a { width:100%; text-align:center; }
+
+      /* Cursos */
+      .cursos-grid { grid-template-columns:1fr; gap:1rem; }
+
+      /* Profile */
+      .profile-card { grid-template-columns:1fr; gap:1.5rem; }
+      .profile-avatar { width:64px; height:64px; font-size:1.5rem; }
+
+      /* Section headers */
+      .portal-section-header { margin-bottom:.8rem; }
+      .portal-section-title { font-size:1.2rem; }
+
+      /* Config panel */
+      .config-panel { padding:1.5rem 1rem; }
+      .config-box { padding:2rem 1.5rem; }
+    }
+
+    @media(max-width:400px) {
       .stats-row { grid-template-columns:1fr 1fr; }
-      .welcome-bar { flex-direction:column; align-items:flex-start; gap:1rem; }
-      .projects-table { display:block; overflow-x:auto; }
-      .profile-card { grid-template-columns:1fr; }
+      .tab-btn { font-size:.55rem; padding:.8rem .7rem; }
+      .welcome-title { font-size:2rem; }
+      .portal-main { padding:1rem .8rem; }
     }
   </style>
 </head>
@@ -1069,25 +1145,18 @@ function renderProyectos() {
     c.innerHTML = '<div class="empty-state">// No hay proyectos registrados aún.</div>';
     return;
   }
+  const proyList = [...allProyectos].reverse();
   c.innerHTML = `
     <table class="projects-table">
       <thead>
         <tr>
-          <th>Proyecto</th>
-          <th>Servicio</th>
-          <th>Inicio</th>
-          <th>Entrega</th>
-          <th>Estado</th>
-          <th>Bonos</th>
+          <th>Proyecto</th><th>Servicio</th><th>Inicio</th><th>Entrega</th><th>Estado</th><th>Bonos</th>
         </tr>
       </thead>
       <tbody>
-        ${[...allProyectos].reverse().map(p => `
+        ${proyList.map(p => `
           <tr>
-            <td>
-              <div class="project-name">${p['Nombre del proyecto']||'—'}</div>
-              <div class="project-service">${p['ID']||''}</div>
-            </td>
+            <td><div class="project-name">${p['Nombre del proyecto']||'—'}</div><div class="project-service">${p['ID']||''}</div></td>
             <td><span style="font-family:'DM Mono',monospace;font-size:.7rem;color:var(--muted)">${p['Tipo de servicio']||'—'}</span></td>
             <td><span style="font-family:'DM Mono',monospace;font-size:.7rem;color:var(--muted)">${formatFecha(p['Fecha inicio'])}</span></td>
             <td><span style="font-family:'DM Mono',monospace;font-size:.7rem;color:var(--muted)">${formatFecha(p['Fecha entrega'])}</span></td>
@@ -1097,6 +1166,25 @@ function renderProyectos() {
         `).join('')}
       </tbody>
     </table>
+    <div class="projects-mobile" style="display:none">
+      ${proyList.map(p => `
+        <div class="project-mobile-card">
+          <div class="project-mobile-top">
+            <div>
+              <div class="project-mobile-name">${p['Nombre del proyecto']||'—'}</div>
+              <div style="font-family:'DM Mono',monospace;font-size:.6rem;color:var(--muted2)">${p['ID']||''}</div>
+            </div>
+            ${getStatusBadge(p['Estado proyecto'])}
+          </div>
+          <div class="project-mobile-meta">
+            ${p['Tipo de servicio']?`<span>${p['Tipo de servicio']}</span>`:''}
+            ${p['Fecha inicio']?`<span>Inicio: ${formatFecha(p['Fecha inicio'])}</span>`:''}
+            ${p['Fecha entrega']?`<span>Entrega: ${formatFecha(p['Fecha entrega'])}</span>`:''}
+            ${(p['Bonos']||p['Bonos incluidos'])?`<span style="color:var(--purple-light);font-family:'Bebas Neue',sans-serif;font-size:1rem">${p['Bonos']||p['Bonos incluidos']}</span>`:''}
+          </div>
+        </div>
+      `).join('')}
+    </div>
   `;
 }
 
