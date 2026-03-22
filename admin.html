@@ -179,19 +179,96 @@ body::before{content:'';position:fixed;inset:0;background-image:url("data:image/
 .dash-section-title{font-family:Bebas Neue,sans-serif;font-size:1.3rem;letter-spacing:.06em;margin-bottom:1rem;}
 .dash-eyebrow{font-family:DM Mono,monospace;font-size:.58rem;letter-spacing:.18em;color:var(--muted2);margin-bottom:.25rem;}
 
+/* ── HAMBURGER BUTTON ── */
+.hamburger{display:none;position:fixed;top:.9rem;left:1rem;z-index:200;background:var(--surface);border:1px solid var(--border2);color:var(--gold);font-size:1.1rem;width:36px;height:36px;align-items:center;justify-content:center;cursor:none;transition:background .2s;}
+.hamburger:hover{background:var(--surface2);}
+.sidebar-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.6);backdrop-filter:blur(4px);z-index:99;}
+.sidebar-overlay.show{display:block;}
+
 @media(max-width:900px){
-  .sidebar{width:60px;}
-  .nav-item span:not(.nav-icon){display:none;}
-  .nav-badge{display:none;}
-  .sidebar-bottom .oauth-pill,.sidebar-bottom .sidebar-link,.sidebar-bottom .logout-link{display:none;}
-  .sidebar-logo img{height:20px;}
-  .main-content{margin-left:60px;}
+  /* Show hamburger */
+  .hamburger{display:flex;}
+
+  /* Sidebar hidden by default, slides in */
+  .sidebar{
+    transform:translateX(-100%);
+    transition:transform .25s ease;
+    width:var(--sidebar-w);
+    z-index:150;
+  }
+  .sidebar.open{transform:translateX(0);}
+
+  /* Restore all sidebar text (not collapsed) */
+  .nav-item span:not(.nav-icon){display:inline;}
+  .nav-badge{display:inline;}
+  .sidebar-bottom .oauth-pill,
+  .sidebar-bottom .sidebar-link,
+  .sidebar-bottom .logout-link{display:flex;}
+  .sidebar-logo img{height:26px;}
+
+  /* Main takes full width */
+  .main-content{margin-left:0;padding:1.2rem 1rem;padding-top:4rem;}
+
+  /* Login box */
+  .login-box{padding:2rem 1.5rem;}
+
+  /* Page header stacks */
+  .page-header{flex-direction:column;align-items:flex-start;gap:.8rem;}
+  .page-title{font-size:1.8rem;}
+
+  /* Stats grid */
+  .stats-grid{grid-template-columns:1fr 1fr;}
+
+  /* Artists grid */
+  .artists-grid{grid-template-columns:1fr;}
+
+  /* Tables scroll */
+  .table-wrap{overflow-x:auto;-webkit-overflow-scrolling:touch;}
+
+  /* Forms */
+  .form-grid{grid-template-columns:1fr;}
+  .form-group.full{grid-column:1;}
+
+  /* Modals */
+  .modal{max-width:100% !important;margin:.5rem;}
+  .modal-body{padding:1.2rem;}
+  .modal-header{padding:1.2rem;}
+  .modal-footer{padding:.8rem 1.2rem;flex-wrap:wrap;}
+  .modal-overlay{padding:.5rem;align-items:flex-end;}
+
+  /* Finance summary */
+  .fin-summary{grid-template-columns:1fr 1fr;}
+
+  /* Toggle buttons wrap */
+  .toggle-group{flex-wrap:wrap;}
+
+  /* Filter bar */
+  .filter-bar{flex-direction:column;}
+  .filter-input,.filter-select{width:100%;min-width:unset;}
+
+  /* Nuevo proyecto */
+  #page-nuevo > div{max-width:100%;}
+}
+
+@media(max-width:480px){
+  .stats-grid{grid-template-columns:1fr 1fr;}
+  .fin-summary{grid-template-columns:1fr 1fr;}
+  .main-content{padding:1rem .8rem;padding-top:4rem;}
+}
+
+/* Touch devices — disable custom cursor */
+@media(hover:none),(pointer:coarse){
+  .cursor,.cursor-ring{display:none;}
+  body{cursor:auto;}
+  button,a,input,select{cursor:pointer;}
 }
 </style>
 </head>
 <body>
 <div class="cursor" id="cursor"></div>
 <div class="cursor-ring" id="cursorRing"></div>
+<button class="hamburger" id="hamburger" onclick="toggleSidebar()" aria-label="Menu">☰</button>
+<div class="sidebar-overlay" id="sidebarOverlay" onclick="closeSidebar()"></div>
 
 <!-- LOGIN -->
 <div id="loginScreen">
@@ -290,7 +367,7 @@ body::before{content:'';position:fixed;inset:0;background-image:url("data:image/
           <input class="filter-input" id="searchArtistas" placeholder="// Buscar artista..." oninput="renderArtistas()"/>
           <select class="filter-select" id="filterTipoArt" onchange="renderArtistas()">
             <option value="">Todos los niveles</option>
-            <option>Estándar</option><option>Miembro</option><option>Pro</option><option>Estándar</option>
+            <option>Estándar</option><option>Miembro</option><option>Pro</option>
           </select>
         </div>
         <div id="artistasContainer"><div class="loading-state"><div class="spinner"></div>Cargando artistas...</div></div>
@@ -405,8 +482,12 @@ body::before{content:'';position:fixed;inset:0;background-image:url("data:image/
             </div>
             <div class="form-group"><label class="form-label">Estado inicial</label>
               <select class="form-input" id="npEstado">
-                <option value="01 | En proceso">En proceso</option><option value="02 | En mezcla">En mezcla</option>
-                <option value="03 | En revisión">En revisión</option><option value="04 | Finalizado">Finalizado</option>
+                <option value="00 | En espera">En espera</option>
+                <option value="01 | En proceso">En proceso</option>
+                <option value="02 | En mezcla">En mezcla</option>
+                <option value="03 | En revisión">En revisión</option>
+                <option value="04 | Finalizado">Finalizado</option>
+                <option value="05 | Cancelado">Cancelado</option>
               </select>
             </div>
             <div class="form-group"><label class="form-label">Fecha de inicio</label><input class="form-input" id="npFechaI" type="date"/></div>
@@ -440,8 +521,8 @@ body::before{content:'';position:fixed;inset:0;background-image:url("data:image/
       <div class="form-grid">
         <div class="form-group"><label class="form-label">Nombre completo</label><input class="form-input" id="maNombre" placeholder="Nombre real"/></div>
         <div class="form-group"><label class="form-label">AKA / Nombre artístico</label><input class="form-input" id="maAka" placeholder="Nombre artístico"/></div>
-        <div class="form-group"><label class="form-label">Correo</label><input class="form-input" id="maCorreo" placeholder="artista@email.com"/></div>
         <div class="form-group"><label class="form-label">Teléfono</label><input class="form-input" id="maTel" placeholder="9991234567"/></div>
+        <div class="form-group"><label class="form-label">Correo</label><input class="form-input" id="maCorreo" placeholder="artista@email.com"/></div>
         <div class="form-group"><label class="form-label">Código de acceso</label><input class="form-input" id="maCodigo" placeholder="ej: SNOKI2026"/></div>
         <div class="form-group"><label class="form-label">Nivel</label>
           <select class="form-input" id="maTipo">
@@ -959,13 +1040,12 @@ async function guardarArtista(){
   if(!nombre){toast('Nombre requerido','error');return;}
   const existingArtista=rowNum?allArtistas.find(a=>a._rowNumber===rowNum):null;
   const newId=existingArtista?existingArtista['ArtistaID']||'':nextId(allArtistas,'ArtistaID','Art');
-  // Sheet columns: ArtistaID|Nombre|AKA|Correo|Telefono|CodigoAcceso|Tipo|Imagen
   const values=[
     newId,
     nombre,
     document.getElementById('maAka').value.trim(),
-    document.getElementById('maCorreo').value.trim(),
     document.getElementById('maTel').value.trim(),
+    document.getElementById('maCorreo').value.trim(),
     document.getElementById('maCodigo').value.trim(),
     document.getElementById('maTipo').value,
     document.getElementById('maImagen').value.trim(),
@@ -1290,9 +1370,6 @@ function editPago(rowNum){
   document.getElementById('fpTipo').value=(f['Tipo']||'').toLowerCase()==='gasto'?'Gasto':'Ingreso';
   document.getElementById('fpEstado').value=f['Estado']||'Pagado';
   document.getElementById('fpMonto').value=f['Monto']||'';
-  document.getElementById('fpTipo').value=/gasto/i.test(f['Tipo']||'')?'Gasto':'Ingreso';
-  document.getElementById('fpEstado').value=f['Estado']||'Pagado';
-  document.getElementById('fpMonto').value=f['Monto']||'';
   const toInput=s=>{ if(!s||s==='—') return ''; const m=s.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/); if(m) return m[3]+'-'+m[2].padStart(2,'0')+'-'+m[1].padStart(2,'0'); const m2=s.match(/^(\d{1,2})\s+de\s+(\w+)\s+de\s+(\d{4})$/i); if(m2){const mes={enero:'01',febrero:'02',marzo:'03',abril:'04',mayo:'05',junio:'06',julio:'07',agosto:'08',septiembre:'09',octubre:'10',noviembre:'11',diciembre:'12'}; return m2[3]+'-'+(mes[m2[2].toLowerCase()]||'01')+'-'+m2[1].padStart(2,'0');} return ''; };
   document.getElementById('fpFecha').value=toInput(f['Fecha']||'');
   // openModal re-populates selects, then we set values after
@@ -1491,6 +1568,8 @@ function showPage(name,el){
   document.querySelectorAll('.nav-item').forEach(b=>b.classList.remove('active'));
   document.getElementById('page-'+name).classList.add('active');
   if(el) el.classList.add('active');
+  // Close mobile sidebar on navigation
+  closeSidebar();
   // Re-render current page with latest data
   if(name==='finanzas') renderFinanzas();
   if(name==='proyectos'){ setPrjView(prjView); }
@@ -1502,6 +1581,22 @@ function showPage(name,el){
 // ════════════════════════════════════════════
 // TOAST
 // ════════════════════════════════════════════
+// ════════════════════════════════════════════
+// SIDEBAR MOBILE
+// ════════════════════════════════════════════
+function toggleSidebar(){
+  const sb=document.querySelector('.sidebar');
+  const ov=document.getElementById('sidebarOverlay');
+  sb.classList.toggle('open');
+  ov.classList.toggle('show');
+}
+function closeSidebar(){
+  document.querySelector('.sidebar').classList.remove('open');
+  document.getElementById('sidebarOverlay').classList.remove('show');
+}
+// Close sidebar when navigating on mobile
+const _origShowPage=showPage;
+
 function toast(msg,type=''){
   const t=document.createElement('div');
   t.className='toast'+(type?' '+type:'');
