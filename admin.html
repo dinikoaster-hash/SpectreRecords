@@ -1175,6 +1175,7 @@ function renderProyectos(){
       <td style="font-size:.68rem;color:var(--muted)">${p['Tipo de servicio']||'—'}</td>
       <td style="font-size:.68rem;color:var(--muted)">${p['Fecha inicio']||'—'}</td>
       <td>${getBadge(p['Estado proyecto'])}</td>
+      <td style="font-family:Bebas Neue,sans-serif;font-size:1rem;color:var(--purple-light)">${solicitado>0?'$'+solicitado.toLocaleString():'—'}</td>
       <td style="font-family:Bebas Neue,sans-serif;font-size:1rem;color:var(--green)">${cobradoProy>0?'$'+cobradoProy.toLocaleString():'—'}</td>
       <td style="text-align:center">${liqHtml}</td>
       <td>${archHtml}</td>
@@ -1187,7 +1188,7 @@ function renderProyectos(){
 
   document.getElementById('proyectosContainer').innerHTML=`<table class="data-table"><thead><tr>
     <th>Proyecto</th><th>Artista</th><th>Servicio</th><th>Inicio</th><th>Estado</th>
-    <th>Cobrado</th><th>Liq.</th><th>Archivos</th><th>Acciones</th>
+    <th>Solicitado</th><th>Cobrado</th><th>Liq.</th><th>Archivos</th><th>Acciones</th>
   </tr></thead><tbody>${rows}</tbody></table>`;
 }
 
