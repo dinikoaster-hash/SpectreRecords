@@ -1372,13 +1372,13 @@ function renderFinanzas(){
   let html='';
 
   if(finView==='ingresos'){
-    const pendSinF=viewList.filter(f=>!parseFecha(f['Fecha']||'')&&/pendiente/i.test(f['Estado']||''));
-    const pendConF=viewList.filter(f=>parseFecha(f['Fecha']||'')&&/pendiente/i.test(f['Estado']||'')).sort(sortDesc);
+    // TODOS los pendientes van arriba — sin importar si tienen fecha o no
+    const pendientes=viewList.filter(f=>/pendiente/i.test(f['Estado']||'')).sort(sortDesc);
     const pagados=viewList.filter(f=>/pagado/i.test(f['Estado']||'')).sort(sortDesc);
-    const totalPend=viewList.filter(f=>/pendiente/i.test(f['Estado']||'')).reduce((s,f)=>s+(parseFloat(f['Monto'])||0),0);
-    if(pendConF.length){
+    const totalPend=pendientes.reduce((s,f)=>s+(parseFloat(f['Monto'])||0),0);
+    if(pendientes.length){
       html+='<tr><td colspan="7" style="background:rgba(248,113,113,.05);padding:.65rem 1rem;font-family:DM Mono,monospace;font-size:.58rem;letter-spacing:.15em;text-transform:uppercase;color:var(--red);border-bottom:1px solid rgba(248,113,113,.2);">// Pendientes — $'+totalPend.toLocaleString()+' por cobrar</td></tr>';
-      html+=pendConF.map(f=>renderFinRow(f)).join('');
+      html+=pendientes.map(f=>renderFinRow(f)).join('');
     }
     if(pagados.length){
       const grupos={};
@@ -1390,26 +1390,16 @@ function renderFinanzas(){
         html+=rows.map(f=>renderFinRow(f)).join('');
       });
     }
-    if(pendSinF.length){
-      html+='<tr><td colspan="7" style="padding:.65rem 1rem;font-family:DM Mono,monospace;font-size:.58rem;letter-spacing:.15em;text-transform:uppercase;color:var(--muted2);border-bottom:1px solid var(--border);">// Sin fecha asignada</td></tr>';
-      html+=pendSinF.map(f=>renderFinRow(f)).join('');
-    }
   } else {
     // Gastos: pendientes primero (no restan aún), luego pagados por mes
+    // TODOS los gastos pendientes van arriba — sin importar si tienen fecha o no
     const gastosPend=viewList.filter(f=>/pendiente/i.test(f['Estado']||'')).sort(sortDesc);
-    const gastosPendSinF=viewList.filter(f=>/pendiente/i.test(f['Estado']||'')&&!parseFecha(f['Fecha']||''));
-    const gastosPendConF=viewList.filter(f=>/pendiente/i.test(f['Estado']||'')&&parseFecha(f['Fecha']||'')).sort(sortDesc);
     const gastosPagados=viewList.filter(f=>/pagado/i.test(f['Estado']||'')).sort(sortDesc);
     const totalGPend=gastosPend.reduce((s,f)=>s+(parseFloat(f['Monto'])||0),0);
 
-    // Pendientes arriba
-    if(gastosPendConF.length||gastosPendSinF.length){
+    if(gastosPend.length){
       html+='<tr><td colspan="7" style="background:rgba(248,113,113,.05);padding:.65rem 1rem;font-family:DM Mono,monospace;font-size:.58rem;letter-spacing:.15em;text-transform:uppercase;color:var(--red);border-bottom:1px solid rgba(248,113,113,.2);">// Gastos pendientes — '+fmt(totalGPend)+' por saldar (no restan aún)</td></tr>';
-      html+=gastosPendConF.map(f=>renderFinRow(f)).join('');
-      if(gastosPendSinF.length){
-        html+='<tr><td colspan="7" style="padding:.65rem 1rem;font-family:DM Mono,monospace;font-size:.58rem;letter-spacing:.15em;text-transform:uppercase;color:var(--muted2);border-bottom:1px solid var(--border);">// Sin fecha asignada</td></tr>';
-        html+=gastosPendSinF.map(f=>renderFinRow(f)).join('');
-      }
+      html+=gastosPend.map(f=>renderFinRow(f)).join('');
     }
 
     // Pagados agrupados por mes
@@ -1424,12 +1414,7 @@ function renderFinanzas(){
       });
     }
 
-    // Sin fecha pagados
-    const gastosSinFPag=viewList.filter(f=>/pagado/i.test(f['Estado']||'')&&!parseFecha(f['Fecha']||''));
-    if(gastosSinFPag.length){
-      html+='<tr><td colspan="7" style="padding:.65rem 1rem;font-family:DM Mono,monospace;font-size:.58rem;letter-spacing:.15em;text-transform:uppercase;color:var(--muted2);border-bottom:1px solid var(--border);">// Sin fecha asignada</td></tr>';
-      html+=gastosSinFPag.map(f=>renderFinRow(f)).join('');
-    }
+
   }
 
   document.getElementById('finanzasContainer').innerHTML=
