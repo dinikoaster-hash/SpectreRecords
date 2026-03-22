@@ -1,10 +1,10 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-<link rel="icon" type="image/png" href="assets/logo_sr.PNG"/>
-<link rel="apple-touch-icon" href="assets/logo_sr.PNG"/>
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<link rel="icon" type="image/png" href="assets/logo_sr.PNG"/>
+<link rel="apple-touch-icon" href="assets/logo_sr.PNG"/>
   <title>Spectre Records — Portal Artista</title>
   <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Syne:wght@400;600;800&family=DM+Mono:wght@300;400;500&display=swap" rel="stylesheet"/>
   <style>
@@ -1155,6 +1155,25 @@ function getStatusBadge(estado) {
   return `<span class="badge badge-pending">${estado.replace(/^\d+\s*\|\s*/,'')}</span>`;
 }
 
+function calcLiq(p) {
+  const solicitado = parseFloat(p['Solicitado']) || 0;
+  if (!solicitado) return { html: '<span style="color:var(--muted2)">—</span>', mobile: '' };
+  const cobrado = allFinanzas
+    .filter(f => f['Proyecto'] === p['ID'] && (f['Tipo']||'').toLowerCase() === 'ingreso' && /pagado/i.test(f['Estado']||''))
+    .reduce((s, f) => s + (parseFloat(f['Monto']) || 0), 0);
+  if (cobrado >= solicitado) {
+    return {
+      html: '<span style="color:var(--green);font-size:1.3rem;font-weight:900" title="Liquidado">&#10003;</span>',
+      mobile: '<span style="color:var(--green);font-size:.75rem">&#10003; Liquidado</span>'
+    };
+  }
+  const falta = solicitado - cobrado;
+  return {
+    html: '<span style="color:var(--red);font-family:DM Mono,monospace;font-size:.65rem" title="Faltan $' + falta.toLocaleString() + '">&#10007; $' + falta.toLocaleString() + '</span>',
+    mobile: '<span style="color:var(--red);font-size:.75rem">&#10007; Falta $' + falta.toLocaleString() + '</span>'
+  };
+}
+
 function renderProyectos() {
   const c = document.getElementById('proyectosContainer');
   if (!allProyectos.length) {
@@ -1166,25 +1185,27 @@ function renderProyectos() {
     <table class="projects-table">
       <thead>
         <tr>
-          <th>Proyecto</th><th>Servicio</th><th>Inicio</th><th>Entrega</th><th>Estado</th><th>Bonos</th>
+          <th>Proyecto</th><th>Servicio</th><th>Inicio</th><th>Entrega</th><th>Estado</th><th>Liq.</th>
         </tr>
       </thead>
       <tbody>
-        ${proyList.map(p => `
-          <tr>
+        ${proyList.map(p => {
+          const liq = calcLiq(p);
+          return `<tr>
             <td><div class="project-name">${p['Nombre del proyecto']||'—'}</div><div class="project-service">${p['ID']||''}</div></td>
             <td><span style="font-family:'DM Mono',monospace;font-size:.7rem;color:var(--muted)">${p['Tipo de servicio']||'—'}</span></td>
             <td><span style="font-family:'DM Mono',monospace;font-size:.7rem;color:var(--muted)">${formatFecha(p['Fecha inicio'])}</span></td>
             <td><span style="font-family:'DM Mono',monospace;font-size:.7rem;color:var(--muted)">${formatFecha(p['Fecha entrega'])}</span></td>
             <td>${getStatusBadge(p['Estado proyecto'])}</td>
-            <td><span style="font-family:'Bebas Neue',sans-serif;color:var(--purple-light);font-size:1.1rem">${p['Bonos']||p['Bonos incluidos']||'—'}</span></td>
-          </tr>
-        `).join('')}
+            <td style="text-align:center">${liq.html}</td>
+          </tr>`;
+        }).join('')}
       </tbody>
     </table>
     <div class="projects-mobile" style="display:none">
-      ${proyList.map(p => `
-        <div class="project-mobile-card">
+      ${proyList.map(p => {
+        const liq = calcLiq(p);
+        return `<div class="project-mobile-card">
           <div class="project-mobile-top">
             <div>
               <div class="project-mobile-name">${p['Nombre del proyecto']||'—'}</div>
@@ -1196,10 +1217,10 @@ function renderProyectos() {
             ${p['Tipo de servicio']?`<span>${p['Tipo de servicio']}</span>`:''}
             ${p['Fecha inicio']?`<span>Inicio: ${formatFecha(p['Fecha inicio'])}</span>`:''}
             ${p['Fecha entrega']?`<span>Entrega: ${formatFecha(p['Fecha entrega'])}</span>`:''}
-            ${(p['Bonos']||p['Bonos incluidos'])?`<span style="color:var(--purple-light);font-family:'Bebas Neue',sans-serif;font-size:1rem">${p['Bonos']||p['Bonos incluidos']}</span>`:''}
+            ${liq.mobile}
           </div>
-        </div>
-      `).join('')}
+        </div>`;
+      }).join('')}
     </div>
   `;
 }
