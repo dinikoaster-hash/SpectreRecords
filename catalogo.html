@@ -288,11 +288,18 @@ async function load(){
 function getDrivePreviewUrl(url) {
   if (!url) return '';
   let id = '';
+  // Extrae el ID si es un link de descarga directa (uc?id=...)
   if (url.includes('id=')) {
     id = url.split('id=')[1].split('&')[0];
-  } else if (url.includes('/d/')) {
+  } 
+  // Extrae el ID si es un link compartido estándar (/d/ID/view)
+  else if (url.includes('/d/')) {
     id = url.split('/d/')[1].split('/')[0];
   }
+  
+  // Retornamos el link de vista previa. 
+  // Nota: Google siempre mostrará una pequeña flecha de redirección por política de privacidad,
+  // pero este es el modo más limpio posible.
   return id ? `https://drive.google.com/file/d/${id}/preview` : url;
 }
 
@@ -368,10 +375,12 @@ function renderBeats(list){
         '<div class="spec"><div class="spec-l">Escala</div><div class="spec-v">'+(b.Escala||'—')+'</div></div>'+
         '<div class="spec"><div class="spec-l">Precio</div><div class="spec-v" style="color:var(--gold)">'+prec+'</div></div>'+
       '</div>'+
-      (audioUrl ? 
-        '<div class="drive-player">'+
-          '<iframe src="'+getDrivePreviewUrl(audioUrl)+'" allow="autoplay"></iframe>'+
-        '</div>':'')+
+     (audioUrl ? 
+  '<div class="drive-player" style="overflow:hidden; border-radius:8px; height:80px;">' +
+    '<iframe src="' + getDrivePreviewUrl(audioUrl) + '" ' +
+    'style="width:100%; height:160px; border:none; margin-top:-40px;" ' + 
+    'allow="autoplay"></iframe>' +
+  '</div>' : '')
       '<div class="card-footer">'+
         '<div class="precio">'+prec+'<small>'+(b.Tipo||'')+'</small></div>'+
         '<button class="btn-apt" onclick="openModal(\''+bid+'\',\''+bn+'\',\''+be+'\',\''+prec+'\')" '+(vend||est==='Apartado'?'disabled':'')+'>'+
