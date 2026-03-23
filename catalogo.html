@@ -105,10 +105,9 @@ nav{position:sticky;top:0;z-index:100;display:flex;align-items:center;justify-co
 .wbar.on{background:var(--pl);animation:blink .4s ease infinite;}
 .p-time{font-family:DM Mono,monospace;font-size:.55rem;color:var(--muted);flex-shrink:0;min-width:32px;text-align:right;}
 .p-note{font-family:DM Mono,monospace;font-size:.52rem;color:var(--m2);margin-top:.4rem;}
-.drive-wrap{position:relative;height:40px;overflow:hidden;margin-top:.4rem;border-radius:2px;}
-.drive-wrap iframe{position:absolute;top:0;left:0;width:100%;height:100%;border:none;opacity:.01;pointer-events:none;}
-.drive-cover{position:absolute;inset:0;background:var(--s3);z-index:2;display:flex;align-items:center;padding:0 .8rem;}
-.drive-cover span{font-family:DM Mono,monospace;font-size:.52rem;color:var(--m2);}
+.sc-wrap{position:relative;height:0;overflow:hidden;margin-top:.4rem;}
+.sc-wrap.active{height:20px;}
+.sc-wrap iframe{position:absolute;top:0;left:0;width:100%;height:166px;border:none;margin-top:-146px;}
 /* FOOTER */
 .card-footer{display:flex;align-items:center;justify-content:space-between;gap:.6rem;margin-top:auto;}
 .precio{font-family:Bebas Neue,sans-serif;font-size:1.75rem;color:var(--gold);line-height:1;}
@@ -386,46 +385,48 @@ function renderBeats(list){
   }).join('');
 }
 
+function getSCUrl(link){
+  // Build SoundCloud embed URL from any SC link
+  const base='https://w.soundcloud.com/player/?url='+encodeURIComponent(link);
+  return base+'&auto_play=true&hide_related=true&show_comments=false&show_user=false&show_reposts=false&show_teaser=false&visual=false&buying=false&sharing=false&download=false&show_artwork=false&color=%23a855f7';
+}
+
 function togglePlay(bid,did){
   const btn=document.getElementById('pb-'+bid);
   const wv=document.getElementById('wv-'+bid);
 
-  // Stop previous beat
-  if(activeWId&&activeWId!==bid){
-    stopBeat(activeWId);
-  }
+  // Stop previous
+  if(activeWId&&activeWId!==bid) stopBeat(activeWId);
 
-  // Same beat — toggle
-  if(activeWId===bid){
-    stopBeat(bid);
-    return;
-  }
+  // Same beat toggle
+  if(activeWId===bid){ stopBeat(bid); return; }
 
-  // Start new beat
+  // Start
   activeWId=bid;
   btn.innerHTML='&#9632;';btn.classList.add('playing');
 
-  // Use iframe already in DOM (inside card)
-  const iframe=document.getElementById('drv-'+bid);
+  const iframe=document.getElementById('scf-'+bid);
+  const wrap=document.getElementById('scw-'+bid);
   if(iframe){
-    iframe.src='https://drive.google.com/file/d/'+did+'/preview?autoplay=1';
+    iframe.src=getSCUrl(did);
+    if(wrap) wrap.classList.add('active');
   }
-
-  // Animate waveform bars
   startAnim(bid);
 }
 
 function stopBeat(bid){
   const btn=document.getElementById('pb-'+bid);
   const wv=document.getElementById('wv-'+bid);
-  const iframe=document.getElementById('drv-'+bid);
+  const iframe=document.getElementById('scf-'+bid);
+  const wrap=document.getElementById('scw-'+bid);
   if(btn){btn.innerHTML='&#9654;';btn.classList.remove('playing');}
-  if(wv)wv.querySelectorAll('.wbar').forEach(b=>{b.classList.remove('lit','on');});
-  if(iframe){iframe.src='';}
+  if(wv) wv.querySelectorAll('.wbar').forEach(b=>{b.classList.remove('lit','on');});
+  if(iframe) iframe.src='';
+  if(wrap) wrap.classList.remove('active');
   if(animId){clearInterval(animId);animId=null;}
-  if(activeWId===bid)activeWId=null;
+  if(activeWId===bid) activeWId=null;
   const pt=document.getElementById('pt-'+bid);
-  if(pt)pt.textContent='0:00';
+  if(pt) pt.textContent='0:00';
 }
 
 function startAnim(bid){
