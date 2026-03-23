@@ -382,11 +382,11 @@ body::before{content:'';position:fixed;inset:0;background-image:url("data:image/
           <button class="btn btn-ghost" onclick="loadAdmin()" style="font-size:.65rem;padding:.6rem 1.2rem;">⟳ Actualizar</button>
         </div>
         <div class="stats-grid" id="dashStats">
-          <div class="stat-card"><div class="stat-label">Total generado</div><div class="stat-value sv-gold" id="stTotal">—</div></div>
+          <div class="stat-card"><div class="stat-label">Total facturado</div><div class="stat-value sv-gold" id="stTotal">—</div></div>
           <div class="stat-card"><div class="stat-label">Proyectos activos</div><div class="stat-value sv-purple" id="stActivos">—</div></div>
           <div class="stat-card"><div class="stat-label">Artistas</div><div class="stat-value sv-purple" id="stArtistas">—</div></div>
-          <div class="stat-card"><div class="stat-label">Cobrado</div><div class="stat-value sv-green" id="stCobrado">—</div></div>
-          <div class="stat-card"><div class="stat-label">Por cobrar</div><div class="stat-value sv-red" id="stPendiente">—</div></div>
+          <div class="stat-card"><div class="stat-label">Ingresos cobrados</div><div class="stat-value sv-green" id="stCobrado">—</div></div>
+          <div class="stat-card"><div class="stat-label">Por cobrar</div><div class="stat-value sv-yellow" id="stPendiente">—</div></div>
           <div class="stat-card"><div class="stat-label">Finalizados</div><div class="stat-value sv-green" id="stFinalizados">—</div></div>
           <div class="stat-card"><div class="stat-label">Cancelados</div><div class="stat-value sv-red" id="stCancelados">—</div></div>
         </div>
@@ -949,17 +949,21 @@ function renderDashboard(){
   const activos=allProyectos.filter(p=>!/finalizado|cancelado/i.test(p['Estado proyecto']||'')).length;
   const fin=allProyectos.filter(p=>/finalizado/i.test(p['Estado proyecto']||'')).length;
   const cancelados=allProyectos.filter(p=>/cancelado/i.test(p['Estado proyecto']||'')).length;
-  const signMonto=(f)=>/gasto/i.test(f['Tipo']||'')?(-(parseFloat(f['Monto'])||0)):(parseFloat(f['Monto'])||0);
-  const cobrado=allFinanzas.filter(f=>/pagado/i.test(f['Estado']||'')).reduce((s,f)=>s+signMonto(f),0);
-  const pend=allFinanzas.filter(f=>/pendiente/i.test(f['Estado']||'')).reduce((s,f)=>s+signMonto(f),0);
+  // Misma lógica que Finanzas — ingresos y gastos separados
+  const ingresosCobrados=allFinanzas.filter(f=>(f['Tipo']||'').toLowerCase()==='ingreso'&&/pagado/i.test(f['Estado']||'')).reduce((s,f)=>s+(parseFloat(f['Monto'])||0),0);
+  const ingresosPend=allFinanzas.filter(f=>(f['Tipo']||'').toLowerCase()==='ingreso'&&/pendiente/i.test(f['Estado']||'')).reduce((s,f)=>s+(parseFloat(f['Monto'])||0),0);
+  const gastosPagados=allFinanzas.filter(f=>(f['Tipo']||'').toLowerCase()==='gasto'&&/pagado/i.test(f['Estado']||'')).reduce((s,f)=>s+(parseFloat(f['Monto'])||0),0);
+  const cobrado=ingresosCobrados;
+  const pend=ingresosPend;
   document.getElementById('stArtistas').textContent=allArtistas.length||'0';
   document.getElementById('stActivos').textContent=activos||'0';
   document.getElementById('stFinalizados').textContent=fin||'0';
   const stCan=document.getElementById('stCancelados');
   if(stCan) stCan.textContent=cancelados||'0';
-  document.getElementById('stCobrado').textContent=fmt(cobrado);
-  document.getElementById('stPendiente').textContent=fmt(pend);
-  document.getElementById('stTotal').textContent=fmt(cobrado+pend);
+  document.getElementById('stCobrado').textContent=fmt(ingresosCobrados);
+  document.getElementById('stPendiente').textContent=fmt(ingresosPend);
+  // Total = ingresos cobrados + por cobrar (sin contar gastos — eso es en Finanzas)
+  document.getElementById('stTotal').textContent=fmt(ingresosCobrados+ingresosPend);
 
   const al=allProyectos.filter(p=>!/finalizado|cancelado/i.test(p['Estado proyecto']||''));
   document.getElementById('dashProyectos').innerHTML=al.length
