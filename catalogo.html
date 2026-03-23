@@ -1,0 +1,502 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Catálogo de Beats — Spectre Records</title>
+<link rel="icon" type="image/png" href="assets/logo_sr.PNG"/>
+<link rel="apple-touch-icon" href="assets/logo_sr.PNG"/>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Syne:wght@400;600;800&family=DM+Mono:wght@300;400;500&display=swap" rel="stylesheet"/>
+<style>
+:root{
+  --bg:#080808;--surface:#0e0e0e;--surface2:#131318;
+  --purple:#7c3aed;--purple-light:#a855f7;--purple-glow:#9333ea;--purple-dim:#2d1b5e;
+  --text:#f0eaf8;--muted:#6b6378;--muted2:#4a4356;
+  --border:#1a1625;--border2:#221e30;
+  --green:#34d399;--yellow:#fbbf24;--red:#f87171;--gold:#C9A84C;
+}
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box;}
+html{scroll-behavior:smooth;}
+body{background:var(--bg);color:var(--text);font-family:'Syne',sans-serif;min-height:100vh;overflow-x:hidden;cursor:none;}
+body::before{content:'';position:fixed;inset:0;background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E");pointer-events:none;z-index:9000;opacity:0.3;}
+.cursor{position:fixed;width:10px;height:10px;background:var(--purple-light);border-radius:50%;pointer-events:none;z-index:9999;transform:translate(-50%,-50%);mix-blend-mode:screen;transition:width .15s,height .15s;}
+.cursor-ring{position:fixed;width:32px;height:32px;border:1px solid rgba(168,85,247,.35);border-radius:50%;pointer-events:none;z-index:9998;transform:translate(-50%,-50%);transition:width .3s,height .3s;}
+@media(hover:none),(pointer:coarse){.cursor,.cursor-ring{display:none;}body{cursor:auto;}button,a,input,select{cursor:pointer;}}
+@keyframes fadeUp{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:translateY(0)}}
+@keyframes spin{to{transform:rotate(360deg)}}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
+
+/* NAV */
+nav{position:sticky;top:0;z-index:100;display:flex;align-items:center;justify-content:space-between;padding:1.2rem 2.5rem;background:rgba(8,8,8,.92);backdrop-filter:blur(16px);border-bottom:1px solid var(--border);}
+.nav-logo{display:flex;align-items:center;gap:.8rem;text-decoration:none;}
+.nav-logo img{height:36px;width:auto;}
+.nav-logo span{font-family:'Bebas Neue',sans-serif;font-size:1.4rem;letter-spacing:.08em;color:var(--text);}
+.nav-logo span em{color:var(--purple-light);font-style:normal;}
+.nav-right{display:flex;align-items:center;gap:.8rem;}
+.nav-link{font-family:'DM Mono',monospace;font-size:.68rem;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);text-decoration:none;transition:color .2s;}
+.nav-link:hover{color:var(--purple-light);}
+.nav-cta{font-family:'DM Mono',monospace;font-size:.7rem;letter-spacing:.12em;text-transform:uppercase;color:var(--purple-light);border:1px solid rgba(168,85,247,.4);padding:.5rem 1.2rem;text-decoration:none;transition:background .2s,color .2s;}
+.nav-cta:hover{background:var(--purple);color:#fff;border-color:var(--purple);}
+
+/* HERO */
+.cat-hero{padding:4rem 2.5rem 3rem;position:relative;overflow:hidden;}
+.cat-hero::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse 60% 80% at 50% 0%,rgba(124,58,237,.12) 0%,transparent 70%);pointer-events:none;}
+.cat-eyebrow{font-family:'DM Mono',monospace;font-size:.65rem;letter-spacing:.25em;text-transform:uppercase;color:var(--purple-light);margin-bottom:.8rem;}
+.cat-title{font-family:'Bebas Neue',sans-serif;font-size:clamp(3rem,8vw,6rem);letter-spacing:.04em;line-height:.95;margin-bottom:1rem;}
+.cat-title span{color:var(--purple-light);}
+.cat-desc{font-family:'DM Mono',monospace;font-size:.75rem;color:var(--muted);letter-spacing:.06em;max-width:480px;line-height:1.7;}
+
+/* FILTERS */
+.filters-bar{display:flex;gap:.8rem;padding:1.5rem 2.5rem;border-bottom:1px solid var(--border);flex-wrap:wrap;align-items:center;background:rgba(14,14,14,.8);position:sticky;top:73px;z-index:50;backdrop-filter:blur(12px);}
+.filter-chip{font-family:'DM Mono',monospace;font-size:.62rem;letter-spacing:.1em;text-transform:uppercase;padding:.45rem 1rem;background:var(--surface2);border:1px solid var(--border2);color:var(--muted);cursor:none;transition:all .2s;}
+.filter-chip:hover,.filter-chip.active{background:var(--purple-dim);border-color:var(--purple-light);color:var(--purple-light);}
+.filter-chip.active-libre{background:rgba(52,211,153,.1);border-color:rgba(52,211,153,.3);color:var(--green);}
+.filter-search{flex:1;min-width:200px;background:var(--surface2);border:1px solid var(--border2);color:var(--text);font-family:'DM Mono',monospace;font-size:.72rem;padding:.55rem 1rem;outline:none;transition:border-color .2s;}
+.filter-search:focus{border-color:var(--purple-light);}
+.filter-search::placeholder{color:var(--muted2);}
+.results-count{font-family:'DM Mono',monospace;font-size:.6rem;color:var(--muted2);letter-spacing:.1em;margin-left:auto;}
+
+/* GRID */
+.cat-main{padding:2.5rem;max-width:1400px;margin:0 auto;}
+.beats-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:1px;border:1px solid var(--border);}
+
+/* BEAT CARD */
+.beat-card{background:var(--surface);padding:1.5rem;position:relative;overflow:hidden;transition:background .2s;}
+.beat-card:hover{background:var(--surface2);}
+.beat-card::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,var(--purple),var(--purple-light));opacity:0;transition:opacity .3s;}
+.beat-card:hover::before{opacity:1;}
+.beat-card.vendido{opacity:.55;}
+.beat-card.vendido::after{content:'VENDIDO';position:absolute;top:.8rem;right:.8rem;font-family:'Bebas Neue',sans-serif;font-size:.7rem;letter-spacing:.15em;background:var(--red);color:#fff;padding:.2rem .6rem;}
+
+/* BEAT TOP */
+.beat-top{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:1rem;gap:.5rem;}
+.beat-nombre{font-family:'Bebas Neue',sans-serif;font-size:1.3rem;letter-spacing:.04em;line-height:1.1;}
+.beat-estado{font-family:'DM Mono',monospace;font-size:.55rem;letter-spacing:.12em;text-transform:uppercase;padding:.25rem .6rem;flex-shrink:0;}
+.estado-libre{background:rgba(52,211,153,.1);color:var(--green);border:1px solid rgba(52,211,153,.25);}
+.estado-apartado{background:rgba(251,191,36,.1);color:var(--yellow);border:1px solid rgba(251,191,36,.25);}
+.estado-vendido{background:rgba(248,113,113,.1);color:var(--red);border:1px solid rgba(248,113,113,.25);}
+
+/* BEAT META */
+.beat-meta{display:flex;gap:1.2rem;margin-bottom:1.2rem;flex-wrap:wrap;}
+.beat-meta-item{font-family:'DM Mono',monospace;font-size:.62rem;color:var(--muted);display:flex;flex-direction:column;gap:.2rem;}
+.beat-meta-label{font-size:.52rem;letter-spacing:.15em;text-transform:uppercase;color:var(--muted2);}
+.beat-meta-val{color:var(--text);}
+.beat-estilo{display:inline-block;font-family:'DM Mono',monospace;font-size:.58rem;letter-spacing:.1em;text-transform:uppercase;background:var(--purple-dim);color:var(--purple-light);border:1px solid rgba(168,85,247,.2);padding:.2rem .6rem;margin-bottom:1rem;}
+
+/* PLAYER */
+.beat-player{background:var(--surface2);border:1px solid var(--border2);padding:.9rem;margin-bottom:1rem;display:flex;align-items:center;gap:.8rem;}
+.play-btn{width:36px;height:36px;border-radius:50%;background:var(--purple);border:none;color:#fff;font-size:.9rem;cursor:none;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:background .2s;}
+.play-btn:hover{background:var(--purple-glow);}
+.play-btn.playing{background:var(--purple-light);}
+.waveform{flex:1;height:32px;position:relative;cursor:none;}
+.waveform-bars{display:flex;align-items:center;gap:2px;height:100%;}
+.waveform-bar{flex:1;background:var(--border2);border-radius:1px;transition:background .15s;min-width:2px;}
+.waveform-bar.played{background:var(--purple-light);}
+.waveform-bar.active{background:var(--purple-light);animation:pulse .6s infinite;}
+.player-time{font-family:'DM Mono',monospace;font-size:.6rem;color:var(--muted);flex-shrink:0;min-width:35px;text-align:right;}
+.beat-loading{font-family:'DM Mono',monospace;font-size:.6rem;color:var(--muted);display:flex;align-items:center;gap:.5rem;}
+.beat-loading .spinner{width:12px;height:12px;border-width:1px;margin:0;}
+.spinner{width:20px;height:20px;border:2px solid var(--border2);border-top-color:var(--purple-light);border-radius:50%;animation:spin 1s linear infinite;}
+
+/* PRECIO + ACTIONS */
+.beat-footer{display:flex;justify-content:space-between;align-items:center;gap:.8rem;}
+.beat-precio{font-family:'Bebas Neue',sans-serif;font-size:1.8rem;color:var(--gold);letter-spacing:.04em;}
+.beat-precio span{font-family:'DM Mono',monospace;font-size:.6rem;color:var(--muted);letter-spacing:.08em;display:block;line-height:1;}
+.btn-apartar{font-family:'DM Mono',monospace;font-size:.65rem;letter-spacing:.1em;text-transform:uppercase;background:var(--purple);color:#fff;border:none;padding:.6rem 1.2rem;cursor:none;transition:background .2s;}
+.btn-apartar:hover{background:var(--purple-glow);}
+.btn-apartar:disabled{opacity:.4;cursor:not-allowed;}
+
+/* EMPTY */
+.empty-state{font-family:'DM Mono',monospace;font-size:.75rem;color:var(--muted2);padding:4rem;text-align:center;letter-spacing:.08em;border:1px dashed var(--border2);grid-column:1/-1;}
+.loading-state{text-align:center;padding:4rem;font-family:'DM Mono',monospace;font-size:.7rem;color:var(--muted);letter-spacing:.1em;grid-column:1/-1;}
+
+/* MODAL SOLICITUD */
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.75);backdrop-filter:blur(8px);z-index:800;display:none;align-items:center;justify-content:center;padding:1.5rem;}
+.modal-overlay.show{display:flex;}
+.modal{background:var(--surface);border:1px solid var(--border2);width:100%;max-width:460px;animation:fadeUp .3s both;}
+.modal-header{padding:1.5rem 2rem;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;}
+.modal-title{font-family:'Bebas Neue',sans-serif;font-size:1.5rem;letter-spacing:.06em;}
+.modal-close{font-family:'DM Mono',monospace;font-size:.65rem;color:var(--muted);background:none;border:1px solid var(--border2);padding:.4rem .8rem;cursor:none;}
+.modal-close:hover{color:var(--red);border-color:var(--red);}
+.modal-body{padding:2rem;}
+.modal-beat-info{background:var(--surface2);border:1px solid var(--border2);padding:1rem;margin-bottom:1.5rem;display:flex;justify-content:space-between;align-items:center;}
+.modal-beat-name{font-family:'Bebas Neue',sans-serif;font-size:1.2rem;letter-spacing:.04em;}
+.modal-beat-price{font-family:'Bebas Neue',sans-serif;font-size:1.4rem;color:var(--gold);}
+.form-group{display:flex;flex-direction:column;gap:.4rem;margin-bottom:1rem;}
+.form-label{font-family:'DM Mono',monospace;font-size:.6rem;letter-spacing:.15em;text-transform:uppercase;color:var(--muted);}
+.form-input{background:var(--surface2);border:1px solid var(--border2);color:var(--text);font-family:'DM Mono',monospace;font-size:.8rem;padding:.75rem;outline:none;transition:border-color .2s;width:100%;}
+.form-input:focus{border-color:var(--purple-light);}
+.modal-footer{padding:1rem 2rem;border-top:1px solid var(--border);display:flex;gap:.8rem;justify-content:flex-end;}
+.btn-primary{font-family:'DM Mono',monospace;font-size:.72rem;letter-spacing:.12em;text-transform:uppercase;background:var(--purple);color:#fff;border:none;padding:.85rem 2rem;cursor:none;transition:background .2s;}
+.btn-primary:hover{background:var(--purple-glow);}
+.btn-ghost{font-family:'DM Mono',monospace;font-size:.72rem;letter-spacing:.12em;text-transform:uppercase;background:none;color:var(--muted);border:1px solid var(--border2);padding:.85rem 2rem;cursor:none;}
+
+/* TOAST */
+.toast{position:fixed;bottom:2rem;right:2rem;background:var(--surface);border-left:3px solid var(--purple-light);color:var(--text);font-family:'DM Mono',monospace;font-size:.68rem;letter-spacing:.1em;padding:.9rem 1.5rem;z-index:9999;animation:fadeUp .3s both;max-width:320px;}
+.toast.success{border-left-color:var(--green);}
+.toast.error{border-left-color:var(--red);}
+
+/* FOOTER */
+footer{padding:2rem 2.5rem;border-top:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:1rem;}
+.footer-copy{font-family:'DM Mono',monospace;font-size:.6rem;color:var(--muted2);letter-spacing:.1em;}
+.footer-back{font-family:'DM Mono',monospace;font-size:.65rem;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);text-decoration:none;transition:color .2s;}
+.footer-back:hover{color:var(--purple-light);}
+
+/* RESPONSIVE */
+@media(max-width:768px){
+  nav{padding:1rem 1.2rem;}
+  .cat-hero{padding:2.5rem 1.2rem 2rem;}
+  .filters-bar{padding:1rem 1.2rem;top:61px;}
+  .cat-main{padding:1.5rem 1.2rem;}
+  .beats-grid{grid-template-columns:1fr;}
+  .nav-logo span{font-size:1.1rem;}
+}
+</style>
+</head>
+<body>
+<div class="cursor" id="cursor"></div>
+<div class="cursor-ring" id="cursorRing"></div>
+
+<!-- NAV -->
+<nav>
+  <a href="index.html" class="nav-logo">
+    <img src="assets/logo_sr.PNG" alt="Spectre Records"/>
+    <span>SPECTRE <em>RECORDS</em></span>
+  </a>
+  <div class="nav-right">
+    <a href="index.html" class="nav-link">Inicio</a>
+    <a href="portal.html" class="nav-cta">Portal Artista →</a>
+  </div>
+</nav>
+
+<!-- HERO -->
+<div class="cat-hero">
+  <div class="cat-eyebrow">// Heaven Music</div>
+  <h1 class="cat-title">CATÁLOGO<br>DE <span>BEATS</span></h1>
+  <p class="cat-desc">Escucha, aparta o adquiere beats exclusivos producidos por Heaven Music. Cada beat es una oportunidad.</p>
+</div>
+
+<!-- FILTERS -->
+<div class="filters-bar">
+  <input class="filter-search" id="searchInput" placeholder="// Buscar beat..." oninput="applyFilters()"/>
+  <button class="filter-chip active" data-filter="estilo" data-val="" onclick="setEstilo(this,'')">Todos</button>
+  <button class="filter-chip" data-filter="estilo" data-val="Rap" onclick="setEstilo(this,'Rap')">Rap</button>
+  <button class="filter-chip" data-filter="estilo" data-val="Trap" onclick="setEstilo(this,'Trap')">Trap</button>
+  <button class="filter-chip" data-filter="estilo" data-val="Drill" onclick="setEstilo(this,'Drill')">Drill</button>
+  <button class="filter-chip" data-filter="estilo" data-val="House" onclick="setEstilo(this,'House')">House</button>
+  <button class="filter-chip" data-filter="estilo" data-val="Reggaeton" onclick="setEstilo(this,'Reggaeton')">Reggaeton</button>
+  <button class="filter-chip" data-filter="estilo" data-val="Plugg" onclick="setEstilo(this,'Plugg')">Plugg</button>
+  <button class="filter-chip active-libre" id="filterLibre" onclick="toggleLibre()" style="margin-left:auto;">Solo disponibles</button>
+  <span class="results-count" id="resultsCount"></span>
+</div>
+
+<!-- GRID -->
+<div class="cat-main">
+  <div class="beats-grid" id="beatsGrid">
+    <div class="loading-state"><div class="spinner" style="margin:0 auto 1rem"></div>Cargando catálogo...</div>
+  </div>
+</div>
+
+<!-- FOOTER -->
+<footer>
+  <div class="footer-copy">// Spectre Records · Heaven Music · Mérida, Yucatán</div>
+  <a href="index.html" class="footer-back">← Volver al inicio</a>
+</footer>
+
+<!-- MODAL SOLICITUD -->
+<div class="modal-overlay" id="modalSolicitud">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title">APARTAR BEAT</div>
+      <button class="modal-close" onclick="closeModal()">✕ Cerrar</button>
+    </div>
+    <div class="modal-body">
+      <div class="modal-beat-info">
+        <div>
+          <div style="font-family:'DM Mono',monospace;font-size:.58rem;letter-spacing:.12em;text-transform:uppercase;color:var(--muted2);margin-bottom:.3rem;">Beat seleccionado</div>
+          <div class="modal-beat-name" id="modalBeatName">—</div>
+        </div>
+        <div class="modal-beat-price" id="modalBeatPrice">—</div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Tu nombre</label>
+        <input class="form-input" id="solNombre" placeholder="¿Cómo te llamas?"/>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Correo electrónico</label>
+        <input class="form-input" id="solCorreo" type="email" placeholder="tu@correo.com"/>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Mensaje (opcional)</label>
+        <input class="form-input" id="solMensaje" placeholder="¿Algo que quieras decirnos?"/>
+      </div>
+      <p style="font-family:'DM Mono',monospace;font-size:.62rem;color:var(--muted);line-height:1.7;margin-top:.5rem;">
+        // Al apartar, te contactaremos en menos de 24h para coordinar el pago y entrega.
+      </p>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-primary" onclick="enviarSolicitud()">Enviar solicitud →</button>
+      <button class="btn-ghost" onclick="closeModal()">Cancelar</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ── Config ──
+const SHEET_ID = '18-hf-2pCs1UhUUi66Ke_JmheavXk_V-Enus0p3yfNd0';
+const API_KEY  = 'AIzaSyC6K7d8zJc2TVrchsJQeIAfHEGJ5drA74c';
+const WHATSAPP = '529999556480';
+
+// ── Cursor ──
+const cur=document.getElementById('cursor'),ring=document.getElementById('cursorRing');
+let mx=0,my=0,rx=0,ry=0;
+document.addEventListener('mousemove',e=>{mx=e.clientX;my=e.clientY;cur.style.left=mx+'px';cur.style.top=my+'px';});
+(function loop(){rx+=(mx-rx)*.12;ry+=(my-ry)*.12;ring.style.left=rx+'px';ring.style.top=ry+'px';requestAnimationFrame(loop);})();
+document.addEventListener('mouseover',e=>{
+  if(e.target.closest('a,button,input')){cur.style.width='5px';cur.style.height='5px';ring.style.width='44px';ring.style.height='44px';}
+  else{cur.style.width='10px';cur.style.height='10px';ring.style.width='32px';ring.style.height='32px';}
+});
+
+// ── State ──
+let allBeats = [];
+let filtroEstilo = '';
+let soloLibres = true;
+let currentBeatId = null;
+let currentAudio = null;
+let currentPlayBtn = null;
+let currentBars = null;
+let animFrame = null;
+
+// ── Load ──
+async function loadCatalogo(){
+  try{
+    const ts = Date.now();
+    const url = `https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}/values/Catalogo?key=${API_KEY}&_=${ts}`;
+    const r = await fetch(url, {cache:'no-store'});
+    if(!r.ok) throw new Error('Sheet error');
+    const d = await r.json();
+    if(!d.values||d.values.length<2){ renderBeats([]); return; }
+    const [headers,...rows] = d.values;
+    allBeats = rows
+      .filter(row=>row.some(c=>c&&c.trim()))
+      .map(row=>{
+        const o={};
+        headers.forEach((h,i)=>{ o[h.trim()]=(row[i]||'').trim(); });
+        return o;
+      });
+    // Update estilo filters with any custom ones
+    updateEstiloFilters();
+    applyFilters();
+  }catch(e){
+    document.getElementById('beatsGrid').innerHTML='<div class="empty-state">// No se pudo cargar el catálogo. Intenta de nuevo.</div>';
+  }
+}
+
+function updateEstiloFilters(){
+  const defaults=['Rap','Trap','Drill','House','Reggaeton','Plugg'];
+  const custom=[...new Set(allBeats.map(b=>b['Estilo']||'').filter(e=>e&&!defaults.includes(e)))];
+  const bar=document.querySelector('.filters-bar');
+  custom.forEach(estilo=>{
+    if(!bar.querySelector(`[data-val="${estilo}"]`)){
+      const btn=document.createElement('button');
+      btn.className='filter-chip';
+      btn.dataset.filter='estilo';
+      btn.dataset.val=estilo;
+      btn.onclick=function(){ setEstilo(this,estilo); };
+      btn.textContent=estilo;
+      // Insert before the "Solo disponibles" button
+      bar.insertBefore(btn, document.getElementById('filterLibre'));
+    }
+  });
+}
+
+function applyFilters(){
+  const q=(document.getElementById('searchInput').value||'').toLowerCase();
+  const list=allBeats.filter(b=>{
+    const m=!q||(b['Nombre']||'').toLowerCase().includes(q)||(b['Estilo']||'').toLowerCase().includes(q);
+    const e=!filtroEstilo||(b['Estilo']||'').toLowerCase()===filtroEstilo.toLowerCase();
+    const l=!soloLibres||b['Estado']==='Libre';
+    return m&&e&&l;
+  });
+  document.getElementById('resultsCount').textContent=list.length+' beat'+(list.length!==1?'s':'');
+  renderBeats(list);
+}
+
+function setEstilo(btn, val){
+  filtroEstilo=val;
+  document.querySelectorAll('.filter-chip[data-filter="estilo"]').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  applyFilters();
+}
+
+function toggleLibre(){
+  soloLibres=!soloLibres;
+  const btn=document.getElementById('filterLibre');
+  btn.classList.toggle('active-libre', soloLibres);
+  btn.style.opacity=soloLibres?'1':'.5';
+  applyFilters();
+}
+
+// ── Render ──
+function getDrivePreviewUrl(link){
+  if(!link) return '';
+  if(link.includes('drive.google.com/file/d/')){
+    const id=link.split('/d/')[1].split('/')[0];
+    return `https://drive.google.com/file/d/${id}/preview`;
+  }
+  if(link.includes('id=')){
+    const id=new URLSearchParams(link.split('?')[1]).get('id');
+    if(id) return `https://drive.google.com/file/d/${id}/preview`;
+  }
+  return link;
+}
+
+function renderBeats(list){
+  const grid=document.getElementById('beatsGrid');
+  if(!list.length){
+    grid.innerHTML='<div class="empty-state">// No se encontraron beats con esos filtros.</div>';
+    return;
+  }
+
+  grid.innerHTML=list.map((b,i)=>{
+    const estado=b['Estado']||'Libre';
+    const vendido=estado==='Vendido';
+    const previewUrl=getDrivePreviewUrl(b['Archivo']||'');
+    const bars=Array.from({length:28},(_,j)=>{
+      const h=20+Math.sin(j*0.8+i*1.3)*25+Math.random()*20;
+      return `<div class="waveform-bar" style="height:${Math.max(8,Math.min(100,h))}%" data-idx="${j}"></div>`;
+    }).join('');
+
+    return `<div class="beat-card${vendido?' vendido':''}">
+      <div class="beat-top">
+        <div class="beat-nombre">${b['Nombre']||'—'}</div>
+        <span class="beat-estado estado-${estado.toLowerCase()}">${estado}</span>
+      </div>
+      <div class="beat-estilo">${b['Estilo']||'—'}</div>
+      <div class="beat-meta">
+        ${b['BPM']?`<div class="beat-meta-item"><span class="beat-meta-label">BPM</span><span class="beat-meta-val">${b['BPM']}</span></div>`:''}
+        ${b['Escala']?`<div class="beat-meta-item"><span class="beat-meta-label">Escala</span><span class="beat-meta-val">${b['Escala']}</span></div>`:''}
+        ${b['Tipo']?`<div class="beat-meta-item"><span class="beat-meta-label">Licencia</span><span class="beat-meta-val">${b['Tipo']}</span></div>`:''}
+      </div>
+      ${previewUrl?`
+      <div class="beat-player" id="player-${b['ID']}">
+        <button class="play-btn" id="playbtn-${b['ID']}" onclick="togglePlay('${b['ID']}','${previewUrl}')" ${vendido?'disabled':''}>▶</button>
+        <div class="waveform" id="wave-${b['ID']}">${bars}</div>
+        <div class="player-time" id="time-${b['ID']}">0:00</div>
+      </div>`:''}
+      <div class="beat-footer">
+        <div class="beat-precio">
+          ${b['Precio']?'$'+parseFloat(b['Precio']).toLocaleString():'Consultar'}
+          <span>${b['Tipo']||''}</span>
+        </div>
+        <button class="btn-apartar" onclick="abrirSolicitud('${b['ID']}','${(b['Nombre']||'').replace(/'/g,"\\'")}','${b['Precio']||''}')"
+          ${vendido||estado==='Apartado'?'disabled':''}>
+          ${vendido?'Vendido':estado==='Apartado'?'Apartado':'Apartar →'}
+        </button>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+// ── Player (iframe Drive) ──
+let activeIframe = null;
+
+function togglePlay(beatId, previewUrl){
+  const btn=document.getElementById('playbtn-'+beatId);
+  const playerDiv=document.getElementById('player-'+beatId);
+
+  // If another beat is playing, stop it
+  if(activeIframe && activeIframe.id !== 'driveframe-'+beatId){
+    activeIframe.src='';
+    activeIframe.style.display='none';
+    const oldId=activeIframe.id.replace('driveframe-','');
+    const oldBtn=document.getElementById('playbtn-'+oldId);
+    if(oldBtn){oldBtn.textContent='▶';oldBtn.classList.remove('playing');}
+  }
+
+  let iframe=document.getElementById('driveframe-'+beatId);
+  if(!iframe){
+    iframe=document.createElement('iframe');
+    iframe.id='driveframe-'+beatId;
+    iframe.style.cssText='width:100%;height:60px;border:none;display:none;margin-top:.5rem;';
+    iframe.allow='autoplay';
+    playerDiv.appendChild(iframe);
+  }
+
+  if(btn.classList.contains('playing')){
+    iframe.src='';
+    iframe.style.display='none';
+    btn.textContent='▶';
+    btn.classList.remove('playing');
+    activeIframe=null;
+    // Reset bars
+    document.querySelectorAll(`#wave-${beatId} .waveform-bar`).forEach(b=>b.classList.remove('played','active'));
+  } else {
+    iframe.src=previewUrl;
+    iframe.style.display='block';
+    btn.textContent='■';
+    btn.classList.add('playing');
+    activeIframe=iframe;
+    // Animate bars
+    animateBars(beatId);
+  }
+}
+
+function animateBars(beatId){
+  const bars=document.querySelectorAll(`#wave-${beatId} .waveform-bar`);
+  let idx=0;
+  function step(){
+    if(!document.getElementById('playbtn-'+beatId)?.classList.contains('playing')) return;
+    bars.forEach((b,i)=>{ b.classList.toggle('active', i===idx); b.classList.toggle('played', i<idx); });
+    idx=(idx+1)%bars.length;
+    setTimeout(()=>requestAnimationFrame(step), 400);
+  }
+  requestAnimationFrame(step);
+}
+
+// ── Solicitud ──
+function abrirSolicitud(id, nombre, precio){
+  currentBeatId=id;
+  document.getElementById('modalBeatName').textContent=nombre;
+  document.getElementById('modalBeatPrice').textContent=precio?'$'+parseFloat(precio).toLocaleString()+' MXN':'Consultar';
+  document.getElementById('solNombre').value='';
+  document.getElementById('solCorreo').value='';
+  document.getElementById('solMensaje').value='';
+  document.getElementById('modalSolicitud').classList.add('show');
+}
+
+function closeModal(){
+  document.getElementById('modalSolicitud').classList.remove('show');
+}
+
+function enviarSolicitud(){
+  const nombre=document.getElementById('solNombre').value.trim();
+  const correo=document.getElementById('solCorreo').value.trim();
+  const mensaje=document.getElementById('solMensaje').value.trim();
+  const beatNombre=document.getElementById('modalBeatName').textContent;
+  const precio=document.getElementById('modalBeatPrice').textContent;
+
+  if(!nombre||!correo){toast('Nombre y correo son requeridos','error');return;}
+  if(!correo.includes('@')){toast('Correo inválido','error');return;}
+
+  // Send via WhatsApp
+  const msg=`🎵 *Solicitud de Beat*\n\nBeat: *${beatNombre}*\nPrecio: ${precio}\n\nNombre: ${nombre}\nCorreo: ${correo}${mensaje?'\nMensaje: '+mensaje:''}`;
+  const url=`https://wa.me/${WHATSAPP}?text=${encodeURIComponent(msg)}`;
+  window.open(url,'_blank');
+  closeModal();
+  toast('✓ Redirigiendo a WhatsApp...','success');
+}
+
+function toast(msg,type=''){
+  const t=document.createElement('div');
+  t.className='toast'+(type?' '+type:'');
+  t.textContent=msg;
+  document.body.appendChild(t);
+  setTimeout(()=>t.remove(),3500);
+}
+
+// ── Init ──
+window.addEventListener('load', loadCatalogo);
+</script>
+</body>
+</html>
