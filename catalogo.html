@@ -34,7 +34,9 @@ nav{position:sticky;top:0;z-index:100;display:flex;align-items:center;justify-co
 .nav-link:hover{color:var(--pl);}
 .nav-cta{font-family:DM Mono,monospace;font-size:.65rem;letter-spacing:.1em;text-transform:uppercase;color:var(--pl);border:1px solid rgba(168,85,247,.35);padding:.45rem 1.1rem;text-decoration:none;transition:background .2s,color .2s;}
 .nav-cta:hover{background:var(--purple);color:#fff;border-color:var(--purple);}
-.app{display:grid;grid-template-columns:240px 1fr;height:calc(100vh - 53px - 105px);overflow:hidden;}
+/* FIX: altura del app descontando player-bar solo cuando está visible */
+.app{display:grid;grid-template-columns:240px 1fr;height:calc(100vh - 53px);overflow:hidden;}
+.app.has-player{height:calc(100vh - 53px - 105px);}
 .sidebar{border-right:1px solid var(--border);overflow-y:auto;display:flex;flex-direction:column;}
 .sidebar::-webkit-scrollbar{width:3px;}
 .sidebar::-webkit-scrollbar-thumb{background:var(--border);}
@@ -91,8 +93,10 @@ nav{position:sticky;top:0;z-index:100;display:flex;align-items:center;justify-co
 .eq-bar:nth-child(2){animation:eq2 .7s ease infinite .15s;}
 .eq-bar:nth-child(3){animation:eq3 .7s ease infinite .3s;}
 .tr-info{display:flex;align-items:center;gap:.75rem;min-width:0;}
+/* FIX: thumbnail con imagen de cover */
 .tr-thumb{width:40px;height:40px;background:var(--s3);border:1px solid var(--b2);flex-shrink:0;display:flex;align-items:center;justify-content:center;overflow:hidden;position:relative;}
-.thumb-wave{display:flex;align-items:flex-end;gap:1.5px;height:22px;}
+.tr-thumb img{width:100%;height:100%;object-fit:cover;position:absolute;inset:0;}
+.thumb-wave{display:flex;align-items:flex-end;gap:1.5px;height:22px;position:relative;z-index:1;}
 .thumb-bar{width:3px;border-radius:1px;background:rgba(168,85,247,.3);}
 .beat-card.playing .thumb-bar{background:var(--pl);}
 .tr-text{min-width:0;}
@@ -113,10 +117,14 @@ nav{position:sticky;top:0;z-index:100;display:flex;align-items:center;justify-co
 .btn-apt{font-family:DM Mono,monospace;font-size:.54rem;letter-spacing:.1em;text-transform:uppercase;background:transparent;color:var(--pl);border:1px solid rgba(168,85,247,.3);padding:.38rem .75rem;cursor:none;transition:all .15s;white-space:nowrap;}
 .btn-apt:hover{background:var(--purple);color:#fff;border-color:var(--purple);}
 .btn-apt:disabled{background:transparent;color:var(--m2);border-color:var(--b2);cursor:not-allowed;}
-.player-bar{position:fixed;bottom:0;left:0;right:0;height:105px;background:rgba(10,8,15,.96);backdrop-filter:blur(24px);border-top:1px solid var(--b2);display:flex;align-items:center;padding:0 1.8rem;gap:1.4rem;z-index:500;}
+/* FIX: player-bar oculto por defecto, se muestra con .visible */
+.player-bar{position:fixed;bottom:0;left:0;right:0;height:105px;background:rgba(10,8,15,.96);backdrop-filter:blur(24px);border-top:1px solid var(--b2);display:flex;align-items:center;padding:0 1.8rem;gap:1.4rem;z-index:500;transform:translateY(100%);transition:transform .3s ease;}
+.player-bar.visible{transform:translateY(0);}
 .pb-info{display:flex;align-items:center;gap:.8rem;min-width:200px;flex:0 0 200px;}
-.pb-thumb{width:44px;height:44px;background:var(--s3);border:1px solid var(--b2);flex-shrink:0;display:flex;align-items:center;justify-content:center;overflow:hidden;}
-.pb-thumb-wave{display:flex;align-items:flex-end;gap:1.5px;height:22px;}
+/* FIX: pb-thumb con imagen */
+.pb-thumb{width:44px;height:44px;background:var(--s3);border:1px solid var(--b2);flex-shrink:0;display:flex;align-items:center;justify-content:center;overflow:hidden;position:relative;}
+.pb-thumb img{width:100%;height:100%;object-fit:cover;position:absolute;inset:0;}
+.pb-thumb-wave{display:flex;align-items:flex-end;gap:1.5px;height:22px;position:relative;z-index:1;}
 .pb-thumb-bar{width:3px;border-radius:1px;background:rgba(168,85,247,.35);}
 .player-bar.active .pb-thumb-bar{background:var(--pl);}
 .pb-name{font-family:Syne,sans-serif;font-weight:700;font-size:.82rem;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:140px;}
@@ -167,6 +175,7 @@ nav{position:sticky;top:0;z-index:100;display:flex;align-items:center;justify-co
 .toast.error{border-left-color:var(--red);}
 @media(max-width:900px){
   .app{grid-template-columns:1fr;height:auto;overflow:visible;}
+  .app.has-player{height:auto;}
   .sidebar{height:auto;border-right:none;border-bottom:1px solid var(--border);}
   .sidebar-top{padding:1.2rem;}
   .s-title{font-size:1.8rem;}
@@ -179,6 +188,7 @@ nav{position:sticky;top:0;z-index:100;display:flex;align-items:center;justify-co
   .sidebar-stats{display:none;}
   .main{overflow:visible;}
   .col-headers{display:none;}
+  /* FIX mobile: mostrar bpm/escala en móvil dentro del nombre */
   .beat-card{grid-template-columns:28px 1fr auto;gap:.4rem;}
   .tr-bpm,.tr-escala,.tr-estado{display:none;}
   .tr-actions{flex-direction:column;align-items:flex-end;gap:.25rem;}
@@ -189,6 +199,8 @@ nav{position:sticky;top:0;z-index:100;display:flex;align-items:center;justify-co
   .pb-right{display:none;}
   .pb-seek-container{max-width:100%;}
   .pb-center{gap:.4rem;}
+  /* FIX: espacio al fondo cuando player visible en móvil */
+  body.player-open .main{padding-bottom:130px;}
 }
 @media(max-width:500px){
   .beat-card{grid-template-columns:24px 1fr auto;}
@@ -213,7 +225,7 @@ nav{position:sticky;top:0;z-index:100;display:flex;align-items:center;justify-co
   </div>
 </nav>
 
-<div class="app">
+<div class="app" id="appGrid">
   <aside class="sidebar">
     <div class="sidebar-top">
       <div class="s-eyebrow">// Heaven Music</div>
@@ -264,13 +276,14 @@ nav{position:sticky;top:0;z-index:100;display:flex;align-items:center;justify-co
   </main>
 </div>
 
+<!-- PLAYER BAR: oculto hasta que se reproduzca algo -->
 <div class="player-bar" id="playerBar">
   <div class="pb-info">
     <div class="pb-thumb" id="pbThumb">
       <div class="pb-thumb-wave" id="pbThumbWave"></div>
     </div>
-    <div>
-      <div class="pb-name" id="pbName"><span class="pb-idle">// Sin reproducción</span></div>
+    <div style="min-width:0;">
+      <div class="pb-name" id="pbName"></div>
       <div class="pb-sub" id="pbSub"></div>
     </div>
   </div>
@@ -299,26 +312,27 @@ nav{position:sticky;top:0;z-index:100;display:flex;align-items:center;justify-co
   <div class="modal">
     <div class="m-head">
       <div class="m-title">APARTAR BEAT</div>
-      <button class="m-x" onclick="closeModal()">✕</button>
+      <button class="m-x" onclick="closeModal()">&#x2715;</button>
     </div>
     <div class="m-body">
       <div class="m-preview">
-        <div><div class="m-name" id="mName">—</div><div class="m-sub" id="mEstilo"></div></div>
-        <div class="m-price" id="mPrice">—</div>
+        <div><div class="m-name" id="mName">&#x2014;</div><div class="m-sub" id="mEstilo"></div></div>
+        <div class="m-price" id="mPrice">&#x2014;</div>
       </div>
-      <div class="fg"><label class="fl">Tu nombre</label><input class="fi" id="sNombre" placeholder="¿Cómo te llamas?"/></div>
+      <div class="fg"><label class="fl">Tu nombre</label><input class="fi" id="sNombre" placeholder="&#xBF;C&#xF3;mo te llamas?"/></div>
       <div class="fg"><label class="fl">Correo</label><input class="fi" id="sCorreo" type="email" placeholder="tu@correo.com"/></div>
-      <div class="fg"><label class="fl">Mensaje (opcional)</label><input class="fi" id="sMensaje" placeholder="¿Algo que quieras decirnos?"/></div>
+      <div class="fg"><label class="fl">Mensaje (opcional)</label><input class="fi" id="sMensaje" placeholder="&#xBF;Algo que quieras decirnos?"/></div>
       <p class="m-note">// Te contactamos en menos de 24h para coordinar pago y entrega.</p>
     </div>
     <div class="m-foot">
-      <button class="btn-send" onclick="enviar()">Enviar →</button>
+      <button class="btn-send" onclick="enviar()">Enviar &#x2192;</button>
       <button class="btn-cancel" onclick="closeModal()">Cancelar</button>
     </div>
   </div>
 </div>
 
-<audio id="audioPlayer" preload="metadata" playsinline webkit-playsinline></audio>
+<!-- Audio element con atributos iOS -->
+<audio id="audioPlayer" preload="metadata" playsinline webkit-playsinline x-webkit-airplay="allow"></audio>
 
 <script src="https://w.soundcloud.com/player/api.js"></script>
 <script>
@@ -334,31 +348,41 @@ document.addEventListener('mousemove',e=>{mx=e.clientX;my=e.clientY;cur.style.le
 
 /* ── State ── */
 let allBeats=[],fEstilo='',soloLibres=true;
-let currentList=[];          // lista filtrada actualmente visible
-let currentIndex=-1;         // índice real dentro de currentList
+let currentList=[];
+let currentIndex=-1;
 let isPlaying=false;
-let currentPlayerType='html5'; // 'html5' | 'soundcloud'
+let currentPlayerType='html5';
 let scWidget=null;
 let scContainer=null;
 let audioUnlocked=false;
+let playerVisible=false;
 
 const audioPlayer=document.getElementById('audioPlayer');
 
-/* ── Audio unlock para iOS / Android (requiere gesto del usuario) ── */
+/* ── Unlock audio en primer gesto (iOS / Android) ── */
 function unlockAudio(){
   if(audioUnlocked)return;
   audioUnlocked=true;
-  // Reproducir y pausar inmediatamente en silencio para desbloquear el contexto
-  audioPlayer.src='data:audio/wav;base64,UklGRigAAABXQVZFZm10IBIAAAABAAEARKwAAIhYAQACABAAAABkYXRhAgAAAAEA';
+  const silentWav='data:audio/wav;base64,UklGRigAAABXQVZFZm10IBIAAAABAAEARKwAAIhYAQACABAAAABkYXRhAgAAAAEA';
+  audioPlayer.src=silentWav;
   audioPlayer.volume=0;
-  audioPlayer.play().then(()=>{
-    audioPlayer.pause();
-    audioPlayer.volume=1;
-    audioPlayer.src='';
-  }).catch(()=>{audioPlayer.volume=1;audioPlayer.src='';});
+  const p=audioPlayer.play();
+  if(p&&p.then)p.then(()=>{audioPlayer.pause();audioPlayer.currentTime=0;audioPlayer.volume=1;audioPlayer.src='';}).catch(()=>{audioPlayer.volume=1;audioPlayer.src='';});
+  else{audioPlayer.volume=1;audioPlayer.src='';}
 }
 document.addEventListener('touchstart',unlockAudio,{once:true,passive:true});
 document.addEventListener('mousedown',unlockAudio,{once:true,passive:true});
+
+/* ── Mostrar / ocultar player bar ── */
+function showPlayerBar(){
+  if(playerVisible)return;
+  playerVisible=true;
+  const bar=document.getElementById('playerBar');
+  const app=document.getElementById('appGrid');
+  bar.classList.add('visible','active');
+  app.classList.add('has-player');
+  document.body.classList.add('player-open');
+}
 
 /* ── Sheets load ── */
 async function load(){
@@ -428,22 +452,31 @@ function genBars(seed,n){
 function thumbWaveHtml(seed,n){
   return genBars(seed,n).map(h=>'<div class="thumb-bar" style="height:'+Math.round(h*.22)+'px"></div>').join('');
 }
+
+/* FIX: helper para obtener URL de imagen del beat */
+function getCoverUrl(beat){
+  if(beat.Imagen&&beat.Imagen.trim()){
+    // Si es un link de Drive, convertir a URL directa de imagen
+    const img=beat.Imagen.trim();
+    let m=img.match(/\/d\/([^\/\?]+)/);
+    if(m)return 'https://drive.google.com/thumbnail?id='+m[1]+'&sz=w80';
+    m=img.match(/id=([^&]+)/);
+    if(m)return 'https://drive.google.com/thumbnail?id='+m[1]+'&sz=w80';
+    // URL directa
+    return img;
+  }
+  // Default: coverart en assets
+  return 'assets/coverart.png';
+}
+
 (function initPbThumb(){
   const tw=document.getElementById('pbThumbWave');
   if(tw)tw.innerHTML=thumbWaveHtml(42,12);
 })();
 
-/* ── Render ── */
+/* ── Render lista de beats ── */
 function renderBeats(list){
-  // Si el beat activo sigue en la nueva lista, actualizar su índice
   currentList=list;
-  if(currentIndex>=0){
-    // Buscar si el beat que suena sigue visible
-    const playingBeat=currentList[currentIndex]||null;
-    // Re-buscar por referencia en la nueva lista
-    // (currentIndex puede cambiar si los filtros cambian)
-  }
-
   const g=document.getElementById('beatsGrid');
   if(!list.length){g.innerHTML='<div class="empty-state">// No se encontraron beats.</div>';return;}
   g.innerHTML=list.map((b,i)=>{
@@ -456,8 +489,8 @@ function renderBeats(list){
     const be=(b.Estilo||'').replace(/'/g,'&#39;');
     const thumbW=thumbWaveHtml(i,12);
     const canPlay=!!(linkObj&&!vend);
-    // Marcar como playing si es el índice activo
     const isActivePlaying=(isPlaying&&i===currentIndex);
+    const coverUrl=getCoverUrl(b);
     return '<div class="beat-card'+(vend?' vendido':'')+(isActivePlaying?' playing':'')+'" id="card-idx-'+i+'" '+
         (canPlay?'onclick="rowClick('+i+')" ':'')+'>'+
       '<div class="tr-idx">'+
@@ -466,22 +499,25 @@ function renderBeats(list){
         '<div class="eq-bars"><div class="eq-bar"></div><div class="eq-bar"></div><div class="eq-bar"></div></div>'+
       '</div>'+
       '<div class="tr-info">'+
-        '<div class="tr-thumb"><div class="thumb-wave">'+thumbW+'</div></div>'+
+        '<div class="tr-thumb">'+
+          '<img src="'+coverUrl+'" alt="" onerror="this.style.display=\'none\'"/>'+
+          '<div class="thumb-wave">'+thumbW+'</div>'+
+        '</div>'+
         '<div class="tr-text">'+
-          '<div class="tr-name">'+(b.Nombre||'—')+'</div>'+
+          '<div class="tr-name">'+(b.Nombre||'&#x2014;')+'</div>'+
           '<div class="tr-tags">'+
             (b.Estilo?'<span class="tag tag-estilo">'+b.Estilo+'</span>':'')+
             (b.Tipo?'<span class="tag tag-tipo">'+b.Tipo+'</span>':'')+
           '</div>'+
         '</div>'+
       '</div>'+
-      '<div class="tr-bpm">'+(b.BPM||'—')+'</div>'+
-      '<div class="tr-escala">'+(b.Escala||'—')+'</div>'+
+      '<div class="tr-bpm">'+(b.BPM||'&#x2014;')+'</div>'+
+      '<div class="tr-escala">'+(b.Escala||'&#x2014;')+'</div>'+
       '<div class="tr-estado"><span class="estado-pill '+pillCls+'">'+est+'</span></div>'+
       '<div class="tr-actions" onclick="event.stopPropagation()">'+
         '<span class="tr-price">'+prec+'</span>'+
         '<button class="btn-apt" onclick="openModal('+i+',\''+bn+'\',\''+be+'\',\''+prec+'\')" '+(vend||est==='Apartado'?'disabled':'')+'>'+
-          (vend?'Vendido':est==='Apartado'?'Apartado':'Apartar →')+
+          (vend?'Vendido':est==='Apartado'?'Apartado':'Apartar &#x2192;')+
         '</button>'+
       '</div>'+
     '</div>';
@@ -492,7 +528,6 @@ function renderBeats(list){
 function getAudioLink(link){
   if(!link)return null;
   if(link.includes('soundcloud.com'))return {type:'soundcloud',url:link};
-  // Google Drive: extraer file ID y armar URL de stream
   let m=link.match(/\/d\/([^\/\?]+)/);
   if(m)return {type:'drive',id:m[1],url:'https://drive.google.com/uc?export=download&id='+m[1]};
   m=link.match(/id=([^&]+)/);
@@ -500,45 +535,51 @@ function getAudioLink(link){
   return null;
 }
 
-/* ── Reproducción principal ── */
-
-// rowClick: el usuario hace click en una fila (índice dentro de currentList)
+/* ── Reproducción: click en fila ── */
 function rowClick(idx){
-  if(idx===currentIndex){
-    // Mismo beat → toggle play/pause
-    toggleBarPlay();
-    return;
-  }
+  unlockAudio(); // asegurar unlock antes de reproducir
+  if(idx===currentIndex){toggleBarPlay();return;}
   playBeatAtIndex(idx);
 }
 
-// playBeatAtIndex: carga y reproduce el beat en la posición idx de currentList
+/* ── Cargar y reproducir beat por índice ── */
 function playBeatAtIndex(idx){
   if(idx<0||idx>=currentList.length)return;
   const beat=currentList[idx];
   const linkObj=getAudioLink(beat.Archivo||'');
   if(!linkObj)return;
 
-  // Detener lo que esté sonando SIN resetear UI todavía
-  _stopEngine();
+  _stopEngine(true); // true = resetear currentTime al cambiar beat
 
   currentIndex=idx;
   isPlaying=true;
 
-  // Actualizar UI de cards
+  // UI: cards
   document.querySelectorAll('.beat-card').forEach(c=>c.classList.remove('playing'));
   const card=document.getElementById('card-idx-'+idx);
   if(card)card.classList.add('playing');
 
-  // Actualizar barra inferior
-  document.getElementById('pbName').textContent=beat.Nombre||'—';
-  document.getElementById('pbSub').textContent=(beat.Estilo?beat.Estilo+' · ':'')+(beat.BPM?beat.BPM+' BPM':'');
+  // UI: barra inferior
+  document.getElementById('pbName').textContent=beat.Nombre||'&#x2014;';
+  document.getElementById('pbSub').textContent=(beat.Estilo?beat.Estilo+' \u00b7 ':'')+(beat.BPM?beat.BPM+' BPM':'');
   document.getElementById('pbPlayBtn').disabled=false;
   setPlayBtnState(true);
-  document.getElementById('playerBar').classList.add('active');
   resetSeek();
 
-  // Lanzar motor
+  // Cover art en barra
+  const pbThumb=document.getElementById('pbThumb');
+  const coverUrl=getCoverUrl(beat);
+  // Limpiar imagen previa e insertar nueva
+  let existingImg=pbThumb.querySelector('img');
+  if(!existingImg){existingImg=document.createElement('img');existingImg.alt='';pbThumb.insertBefore(existingImg,pbThumb.firstChild);}
+  existingImg.src=coverUrl;
+  existingImg.onerror=function(){this.style.display='none';};
+  existingImg.style.display='';
+
+  // Mostrar barra si no está visible
+  showPlayerBar();
+
+  // Motor
   if(linkObj.type==='soundcloud'){
     currentPlayerType='soundcloud';
     _startSoundCloud(linkObj.url);
@@ -552,21 +593,24 @@ function playBeatAtIndex(idx){
 function _startHTML5(url){
   audioPlayer.src=url;
   audioPlayer.load();
+  // En iOS necesitamos llamar play() dentro del evento de usuario
+  // unlockAudio ya se llamó antes en rowClick
   const p=audioPlayer.play();
-  if(p&&p.catch)p.catch(err=>{
-    // Autoplay bloqueado — esperar gesto
-    if(err.name==='NotAllowedError'){
-      isPlaying=false;
-      setPlayBtnState(false);
-    }
-  });
+  if(p&&p.catch){
+    p.catch(err=>{
+      if(err.name==='NotAllowedError'||err.name==='NotSupportedError'){
+        isPlaying=false;
+        setPlayBtnState(false);
+        const card=document.getElementById('card-idx-'+currentIndex);
+        if(card)card.classList.remove('playing');
+      }
+    });
+  }
 }
 
 /* ── Motor SoundCloud ── */
 function _startSoundCloud(url){
-  // Limpiar iframe anterior si existe
   if(scContainer){scContainer.remove();scContainer=null;scWidget=null;}
-
   scContainer=document.createElement('div');
   scContainer.style.cssText='position:fixed;bottom:-9999px;left:0;width:300px;height:166px;overflow:hidden;opacity:.001;pointer-events:none;z-index:-999;';
   const iframeUrl='https://w.soundcloud.com/player/?url='+encodeURIComponent(url)
@@ -575,48 +619,39 @@ function _startSoundCloud(url){
     +'&sharing=false&download=false&show_artwork=false&color=%23a855f7';
   scContainer.innerHTML='<iframe id="scWidgetFrame" width="100%" height="166" scrolling="no" frameborder="no" allow="autoplay" src="'+iframeUrl+'"></iframe>';
   document.body.appendChild(scContainer);
-
   setTimeout(()=>{
     const iframe=document.getElementById('scWidgetFrame');
     if(!iframe)return;
     scWidget=SC.Widget(iframe);
-    scWidget.bind(SC.Widget.Events.READY,()=>{
-      scWidget.play();
-    });
-    scWidget.bind(SC.Widget.Events.FINISH,()=>{
-      playAdj(1);
-    });
-  },150);
+    scWidget.bind(SC.Widget.Events.READY,()=>{scWidget.play();});
+    scWidget.bind(SC.Widget.Events.FINISH,()=>{playAdj(1);});
+  },200);
 }
 
-/* ── Parar motor (sin tocar UI de currentIndex) ── */
-function _stopEngine(){
+/* ── Parar motor ── */
+function _stopEngine(resetTime){
   if(currentPlayerType==='html5'){
     audioPlayer.pause();
-    // NO resetear currentTime aquí — lo hacemos solo al cambiar de beat
+    if(resetTime)audioPlayer.currentTime=0;
   }else if(scWidget){
-    try{scWidget.pause();}catch(e){}
+    try{scWidget.pause();if(resetTime)scWidget.seekTo(0);}catch(e){}
   }
 }
 
 /* ── Toggle play/pause desde barra ── */
 function toggleBarPlay(){
   if(currentIndex<0)return;
-  const btn=document.getElementById('pbPlayBtn');
   const card=document.getElementById('card-idx-'+currentIndex);
-
   if(isPlaying){
-    // PAUSAR — guardar posición, NO resetear
     isPlaying=false;
     setPlayBtnState(false);
     if(card)card.classList.remove('playing');
     if(currentPlayerType==='html5'){
-      audioPlayer.pause(); // currentTime se conserva automáticamente
+      audioPlayer.pause(); // currentTime se conserva
     }else if(scWidget){
       try{scWidget.pause();}catch(e){}
     }
   }else{
-    // REANUDAR desde donde quedó
     isPlaying=true;
     setPlayBtnState(true);
     if(card)card.classList.add('playing');
@@ -632,21 +667,14 @@ function toggleBarPlay(){
 /* ── Siguiente / Anterior ── */
 function playAdj(dir){
   if(!currentList.length)return;
-  // Si no hay nada sonando, empezar desde 0 o desde el final
-  let startIdx=currentIndex>=0?currentIndex:(dir>0?-1:currentList.length);
+  const startIdx=currentIndex>=0?currentIndex:(dir>0?-1:currentList.length);
   let nextIdx=startIdx+dir;
-
-  // Buscar el siguiente beat válido en la dirección indicada
   while(nextIdx>=0&&nextIdx<currentList.length){
     const b=currentList[nextIdx];
-    const linkObj=getAudioLink(b.Archivo||'');
-    if(linkObj&&b.Estado!=='Vendido'){
-      playBeatAtIndex(nextIdx);
-      return;
-    }
+    const lObj=getAudioLink(b.Archivo||'');
+    if(lObj&&b.Estado!=='Vendido'){playBeatAtIndex(nextIdx);return;}
     nextIdx+=dir;
   }
-  // No hay más beats en esa dirección — no hacer nada
 }
 
 /* ── Seek bar ── */
@@ -655,23 +683,17 @@ function handleSeekClick(e){
   const seekBar=document.getElementById('pbSeek');
   const rect=seekBar.getBoundingClientRect();
   const pct=Math.min(1,Math.max(0,(e.clientX-rect.left)/rect.width));
-
   if(currentPlayerType==='html5'){
-    if(audioPlayer.duration>0){
-      audioPlayer.currentTime=pct*audioPlayer.duration;
-    }
+    if(audioPlayer.duration>0)audioPlayer.currentTime=pct*audioPlayer.duration;
   }else if(scWidget){
-    scWidget.getDuration(dur=>{
-      if(dur>0)scWidget.seekTo(pct*dur);
-    });
+    scWidget.getDuration(dur=>{if(dur>0)scWidget.seekTo(pct*dur);});
   }
 }
 
-/* ── Update seek desde HTML5 ── */
+/* ── Eventos HTML5 Audio ── */
 audioPlayer.addEventListener('timeupdate',()=>{
   if(currentPlayerType!=='html5')return;
-  const c=audioPlayer.currentTime;
-  const d=audioPlayer.duration;
+  const c=audioPlayer.currentTime,d=audioPlayer.duration;
   document.getElementById('pbTimeCurrent').textContent=formatTime(c);
   if(isFinite(d))document.getElementById('pbTimeDuration').textContent=formatTime(d);
   if(d>0)document.getElementById('pbSeekProgress').style.width=((c/d)*100)+'%';
@@ -682,17 +704,36 @@ audioPlayer.addEventListener('loadedmetadata',()=>{
 });
 audioPlayer.addEventListener('ended',()=>{
   if(currentPlayerType!=='html5')return;
+  isPlaying=false;
   playAdj(1);
 });
-// Manejar errores de carga de audio (Drive a veces necesita cors)
 audioPlayer.addEventListener('error',()=>{
   if(currentPlayerType!=='html5')return;
   toast('// Error al cargar audio','error');
   isPlaying=false;
   setPlayBtnState(false);
+  const card=document.getElementById('card-idx-'+currentIndex);
+  if(card)card.classList.remove('playing');
+});
+audioPlayer.addEventListener('play',()=>{
+  if(currentPlayerType!=='html5')return;
+  isPlaying=true;
+  setPlayBtnState(true);
+  const card=document.getElementById('card-idx-'+currentIndex);
+  if(card)card.classList.add('playing');
+});
+audioPlayer.addEventListener('pause',()=>{
+  if(currentPlayerType!=='html5')return;
+  // Solo actualizar si no es por un cambio de beat (src vaciado)
+  if(audioPlayer.src&&audioPlayer.src!==window.location.href){
+    isPlaying=false;
+    setPlayBtnState(false);
+    const card=document.getElementById('card-idx-'+currentIndex);
+    if(card)card.classList.remove('playing');
+  }
 });
 
-/* ── Update seek desde SoundCloud (polling 500ms) ── */
+/* ── Polling SoundCloud ── */
 setInterval(()=>{
   if(currentPlayerType!=='soundcloud'||!scWidget||!isPlaying)return;
   scWidget.getPosition(pos=>{
@@ -712,17 +753,12 @@ function resetSeek(){
   document.getElementById('pbTimeCurrent').textContent='0:00';
   document.getElementById('pbTimeDuration').textContent='0:00';
 }
-
 function setPlayBtnState(playing){
-  const btn=document.getElementById('pbPlayBtn');
-  // ❚❚ = pause icon, ► = play icon
-  btn.innerHTML=playing?'&#9646;&#9646;':'&#9654;';
+  document.getElementById('pbPlayBtn').innerHTML=playing?'&#9646;&#9646;':'&#9654;';
 }
-
 function formatTime(secs){
   if(!isFinite(secs)||isNaN(secs))return '0:00';
-  const m=Math.floor(secs/60);
-  const s=Math.floor(secs%60);
+  const m=Math.floor(secs/60),s=Math.floor(secs%60);
   return m+':'+(s<10?'0':'')+s;
 }
 
@@ -742,11 +778,11 @@ function enviar(){
   const c=document.getElementById('sCorreo').value.trim();
   const m=document.getElementById('sMensaje').value.trim();
   if(!n||!c){toast('Nombre y correo requeridos','error');return;}
-  if(!c.includes('@')){toast('Correo inválido','error');return;}
+  if(!c.includes('@')){toast('Correo inv\u00e1lido','error');return;}
   const b=window._beat||{};
-  const msg='🎵 *Solicitud de Beat — Spectre Records*\n\nBeat: *'+(b.nombre||'—')+'*\nPrecio: '+(b.precio||'—')+'\n\nNombre: '+n+'\nCorreo: '+c+(m?'\nMensaje: '+m:'');
+  const msg='\uD83C\uDFB5 *Solicitud de Beat \u2014 Spectre Records*\n\nBeat: *'+(b.nombre||'\u2014')+'*\nPrecio: '+(b.precio||'\u2014')+'\n\nNombre: '+n+'\nCorreo: '+c+(m?'\nMensaje: '+m:'');
   window.open('https://wa.me/'+WA+'?text='+encodeURIComponent(msg),'_blank');
-  closeModal();toast('✓ Redirigiendo a WhatsApp...','success');
+  closeModal();toast('\u2713 Redirigiendo a WhatsApp...','success');
 }
 
 function toast(msg,type){
