@@ -360,6 +360,9 @@ body::before{content:'';position:fixed;inset:0;background-image:url("data:image/
         <button class="nav-item" onclick="showPage('cursos',this)">
           <span class="nav-icon">▶</span><span>Cursos</span>
         </button>
+        <button class="nav-item" onclick="showPage('catalogo',this)">
+          <span class="nav-icon">♫</span><span>Catálogo</span>
+        </button>
         <button class="nav-item" onclick="showPage('nuevo',this)">
           <span class="nav-icon">+</span><span>Nuevo proyecto</span>
         </button>
@@ -509,6 +512,32 @@ body::before{content:'';position:fixed;inset:0;background-image:url("data:image/
           </select>
         </div>
         <div id="cursosAdminContainer"><div class="loading-state"><div class="spinner"></div>Cargando cursos...</div></div>
+      </div>
+
+      <!-- CATÁLOGO -->
+      <div class="page" id="page-catalogo">
+        <div class="page-header">
+          <div><div class="page-eyebrow">// Beats disponibles</div><div class="page-title">CATÁLOGO</div></div>
+          <div style="display:flex;gap:.6rem;">
+            <button class="btn btn-ghost" onclick="loadAdmin()" style="font-size:.65rem;padding:.6rem 1.2rem;">⟳ Actualizar</button>
+            <button class="btn btn-gold" onclick="openModal('modalBeat')">+ Nuevo beat</button>
+          </div>
+        </div>
+        <div class="filter-bar">
+          <input class="filter-input" id="searchBeats" placeholder="// Buscar beat..." oninput="renderCatalogo()"/>
+          <select class="filter-select" id="filterEstiloBeat" onchange="renderCatalogo()">
+            <option value="">Todos los estilos</option>
+            <option>Rap</option><option>Trap</option><option>Drill</option>
+            <option>House</option><option>Reggaeton</option><option>Plugg</option>
+          </select>
+          <select class="filter-select" id="filterEstadoBeat" onchange="renderCatalogo()">
+            <option value="">Todos</option>
+            <option value="Libre">Libre</option>
+            <option value="Apartado">Apartado</option>
+            <option value="Vendido">Vendido</option>
+          </select>
+        </div>
+        <div id="catalogoContainer"><div class="loading-state"><div class="spinner"></div>Cargando catálogo...</div></div>
       </div>
 
       <!-- NUEVO PROYECTO -->
@@ -686,6 +715,55 @@ body::before{content:'';position:fixed;inset:0;background-image:url("data:image/
   </div>
 </div>
 
+<!-- MODAL: BEAT -->
+<div class="modal-overlay" id="modalBeat">
+  <div class="modal" style="max-width:580px;">
+    <div class="modal-header">
+      <div class="modal-title" id="modalBeatTitle">NUEVO BEAT</div>
+      <button class="modal-close" onclick="closeModal('modalBeat')">✕ Cerrar</button>
+    </div>
+    <div class="modal-body">
+      <input type="hidden" id="beatRowNum"/>
+      <div class="form-grid">
+        <div class="form-group"><label class="form-label">Nombre del beat</label><input class="form-input" id="beatNombre" placeholder="Nombre del beat"/></div>
+        <div class="form-group"><label class="form-label">Estilo</label>
+          <input class="form-input" id="beatEstilo" placeholder="Rap, Trap, Drill..." list="estilosList"/>
+          <datalist id="estilosList">
+            <option value="Rap"/><option value="Trap"/><option value="Drill"/>
+            <option value="House"/><option value="Reggaeton"/><option value="Plugg"/>
+          </datalist>
+        </div>
+        <div class="form-group"><label class="form-label">BPM</label><input class="form-input" id="beatBpm" type="number" placeholder="140"/></div>
+        <div class="form-group"><label class="form-label">Escala / Tono</label><input class="form-input" id="beatEscala" placeholder="Am, C#, Gm..."/></div>
+        <div class="form-group"><label class="form-label">Precio (MXN)</label><input class="form-input" id="beatPrecio" type="number" placeholder="500"/></div>
+        <div class="form-group"><label class="form-label">Estado</label>
+          <select class="form-input" id="beatEstado">
+            <option value="Libre">Libre</option>
+            <option value="Apartado">Apartado</option>
+            <option value="Vendido">Vendido</option>
+          </select>
+        </div>
+        <div class="form-group"><label class="form-label">Tipo</label>
+          <select class="form-input" id="beatTipo">
+            <option value="Exclusivo">Exclusivo</option>
+            <option value="No Exclusivo">No Exclusivo</option>
+          </select>
+        </div>
+        <div class="form-group"><label class="form-label">Archivo de audio (MP3/WAV)</label>
+          <input class="form-file" id="beatArchivo" type="file" accept="audio/*"/>
+        </div>
+        <div class="form-group full"><label class="form-label">Link audio (si ya está en Drive)</label>
+          <input class="form-input" id="beatLink" placeholder="https://drive.google.com/..."/>
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-green" onclick="guardarBeat()">Guardar →</button>
+      <button class="btn btn-ghost" onclick="closeModal('modalBeat')">Cancelar</button>
+    </div>
+  </div>
+</div>
+
 <!-- MODAL: CONFIRMAR DELETE -->
 <div class="modal-overlay" id="modalConfirm">
   <div class="modal" style="max-width:400px;">
@@ -707,12 +785,12 @@ body::before{content:'';position:fixed;inset:0;background-image:url("data:image/
 const OAUTH_CLIENT_ID = '517201895021-4q6nl7376jgag4bmrrqbo9t141n81v93.apps.googleusercontent.com';
 const SHEET_ID        = '18-hf-2pCs1UhUUi66Ke_JmheavXk_V-Enus0p3yfNd0';
 const API_KEY         = 'AIzaSyC6K7d8zJc2TVrchsJQeIAfHEGJ5drA74c';
-const DRIVE_FOLDER_ID = ''; // Optional: set a folder ID to upload files there
-const SH = { artistas:'Artistas', proyectos:'Proyectos', finanzas:'Finanzas', cursos:'Cursos' };
+const DRIVE_FOLDER_ID = '14FBLQdG5Ix3xWq1pf2fwaQfTJCj7BiR7'; // Carpeta beats en Drive
+const SH = { artistas:'Artistas', proyectos:'Proyectos', finanzas:'Finanzas', cursos:'Cursos', catalogo:'Catalogo' };
 const DEFAULT_PASS    = 'heaven2025';
 
 let oauthToken  = null;
-let allArtistas = [], allProyectos = [], allFinanzas = [], allCursos = [];
+let allArtistas = [], allProyectos = [], allFinanzas = [], allCursos = [], allBeats = [];
 let finView = 'ingresos'; // 'ingresos' | 'gastos'
 let prjView = 'activos';  // 'activos' | 'finalizados' | 'cancelados'
 
@@ -897,14 +975,15 @@ async function loadAdmin(delay=0){
   }
   // Small delay after writes so Sheets API returns fresh data
   if(delay>0) await new Promise(r=>setTimeout(r,delay));
-  [allArtistas,allProyectos,allFinanzas,allCursos]=await Promise.all([
-    fetchSheet(SH.artistas),fetchSheet(SH.proyectos),fetchSheet(SH.finanzas),fetchSheet(SH.cursos)
+  [allArtistas,allProyectos,allFinanzas,allCursos,allBeats]=await Promise.all([
+    fetchSheet(SH.artistas),fetchSheet(SH.proyectos),fetchSheet(SH.finanzas),fetchSheet(SH.cursos),fetchSheet(SH.catalogo)
   ]);
   renderDashboard();
   renderArtistas();
   renderProyectos();
   renderFinanzas();
   renderCursosAdmin();
+  renderCatalogo();
   populateArtistSelects();
   populateProyectoSelects();
   updateBadges();
@@ -1548,7 +1627,7 @@ function limpiarNP(){
 function confirmDelete(tipo,rowNum,nombre){
   document.getElementById('confirmMsg').textContent=`¿Eliminar "${nombre}"? Esta acción no se puede deshacer.`;
   document.getElementById('confirmOkBtn').onclick=async()=>{
-    const sheet=tipo==='artista'?SH.artistas:tipo==='proyecto'?SH.proyectos:tipo==='curso'?SH.cursos:SH.finanzas;
+    const sheet=tipo==='artista'?SH.artistas:tipo==='proyecto'?SH.proyectos:tipo==='curso'?SH.cursos:tipo==='beat'?SH.catalogo:SH.finanzas;
     const ok=await deleteRow(sheet,rowNum);
     if(ok){ toast('✓ Eliminado','success'); closeModal('modalConfirm'); await loadAdmin(); }
     else  { toast('Error al eliminar — asegúrate de tener OAuth activo','error'); closeModal('modalConfirm'); }
@@ -1630,6 +1709,165 @@ async function guardarCurso(){
   } else { toast('Error al guardar — activa OAuth primero','error'); }
 }
 
+// ════════════════════════════════════════════
+// CATÁLOGO DE BEATS
+// ════════════════════════════════════════════
+function estadoBeatBadge(e){
+  if(!e||e==='Libre') return '<span class="badge badge-paid">Libre</span>';
+  if(e==='Apartado') return '<span class="badge badge-pending">Apartado</span>';
+  if(e==='Vendido')  return '<span class="badge badge-unpaid">Vendido</span>';
+  return '<span class="badge badge-pending">'+e+'</span>';
+}
+
+function renderCatalogo(){
+  const q=(document.getElementById('searchBeats')?.value||'').toLowerCase();
+  const estilo=document.getElementById('filterEstiloBeat')?.value||'';
+  const estado=document.getElementById('filterEstadoBeat')?.value||'';
+  const container=document.getElementById('catalogoContainer');
+  if(!container) return;
+
+  const list=allBeats.filter(b=>{
+    const m=!q||(b['Nombre']||'').toLowerCase().includes(q)||(b['Estilo']||'').toLowerCase().includes(q);
+    const es=!estilo||(b['Estilo']||'').toLowerCase()===estilo.toLowerCase();
+    const et=!estado||(b['Estado']||'')=== estado;
+    return m&&es&&et;
+  });
+
+  if(!list.length){
+    container.innerHTML='<div class="empty-state">// No hay beats en el catálogo aún</div>';
+    return;
+  }
+
+  container.innerHTML=`<table class="data-table"><thead><tr>
+    <th>ID</th><th>Nombre</th><th>Estilo</th><th>BPM</th><th>Escala</th><th>Precio</th><th>Tipo</th><th>Estado</th><th>Audio</th><th>Acciones</th>
+  </tr></thead><tbody>${list.map(b=>{
+    const audioLink=b['Archivo']||'';
+    let previewUrl='';
+    if(audioLink.includes('drive.google.com/file/d/')){
+      const id=audioLink.split('/d/')[1].split('/')[0];
+      previewUrl=`https://drive.google.com/file/d/${id}/preview`;
+    } else if(audioLink.includes('id=')){
+      const id=new URLSearchParams(audioLink.split('?')[1]).get('id');
+      previewUrl=`https://drive.google.com/file/d/${id}/preview`;
+    }
+    const audioHtml=previewUrl
+      ?`<button class="btn-xs btn-xs-edit" onclick="togglePreview(this,'${previewUrl}')">▶ Play</button>`
+      :'<span style="color:var(--muted2);font-size:.65rem">—</span>';
+    const ne=(b['Nombre']||'').replace(/'/g,"\'");
+    return `<tr>
+      <td style="font-family:DM Mono,monospace;font-size:.62rem;color:var(--muted2)">${b['ID']||'—'}</td>
+      <td style="font-weight:600">${b['Nombre']||'—'}</td>
+      <td style="font-family:DM Mono,monospace;font-size:.68rem;color:var(--purple-light)">${b['Estilo']||'—'}</td>
+      <td style="font-family:DM Mono,monospace;font-size:.68rem;color:var(--muted)">${b['BPM']||'—'}</td>
+      <td style="font-family:DM Mono,monospace;font-size:.68rem;color:var(--muted)">${b['Escala']||'—'}</td>
+      <td style="font-family:Bebas Neue,sans-serif;font-size:1.1rem;color:var(--gold)">${b['Precio']?'$'+parseFloat(b['Precio']).toLocaleString():'—'}</td>
+      <td style="font-family:DM Mono,monospace;font-size:.62rem;color:var(--muted)">${b['Tipo']||'—'}</td>
+      <td>${estadoBeatBadge(b['Estado'])}</td>
+      <td>${audioHtml}</td>
+      <td><div class="td-actions">
+        <button class="btn-xs btn-xs-edit" onclick="editBeat(${b._rowNumber})">Editar</button>
+        <button class="btn-xs btn-xs-del" onclick="confirmDelete('beat',${b._rowNumber},'${ne}')">Borrar</button>
+      </div></td>
+    </tr>
+    <tr id="preview-${b._rowNumber}" style="display:none">
+      <td colspan="10" style="padding:.5rem 1rem;background:var(--surface2)">
+        <iframe id="iframe-${b._rowNumber}" src="" style="width:100%;height:80px;border:none;border-radius:4px;" allow="autoplay"></iframe>
+      </td>
+    </tr>`;
+  }).join('')}</tbody></table>`;
+
+  // Update estilos datalist with any custom ones
+  updateEstilosList();
+}
+
+function togglePreview(btn, url){
+  const row=btn.closest('tr');
+  const previewRow=row.nextElementSibling;
+  const iframe=previewRow.querySelector('iframe');
+  if(previewRow.style.display==='none'){
+    iframe.src=url;
+    previewRow.style.display='table-row';
+    btn.textContent='■ Stop';
+  } else {
+    iframe.src='';
+    previewRow.style.display='none';
+    btn.textContent='▶ Play';
+  }
+}
+
+function updateEstilosList(){
+  const datalist=document.getElementById('estilosList');
+  if(!datalist) return;
+  const defaults=['Rap','Trap','Drill','House','Reggaeton','Plugg'];
+  const custom=allBeats.map(b=>b['Estilo']||'').filter(e=>e&&!defaults.includes(e));
+  const all=[...new Set([...defaults,...custom])];
+  datalist.innerHTML=all.map(e=>`<option value="${e}"/>`).join('');
+  // Also update filter select
+  const sel=document.getElementById('filterEstiloBeat');
+  if(sel){
+    const cur=sel.value;
+    sel.innerHTML='<option value="">Todos los estilos</option>'+all.map(e=>`<option>${e}</option>`).join('');
+    if(cur) sel.value=cur;
+  }
+}
+
+function editBeat(rowNum){
+  const b=allBeats.find(x=>x._rowNumber===rowNum);
+  if(!b) return;
+  document.getElementById('modalBeatTitle').textContent='EDITAR BEAT';
+  document.getElementById('beatRowNum').value=rowNum;
+  document.getElementById('beatNombre').value=b['Nombre']||'';
+  document.getElementById('beatEstilo').value=b['Estilo']||'';
+  document.getElementById('beatBpm').value=b['BPM']||'';
+  document.getElementById('beatEscala').value=b['Escala']||'';
+  document.getElementById('beatPrecio').value=b['Precio']||'';
+  document.getElementById('beatEstado').value=b['Estado']||'Libre';
+  document.getElementById('beatTipo').value=b['Tipo']||'Exclusivo';
+  document.getElementById('beatLink').value=b['Archivo']||'';
+  document.getElementById('beatArchivo').value='';
+  openModal('modalBeat');
+}
+
+async function guardarBeat(){
+  const rowNum=parseInt(document.getElementById('beatRowNum').value)||0;
+  const nombre=document.getElementById('beatNombre').value.trim();
+  if(!nombre){toast('Nombre requerido','error');return;}
+  const estilo=document.getElementById('beatEstilo').value.trim();
+  const bpm=document.getElementById('beatBpm').value.trim();
+  const escala=document.getElementById('beatEscala').value.trim();
+  const precio=document.getElementById('beatPrecio').value.trim();
+  const estado=document.getElementById('beatEstado').value;
+  const tipo=document.getElementById('beatTipo').value;
+  const file=document.getElementById('beatArchivo').files[0];
+  let archLink=document.getElementById('beatLink').value.trim();
+
+  if(file){
+    const link=await uploadToDrive(file);
+    if(link) archLink=link;
+  }
+
+  const existingB=rowNum?allBeats.find(b=>b._rowNumber===rowNum):null;
+  const id=existingB?existingB['ID']||'':nextId(allBeats,'ID','Beat');
+  // Columns: ID | Nombre | Estilo | Archivo | Precio | BPM | Escala | Estado | Tipo
+  const values=[id, nombre, estilo, archLink, precio, bpm, escala, estado, tipo];
+
+  let ok=false;
+  if(rowNum){ ok=await updateRow(SH.catalogo,rowNum,values); }
+  else      { ok=await appendRow(SH.catalogo,values); }
+
+  if(ok){
+    toast('✓ Beat guardado','success');
+    closeModal('modalBeat');
+    document.getElementById('beatRowNum').value='';
+    document.getElementById('modalBeatTitle').textContent='NUEVO BEAT';
+    ['beatNombre','beatEstilo','beatBpm','beatEscala','beatPrecio','beatLink'].forEach(id=>{
+      const el=document.getElementById(id); if(el) el.value='';
+    });
+    document.getElementById('beatArchivo').value='';
+    await loadAdmin(800);
+  } else { toast('Error al guardar — activa OAuth primero','error'); }
+}
+
 function showPage(name,el){
   document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
   document.querySelectorAll('.nav-item').forEach(b=>b.classList.remove('active'));
@@ -1643,6 +1881,7 @@ function showPage(name,el){
   if(name==='artistas') renderArtistas();
   if(name==='dashboard') renderDashboard();
   if(name==='cursos') renderCursosAdmin();
+  if(name==='catalogo') renderCatalogo();
 }
 
 // ════════════════════════════════════════════
