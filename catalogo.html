@@ -165,6 +165,10 @@ nav{position:sticky;top:0;z-index:100;display:flex;align-items:center;justify-co
 .toast{position:fixed;bottom:1.5rem;right:1.5rem;background:var(--surface);border-left:3px solid var(--pl);color:var(--text);font-family:DM Mono,monospace;font-size:.62rem;letter-spacing:.08em;padding:.75rem 1.2rem;z-index:9999;max-width:260px;box-shadow:0 6px 24px rgba(0,0,0,.5);}
 .toast.success{border-left-color:var(--green);}
 .toast.error{border-left-color:var(--red);}
+/* ── Marquee / scrolling name ── */
+@keyframes mq{0%,12%{transform:translateX(0)}88%,100%{transform:translateX(var(--mq-dist,0px))}}
+.pb-name.marquee{text-overflow:clip!important;animation:mq 7s ease-in-out infinite alternate;}
+
 @media(max-width:900px){
   .app{grid-template-columns:1fr;height:auto;overflow:visible;}
   .sidebar{height:auto;border-right:none;border-bottom:1px solid var(--border);}
@@ -184,17 +188,65 @@ nav{position:sticky;top:0;z-index:100;display:flex;align-items:center;justify-co
   .tr-actions{flex-direction:column;align-items:flex-end;gap:.25rem;}
   nav{padding:.8rem 1.2rem;}
   .main-bar{padding:.7rem 1.2rem;}
-  .player-bar{padding:0 1rem;gap:.8rem;height:120px;}
-  .pb-info{min-width:120px;flex:0 0 120px;}
+
+  /* ── Spotify-style mobile player ── */
+  .player-bar{
+    flex-direction:column;
+    height:auto;
+    padding:.85rem 1.1rem .95rem;
+    gap:.6rem;
+    align-items:stretch;
+  }
+  /* Row 1: thumbnail + scrolling name/sub + controls */
+  .pb-info{
+    display:flex;
+    align-items:center;
+    gap:.75rem;
+    flex:none;
+    min-width:0;
+    width:100%;
+  }
+  .pb-info > div{flex:1;min-width:0;} /* text container grows */
+  .pb-name{
+    font-size:.9rem;
+    max-width:none;
+    white-space:nowrap;
+    overflow:hidden;
+    text-overflow:ellipsis;
+  }
+  .pb-sub{font-size:.55rem;margin-top:.18rem;}
+  .pb-thumb{width:46px;height:46px;flex-shrink:0;}
+  /* Controls sit to the right of the info row via pb-center overlay trick:
+     We keep them inside pb-center but visually align next to pb-info */
+  .pb-center{
+    display:flex;
+    flex-direction:column;
+    align-items:stretch;
+    gap:.55rem;
+    width:100%;
+  }
+  .pb-controls{
+    display:flex;
+    justify-content:center;
+    align-items:center;
+    gap:1.4rem;
+    order:1;
+  }
+  .pb-play{width:44px;height:44px;font-size:1rem;}
+  .pb-skip{font-size:.9rem;padding:.4rem;}
+  .pb-seek-container{
+    order:2;
+    max-width:100%;
+    width:100%;
+    flex-direction:row;
+    gap:.6rem;
+    align-items:center;
+  }
   .pb-right{display:none;}
-  .pb-seek-container{max-width:100%;}
-  .pb-center{gap:.4rem;}
 }
 @media(max-width:500px){
   .beat-card{grid-template-columns:24px 1fr auto;}
   .tr-thumb{display:none;}
-  .pb-seek-container{flex-direction:column;gap:.3rem;align-items:stretch;}
-  .pb-time{min-width:auto;text-align:center;}
 }
 @media(hover:none),(pointer:coarse){
   /* Seek handle always visible on touch devices */
@@ -324,7 +376,7 @@ nav{position:sticky;top:0;z-index:100;display:flex;align-items:center;justify-co
   </div>
 </div>
 
-<audio id="audioPlayer" preload="metadata" playsinline></audio>
+<audio id="audioPlayer" preload="none" playsinline></audio>
 
 <script src="https://w.soundcloud.com/player/api.js"></script>
 <script>
@@ -354,39 +406,27 @@ let scWidget=null;
 let scContainer=null;
 
 /* ── Mobile audio unlock ──
-   iOS Safari requires: (1) a valid src, (2) playsinline, (3) gesture on
-   the element itself or a play() called synchronously inside a user event.
-   We use a 1-byte silent WAV data URI to satisfy iOS constraints. */
+   iOS Safari requires audio.play() to be called synchronously inside a user
+   gesture. We use a SEPARATE temporary Audio element so the unlock never
+   touches audioPlayer and can't race with the first real playback. */
 const SILENT_SRC='data:audio/wav;base64,UklGRiQAAABXQVZFZm10IBAAAAABAAEARKwAAIhYAQACABAAZGF0YQAAAAA=';
 let audioUnlocked=false;
 function unlockAudio(){
   if(audioUnlocked)return;
   audioUnlocked=true;
-  // Unlock AudioContext (required for WebAudio on some iOS versions)
+  // Unlock AudioContext (some iOS versions need this)
   try{
     const Ctx=window.AudioContext||window.webkitAudioContext;
     if(Ctx){const ctx=new Ctx();if(ctx.state==='suspended')ctx.resume().catch(()=>{});}
   }catch(e){}
-  // Unlock HTML5 audio with a real (silent) src so iOS accepts the play()
-  const prev=audioPlayer.getAttribute('src');
-  audioPlayer.muted=true;
-  audioPlayer.src=SILENT_SRC;
-  const p=audioPlayer.play();
-  if(p&&p.then){
-    p.then(()=>{
-      audioPlayer.pause();
-      audioPlayer.muted=false;
-      // Restore previous src if any; remove otherwise so it doesn't interfere
-      if(prev){audioPlayer.src=prev;}else{audioPlayer.removeAttribute('src');}
-    }).catch(()=>{
-      audioPlayer.muted=false;
-      if(prev){audioPlayer.src=prev;}else{audioPlayer.removeAttribute('src');}
-    });
-  }else{
-    audioPlayer.pause();
-    audioPlayer.muted=false;
-    if(prev){audioPlayer.src=prev;}else{audioPlayer.removeAttribute('src');}
-  }
+  // Use a FRESH throwaway element — never touch audioPlayer here.
+  // This avoids any race where the unlock's .then() fires after loadHTML5
+  // has already set the real src, pausing/clearing it by accident.
+  try{
+    const tmp=new Audio(SILENT_SRC);
+    tmp.muted=true;
+    tmp.play().catch(()=>{});
+  }catch(e){}
 }
 document.addEventListener('touchstart',unlockAudio,{once:true,passive:true});
 document.addEventListener('click',unlockAudio,{once:true});
@@ -433,6 +473,23 @@ function thumbWaveHtml(seed,n){
   const tw=document.getElementById('pbThumbWave');
   if(tw) tw.innerHTML=thumbWaveHtml(42,12);
 })();
+
+/* ── Scrolling name (marquee) ── */
+function updateMarquee(){
+  const el=document.getElementById('pbName');
+  el.classList.remove('marquee');
+  el.style.removeProperty('--mq-dist');
+  // Small delay to let layout settle before measuring overflow
+  requestAnimationFrame(()=>{
+    requestAnimationFrame(()=>{
+      const overflow=el.scrollWidth-el.clientWidth;
+      if(overflow>4){
+        el.style.setProperty('--mq-dist','-'+overflow+'px');
+        el.classList.add('marquee');
+      }
+    });
+  });
+}
 
 /* ── UI sync ── */
 function setPlayingUI(playing){
@@ -591,6 +648,7 @@ function playBeat(idx){
   document.getElementById('pbSub').textContent=(beat.Estilo?beat.Estilo+' · ':'')+( beat.BPM?beat.BPM+' BPM':'');
   document.getElementById('pbPlayBtn').disabled=false;
   resetSeek();
+  updateMarquee();
 
   const linkObj=getAudioLink(beat.Archivo||'');
   if(!linkObj)return;
@@ -610,16 +668,17 @@ function playBeat(idx){
 /* ── HTML5 audio loader ── */
 function loadHTML5(url){
   destroySoundCloud();
+  // On iOS: do NOT call load() — it resets the element and can break the
+  // gesture context that makes play() work. Just set src and call play().
+  // The browser begins fetching automatically when play() is called.
   audioPlayer.src=url;
-  audioPlayer.currentTime=0;
-  audioPlayer.load();
   const p=audioPlayer.play();
   if(p&&p.then){
     p.then(()=>{
       isPlaying=true;
       setPlayingUI(true);
-    }).catch(e=>{
-      // Autoplay blocked — show paused state, user can tap play
+    }).catch(()=>{
+      // Autoplay blocked (iOS first gesture not yet given) — show paused state
       isPlaying=false;
       setPlayingUI(false);
     });
@@ -867,6 +926,7 @@ function toast(msg,type){
 }
 
 window.addEventListener('load',load);
+window.addEventListener('resize',updateMarquee);
 </script>
 </body>
 </html>
