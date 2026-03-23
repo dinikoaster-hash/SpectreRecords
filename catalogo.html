@@ -105,10 +105,7 @@ nav{position:sticky;top:0;z-index:100;display:flex;align-items:center;justify-co
 .wbar.on{background:var(--pl);animation:blink .4s ease infinite;}
 .p-time{font-family:DM Mono,monospace;font-size:.55rem;color:var(--muted);flex-shrink:0;min-width:32px;text-align:right;}
 .p-note{font-family:DM Mono,monospace;font-size:.52rem;color:var(--m2);margin-top:.4rem;}
-.drive-player{position:relative;height:40px;overflow:hidden;margin-top:.5rem;border-radius:2px;}
-.drive-player iframe{position:absolute;top:-105px;left:0;width:100%;height:145px;border:none;pointer-events:none;}
-.drive-player-cover{position:absolute;inset:0;z-index:2;background:var(--s3);display:flex;align-items:center;gap:.5rem;padding:0 .7rem;}
-.drive-player-cover span{font-family:DM Mono,monospace;font-size:.52rem;color:var(--m2);}
+.sc-wrap{position:fixed;bottom:-9999px;left:0;width:300px;height:166px;overflow:hidden;opacity:.001;pointer-events:none;z-index:-999;}
 /* FOOTER */
 .card-footer{display:flex;align-items:center;justify-content:space-between;gap:.6rem;margin-top:auto;}
 .precio{font-family:Bebas Neue,sans-serif;font-size:1.75rem;color:var(--gold);line-height:1;}
@@ -252,7 +249,9 @@ nav{position:sticky;top:0;z-index:100;display:flex;align-items:center;justify-co
   </div>
 </div>
 
-
+<div class="sc-wrap" id="scGlobal">
+  <iframe id="scGlobalFrame" allow="autoplay" scrolling="no" src=""></iframe>
+</div>
 <script>
 const SID='18-hf-2pCs1UhUUi66Ke_JmheavXk_V-Enus0p3yfNd0';
 const AK='AIzaSyC6K7d8zJc2TVrchsJQeIAfHEGJ5drA74c';
@@ -379,12 +378,7 @@ function renderBeats(list){
             '<div class="wave-wrap"><div class="wave-bars" id="wv-'+bid+'">'+bHtml+'</div></div>'+
             '<div class="p-time" id="pt-'+bid+'">0:00</div>'+
           '</div>'+
-          '<div class="drive-player" id="dp-'+bid+'">'+
-            '<iframe id="dif-'+bid+'" src="" allow="autoplay" sandbox="allow-scripts allow-same-origin allow-presentation"></iframe>'+
-            '<div class="drive-player-cover">'+
-              '<span>// Preview · sin descarga</span>'+
-            '</div>'+
-          '</div>'+
+          '<div class="p-note">// Preview · sin descarga</div>'+
         '</div>':'')+
       '<div class="card-footer">'+
         '<div class="precio">'+prec+'<small>'+(b.Tipo||'')+'</small></div>'+
