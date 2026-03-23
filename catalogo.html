@@ -260,7 +260,7 @@ document.addEventListener('mousemove',e=>{mx=e.clientX;my=e.clientY;cur.style.le
 (function loop(){rx+=(mx-rx)*.12;ry+=(my-ry)*.12;ring.style.left=rx+'px';ring.style.top=ry+'px';requestAnimationFrame(loop);})();
 
 // State
-let allBeats=[],fEstilo='',soloLibres=true,activeIframe=null,animId=null,activeWId=null;
+let allBeats=[],fEstilo='',soloLibres=true,animId=null,activeWId=null;
 
 async function load(){
   try{
@@ -382,37 +382,80 @@ function renderBeats(list){
   }).join('');
 }
 
+// Active audio element
+let activeAudio=null;
+
 function togglePlay(bid,did){
   const btn=document.getElementById('pb-'+bid);
   const wv=document.getElementById('wv-'+bid);
-  // stop existing
-  if(activeIframe){activeIframe.src='';activeIframe.remove();activeIframe=null;}
-  if(animId){clearInterval(animId);animId=null;}
-  if(activeWId&&activeWId!==bid){
+
+  // Stop any currently playing
+  if(activeAudio&&activeWId!==bid){
+    activeAudio.pause();activeAudio=null;
+    if(animId){clearInterval(animId);animId=null;}
     const ow=document.getElementById('wv-'+activeWId);
     if(ow)ow.querySelectorAll('.wbar').forEach(b=>{b.classList.remove('lit','on');});
     const ob=document.getElementById('pb-'+activeWId);
     if(ob){ob.innerHTML='&#9654;';ob.classList.remove('playing');}
   }
-  if(btn.classList.contains('playing')){
-    btn.innerHTML='&#9654;';btn.classList.remove('playing');
-    wv.querySelectorAll('.wbar').forEach(b=>{b.classList.remove('lit','on');});
-    activeWId=null;return;
+
+  // If same beat — toggle pause/play
+  if(activeAudio&&activeWId===bid){
+    if(activeAudio.paused){
+      activeAudio.play();
+      btn.innerHTML='&#9632;';btn.classList.add('playing');
+      startAnim(bid);
+    } else {
+      activeAudio.pause();
+      btn.innerHTML='&#9654;';btn.classList.remove('playing');
+      if(animId){clearInterval(animId);animId=null;}
+    }
+    return;
   }
-  const iframe=document.createElement('iframe');
-  iframe.src='https://drive.google.com/file/d/'+did+'/preview';
-  iframe.style.cssText='width:0;height:0;position:absolute;opacity:0;pointer-events:none;border:none;';
-  iframe.allow='autoplay';
-  document.body.appendChild(iframe);
-  activeIframe=iframe;activeWId=bid;
-  btn.innerHTML='&#9632;';btn.classList.add('playing');
+
+  // Create new audio
+  const audio=new Audio('https://drive.google.com/uc?export=download&id='+did);
+  audio.crossOrigin='anonymous';
+  audio.play().then(()=>{
+    activeAudio=audio;activeWId=bid;
+    btn.innerHTML='&#9632;';btn.classList.add('playing');
+    startAnim(bid);
+    audio.addEventListener('ended',()=>{
+      btn.innerHTML='&#9654;';btn.classList.remove('playing');
+      wv.querySelectorAll('.wbar').forEach(b=>{b.classList.remove('lit','on');});
+      activeAudio=null;activeWId=null;
+      if(animId){clearInterval(animId);animId=null;}
+    });
+    // Sync bars with actual progress
+    audio.addEventListener('timeupdate',()=>{
+      const pct=audio.duration?audio.currentTime/audio.duration:0;
+      const bars=wv.querySelectorAll('.wbar');
+      const litCount=Math.floor(pct*bars.length);
+      bars.forEach((b,i)=>{b.classList.toggle('lit',i<litCount);});
+      const m=Math.floor(audio.currentTime/60);
+      const s=Math.floor(audio.currentTime%60);
+      const pt=document.getElementById('pt-'+bid);
+      if(pt)pt.textContent=m+':'+(s<10?'0':'')+s;
+    });
+  }).catch(()=>{
+    // Drive may block direct fetch — fallback toast
+    toast('// Drive bloqueó la reproducción directa. Intenta abrir el beat en Drive.','error');
+  });
+}
+
+function startAnim(bid){
+  if(animId)clearInterval(animId);
+  const wv=document.getElementById('wv-'+bid);
+  if(!wv)return;
   const bars=wv.querySelectorAll('.wbar');
   let idx=0;
   animId=setInterval(()=>{
-    if(!btn.classList.contains('playing')){clearInterval(animId);return;}
-    bars.forEach((b,i)=>{b.classList.toggle('on',i===idx);b.classList.toggle('lit',i<idx);});
+    const btn=document.getElementById('pb-'+bid);
+    if(!btn||!btn.classList.contains('playing')){clearInterval(animId);return;}
+    // Pulse current bar
+    bars.forEach((b,i)=>{b.classList.toggle('on',i===idx);});
     idx=(idx+1)%bars.length;
-  },105);
+  },90);
 }
 
 function openModal(bid,nombre,estilo,precio){
