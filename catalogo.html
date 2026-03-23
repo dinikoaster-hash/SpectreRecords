@@ -375,18 +375,8 @@ function renderBeats(list){
         '<div class="spec"><div class="spec-l">Precio</div><div class="spec-v" style="color:var(--gold)">'+prec+'</div></div>'+
       '</div>'+
       (did?
-        '<div class="player" id="pl-'+bid+'">'+
-          '<div class="player-row">'+
-            '<button class="play-btn" id="pb-'+bid+'" onclick="playFromData(this)" data-bid="'+bid+'" data-src="'+didEnc+'" '+(vend?'disabled':'')+'>&#9654;</button>'+
-            '<div class="wave-wrap"><div class="wave-bars" id="wv-'+bid+'">'+bHtml+'</div></div>'+
-            '<div class="p-time" id="pt-'+bid+'">0:00</div>'+
-          '</div>'+
-          '<div class="drive-player" id="dp-'+bid+'">'+
-            '<iframe id="dif-'+bid+'" src="" allow="autoplay" referrerpolicy="no-referrer" sandbox="allow-scripts allow-same-origin allow-presentation allow-autoplay" data-protected="true"></iframe>'+
-            '<div class="drive-player-cover">'+
-              '<span>// Preview · sin descarga</span>'+
-            '</div>'+
-          '</div>'+
+        '<div class="drive-player">'+
+          '<iframe src="'+getDrivePreviewUrl(b.Archivo||'')+'" allow="autoplay" sandbox="allow-scripts allow-same-origin allow-presentation allow-autoplay"></iframe>'+
         '</div>':'')+
       '<div class="card-footer">'+
         '<div class="precio">'+prec+'<small>'+(b.Tipo||'')+'</small></div>'+
