@@ -1,3 +1,4 @@
+<!DOCTYPE html>
 <html lang="es">
 <head>
 <meta charset="UTF-8"/>
@@ -317,7 +318,7 @@ nav{position:sticky;top:0;z-index:100;display:flex;align-items:center;justify-co
   </div>
 </div>
 
-<audio id="audioPlayer" preload="metadata"></audio>
+<audio id="audioPlayer" preload="metadata" playsinline webkit-playsinline></audio>
 
 <script src="https://w.soundcloud.com/player/api.js"></script>
 <script>
@@ -325,35 +326,41 @@ const SID='18-hf-2pCs1UhUUi66Ke_JmheavXk_V-Enus0p3yfNd0';
 const AK='AIzaSyC6K7d8zJc2TVrchsJQeIAfHEGJ5drA74c';
 const WA='529999556480';
 
+/* ── Cursor ── */
 const cur=document.getElementById('cursor'),ring=document.getElementById('cursorRing');
 let mx=0,my=0,rx=0,ry=0;
 document.addEventListener('mousemove',e=>{mx=e.clientX;my=e.clientY;cur.style.left=mx+'px';cur.style.top=my+'px';});
 (function loop(){rx+=(mx-rx)*.12;ry+=(my-ry)*.12;ring.style.left=rx+'px';ring.style.top=ry+'px';requestAnimationFrame(loop);})();
 
-let allBeats=[],fEstilo='',soloLibres=true,activeWId=null,isPlaying=false;
-let audioPlayer=document.getElementById('audioPlayer');
+/* ── State ── */
+let allBeats=[],fEstilo='',soloLibres=true;
+let currentList=[];          // lista filtrada actualmente visible
+let currentIndex=-1;         // índice real dentro de currentList
+let isPlaying=false;
+let currentPlayerType='html5'; // 'html5' | 'soundcloud'
 let scWidget=null;
-let currentPlayerType='html5';
+let scContainer=null;
+let audioUnlocked=false;
 
-function getDriveDirectUrl(link){
-  if(!link)return null;
-  let m=link.match(/\/d\/([^\/\?]+)/);
-  if(m)return 'https://drive.google.com/uc?export=download&id='+m[1];
-  m=link.match(/id=([^&]+)/);
-  if(m)return 'https://drive.google.com/uc?export=download&id='+m[1];
-  return null;
+const audioPlayer=document.getElementById('audioPlayer');
+
+/* ── Audio unlock para iOS / Android (requiere gesto del usuario) ── */
+function unlockAudio(){
+  if(audioUnlocked)return;
+  audioUnlocked=true;
+  // Reproducir y pausar inmediatamente en silencio para desbloquear el contexto
+  audioPlayer.src='data:audio/wav;base64,UklGRigAAABXQVZFZm10IBIAAAABAAEARKwAAIhYAQACABAAAABkYXRhAgAAAAEA';
+  audioPlayer.volume=0;
+  audioPlayer.play().then(()=>{
+    audioPlayer.pause();
+    audioPlayer.volume=1;
+    audioPlayer.src='';
+  }).catch(()=>{audioPlayer.volume=1;audioPlayer.src='';});
 }
+document.addEventListener('touchstart',unlockAudio,{once:true,passive:true});
+document.addEventListener('mousedown',unlockAudio,{once:true,passive:true});
 
-function getAudioLink(link){
-  if(!link)return null;
-  if(link.includes('soundcloud.com'))return {type:'soundcloud',url:link};
-  if(link.includes('drive.google.com')){
-    const direct=getDriveDirectUrl(link);
-    return direct?{type:'drive',url:direct}:null;
-  }
-  return null;
-}
-
+/* ── Sheets load ── */
 async function load(){
   try{
     const r=await fetch('https://sheets.googleapis.com/v4/spreadsheets/'+SID+'/values/Catalogo?key='+AK+'&_='+Date.now(),{cache:'no-store'});
@@ -414,41 +421,45 @@ function applyFilters(){
   renderBeats(list);
 }
 
+/* ── Helpers visuales ── */
 function genBars(seed,n){
   return Array.from({length:n},(_,i)=>Math.min(95,Math.max(8,12+Math.abs(Math.sin(i*.7+seed*2.1)*52)+Math.abs(Math.sin(i*1.4+seed*.8)*28))));
 }
-
-function safeId(id,i){return (''+( id||i)).replace(/[^a-zA-Z0-9]/g,'x');}
-
 function thumbWaveHtml(seed,n){
-  const bars=genBars(seed,n);
-  return bars.map(h=>'<div class="thumb-bar" style="height:'+Math.round(h*.22)+'px"></div>').join('');
+  return genBars(seed,n).map(h=>'<div class="thumb-bar" style="height:'+Math.round(h*.22)+'px"></div>').join('');
 }
-
 (function initPbThumb(){
   const tw=document.getElementById('pbThumbWave');
-  if(tw) tw.innerHTML=thumbWaveHtml(42,12);
+  if(tw)tw.innerHTML=thumbWaveHtml(42,12);
 })();
 
-let currentList=[];
-
+/* ── Render ── */
 function renderBeats(list){
+  // Si el beat activo sigue en la nueva lista, actualizar su índice
   currentList=list;
+  if(currentIndex>=0){
+    // Buscar si el beat que suena sigue visible
+    const playingBeat=currentList[currentIndex]||null;
+    // Re-buscar por referencia en la nueva lista
+    // (currentIndex puede cambiar si los filtros cambian)
+  }
+
   const g=document.getElementById('beatsGrid');
   if(!list.length){g.innerHTML='<div class="empty-state">// No se encontraron beats.</div>';return;}
   g.innerHTML=list.map((b,i)=>{
     const est=b.Estado||'Libre';
     const vend=est==='Vendido';
     const linkObj=getAudioLink(b.Archivo||'');
-    const bid=safeId(b.ID,i);
     const prec=b.Precio?'$'+parseFloat(b.Precio).toLocaleString():'Consultar';
     const pillCls=est==='Libre'?'p-libre':est==='Apartado'?'p-apartado':'p-vendido';
     const bn=(b.Nombre||'').replace(/'/g,'&#39;');
     const be=(b.Estilo||'').replace(/'/g,'&#39;');
     const thumbW=thumbWaveHtml(i,12);
-    const canPlay=linkObj&&!vend;
-    return '<div class="beat-card'+(vend?' vendido':'')+'" id="card-'+bid+'" '+
-        (canPlay?'onclick="rowClick(\''+bid+'\')" ':'')+'>'+
+    const canPlay=!!(linkObj&&!vend);
+    // Marcar como playing si es el índice activo
+    const isActivePlaying=(isPlaying&&i===currentIndex);
+    return '<div class="beat-card'+(vend?' vendido':'')+(isActivePlaying?' playing':'')+'" id="card-idx-'+i+'" '+
+        (canPlay?'onclick="rowClick('+i+')" ':'')+'>'+
       '<div class="tr-idx">'+
         '<span class="tr-num">'+(i+1)+'</span>'+
         (canPlay?'<span class="tr-play-ico">&#9654;</span>':'')+
@@ -469,7 +480,7 @@ function renderBeats(list){
       '<div class="tr-estado"><span class="estado-pill '+pillCls+'">'+est+'</span></div>'+
       '<div class="tr-actions" onclick="event.stopPropagation()">'+
         '<span class="tr-price">'+prec+'</span>'+
-        '<button class="btn-apt" onclick="openModal(\''+bid+'\',\''+bn+'\',\''+be+'\',\''+prec+'\')" '+(vend||est==='Apartado'?'disabled':'')+'>'+
+        '<button class="btn-apt" onclick="openModal('+i+',\''+bn+'\',\''+be+'\',\''+prec+'\')" '+(vend||est==='Apartado'?'disabled':'')+'>'+
           (vend?'Vendido':est==='Apartado'?'Apartado':'Apartar →')+
         '</button>'+
       '</div>'+
@@ -477,136 +488,235 @@ function renderBeats(list){
   }).join('');
 }
 
-function rowClick(bid){
-  if(activeWId===bid){toggleBarPlay();return;}
-  playBeat(bid);
+/* ── Parseo de fuente de audio ── */
+function getAudioLink(link){
+  if(!link)return null;
+  if(link.includes('soundcloud.com'))return {type:'soundcloud',url:link};
+  // Google Drive: extraer file ID y armar URL de stream
+  let m=link.match(/\/d\/([^\/\?]+)/);
+  if(m)return {type:'drive',id:m[1],url:'https://drive.google.com/uc?export=download&id='+m[1]};
+  m=link.match(/id=([^&]+)/);
+  if(m)return {type:'drive',id:m[1],url:'https://drive.google.com/uc?export=download&id='+m[1]};
+  return null;
 }
 
-function playBeat(bid){
-  if(activeWId) stopCurrentBeat();
+/* ── Reproducción principal ── */
 
-  activeWId=bid;
+// rowClick: el usuario hace click en una fila (índice dentro de currentList)
+function rowClick(idx){
+  if(idx===currentIndex){
+    // Mismo beat → toggle play/pause
+    toggleBarPlay();
+    return;
+  }
+  playBeatAtIndex(idx);
+}
 
-  document.querySelectorAll('.beat-card').forEach(c=>c.classList.remove('playing'));
-  const card=document.getElementById('card-'+bid);
-  if(card) card.classList.add('playing');
-
-  const beat=currentList.find((_,i)=>safeId(_.ID,i)===bid)||{};
-  document.getElementById('pbName').textContent=beat.Nombre||'—';
-  document.getElementById('pbSub').textContent=(beat.Estilo?beat.Estilo+' · ':'')+( beat.BPM?beat.BPM+' BPM':'');
-  document.getElementById('pbPlayBtn').disabled=false;
-  document.getElementById('pbPlayBtn').innerHTML='&#9646;&#9646;';
-  document.getElementById('playerBar').classList.add('active');
-
+// playBeatAtIndex: carga y reproduce el beat en la posición idx de currentList
+function playBeatAtIndex(idx){
+  if(idx<0||idx>=currentList.length)return;
+  const beat=currentList[idx];
   const linkObj=getAudioLink(beat.Archivo||'');
   if(!linkObj)return;
 
+  // Detener lo que esté sonando SIN resetear UI todavía
+  _stopEngine();
+
+  currentIndex=idx;
+  isPlaying=true;
+
+  // Actualizar UI de cards
+  document.querySelectorAll('.beat-card').forEach(c=>c.classList.remove('playing'));
+  const card=document.getElementById('card-idx-'+idx);
+  if(card)card.classList.add('playing');
+
+  // Actualizar barra inferior
+  document.getElementById('pbName').textContent=beat.Nombre||'—';
+  document.getElementById('pbSub').textContent=(beat.Estilo?beat.Estilo+' · ':'')+(beat.BPM?beat.BPM+' BPM':'');
+  document.getElementById('pbPlayBtn').disabled=false;
+  setPlayBtnState(true);
+  document.getElementById('playerBar').classList.add('active');
+  resetSeek();
+
+  // Lanzar motor
   if(linkObj.type==='soundcloud'){
     currentPlayerType='soundcloud';
-    loadSoundCloud(linkObj.url);
-  }else if(linkObj.type==='drive'){
+    _startSoundCloud(linkObj.url);
+  }else{
     currentPlayerType='html5';
-    loadHTML5(linkObj.url);
+    _startHTML5(linkObj.url);
   }
-
-  isPlaying=true;
 }
 
-function loadHTML5(url){
-  if(scWidget){
-    scWidget.pause();
-    scWidget=null;
-  }
+/* ── Motor HTML5 ── */
+function _startHTML5(url){
   audioPlayer.src=url;
   audioPlayer.load();
-  audioPlayer.play().catch(e=>{
-    console.error('Playback error:',e);
-    toast('Error al reproducir','error');
+  const p=audioPlayer.play();
+  if(p&&p.catch)p.catch(err=>{
+    // Autoplay bloqueado — esperar gesto
+    if(err.name==='NotAllowedError'){
+      isPlaying=false;
+      setPlayBtnState(false);
+    }
   });
 }
 
-function loadSoundCloud(url){
-  audioPlayer.pause();
-  audioPlayer.src='';
+/* ── Motor SoundCloud ── */
+function _startSoundCloud(url){
+  // Limpiar iframe anterior si existe
+  if(scContainer){scContainer.remove();scContainer=null;scWidget=null;}
 
-  const container=document.createElement('div');
-  container.style.cssText='position:fixed;bottom:-9999px;left:0;width:300px;height:166px;overflow:hidden;opacity:.001;pointer-events:none;z-index:-999;';
-  container.innerHTML='<iframe id="scWidgetFrame" width="100%" height="166" scrolling="no" frameborder="no" allow="autoplay" src="https://w.soundcloud.com/player/?url='+encodeURIComponent(url)+'&auto_play=true&hide_related=true&show_comments=false&show_user=false&show_reposts=false&show_teaser=false&visual=false&buying=false&sharing=false&download=false&show_artwork=false&color=%23a855f7"></iframe>';
-  document.body.appendChild(container);
+  scContainer=document.createElement('div');
+  scContainer.style.cssText='position:fixed;bottom:-9999px;left:0;width:300px;height:166px;overflow:hidden;opacity:.001;pointer-events:none;z-index:-999;';
+  const iframeUrl='https://w.soundcloud.com/player/?url='+encodeURIComponent(url)
+    +'&auto_play=true&hide_related=true&show_comments=false&show_user=false'
+    +'&show_reposts=false&show_teaser=false&visual=false&buying=false'
+    +'&sharing=false&download=false&show_artwork=false&color=%23a855f7';
+  scContainer.innerHTML='<iframe id="scWidgetFrame" width="100%" height="166" scrolling="no" frameborder="no" allow="autoplay" src="'+iframeUrl+'"></iframe>';
+  document.body.appendChild(scContainer);
 
   setTimeout(()=>{
     const iframe=document.getElementById('scWidgetFrame');
-    if(iframe){
-      scWidget=SC.Widget(iframe);
-      scWidget.bind(SC.Widget.Events.READY,()=>{
-        scWidget.play();
-      });
-    }
-  },100);
-}
-
-function toggleBarPlay(){
-  if(!activeWId) return;
-  const btn=document.getElementById('pbPlayBtn');
-  const card=document.getElementById('card-'+activeWId);
-
-  if(isPlaying){
-    isPlaying=false;
-    btn.innerHTML='&#9654;';
-    if(card) card.classList.remove('playing');
-
-    if(currentPlayerType==='html5'){
-      audioPlayer.pause();
-    }else if(scWidget){
-      scWidget.pause();
-    }
-  } else {
-    isPlaying=true;
-    btn.innerHTML='&#9646;&#9646;';
-    if(card) card.classList.add('playing');
-
-    if(currentPlayerType==='html5'){
-      audioPlayer.play();
-    }else if(scWidget){
+    if(!iframe)return;
+    scWidget=SC.Widget(iframe);
+    scWidget.bind(SC.Widget.Events.READY,()=>{
       scWidget.play();
-    }
-  }
+    });
+    scWidget.bind(SC.Widget.Events.FINISH,()=>{
+      playAdj(1);
+    });
+  },150);
 }
 
-function playAdj(dir){
-  if(!activeWId||!currentList.length) return;
-  const idx=currentList.findIndex((_,i)=>safeId(_.ID,i)===activeWId);
-  let next=currentList[idx+dir];
-  let nextIdx=idx+dir;
-
-  while(next&&(next.Estado==='Vendido'||!getAudioLink(next.Archivo))){
-    nextIdx+=dir;
-    next=currentList[nextIdx];
-  }
-
-  if(!next) return;
-  const nextId=safeId(next.ID,nextIdx);
-  playBeat(nextId);
-}
-
-function stopCurrentBeat(){
-  if(!activeWId) return;
-  const card=document.getElementById('card-'+activeWId);
-  if(card) card.classList.remove('playing');
-
+/* ── Parar motor (sin tocar UI de currentIndex) ── */
+function _stopEngine(){
   if(currentPlayerType==='html5'){
     audioPlayer.pause();
-    audioPlayer.currentTime=0;
+    // NO resetear currentTime aquí — lo hacemos solo al cambiar de beat
   }else if(scWidget){
-    scWidget.pause();
-    scWidget.seekTo(0);
+    try{scWidget.pause();}catch(e){}
   }
+}
 
+/* ── Toggle play/pause desde barra ── */
+function toggleBarPlay(){
+  if(currentIndex<0)return;
+  const btn=document.getElementById('pbPlayBtn');
+  const card=document.getElementById('card-idx-'+currentIndex);
+
+  if(isPlaying){
+    // PAUSAR — guardar posición, NO resetear
+    isPlaying=false;
+    setPlayBtnState(false);
+    if(card)card.classList.remove('playing');
+    if(currentPlayerType==='html5'){
+      audioPlayer.pause(); // currentTime se conserva automáticamente
+    }else if(scWidget){
+      try{scWidget.pause();}catch(e){}
+    }
+  }else{
+    // REANUDAR desde donde quedó
+    isPlaying=true;
+    setPlayBtnState(true);
+    if(card)card.classList.add('playing');
+    if(currentPlayerType==='html5'){
+      const p=audioPlayer.play();
+      if(p&&p.catch)p.catch(()=>{isPlaying=false;setPlayBtnState(false);if(card)card.classList.remove('playing');});
+    }else if(scWidget){
+      try{scWidget.play();}catch(e){}
+    }
+  }
+}
+
+/* ── Siguiente / Anterior ── */
+function playAdj(dir){
+  if(!currentList.length)return;
+  // Si no hay nada sonando, empezar desde 0 o desde el final
+  let startIdx=currentIndex>=0?currentIndex:(dir>0?-1:currentList.length);
+  let nextIdx=startIdx+dir;
+
+  // Buscar el siguiente beat válido en la dirección indicada
+  while(nextIdx>=0&&nextIdx<currentList.length){
+    const b=currentList[nextIdx];
+    const linkObj=getAudioLink(b.Archivo||'');
+    if(linkObj&&b.Estado!=='Vendido'){
+      playBeatAtIndex(nextIdx);
+      return;
+    }
+    nextIdx+=dir;
+  }
+  // No hay más beats en esa dirección — no hacer nada
+}
+
+/* ── Seek bar ── */
+function handleSeekClick(e){
+  if(currentIndex<0)return;
+  const seekBar=document.getElementById('pbSeek');
+  const rect=seekBar.getBoundingClientRect();
+  const pct=Math.min(1,Math.max(0,(e.clientX-rect.left)/rect.width));
+
+  if(currentPlayerType==='html5'){
+    if(audioPlayer.duration>0){
+      audioPlayer.currentTime=pct*audioPlayer.duration;
+    }
+  }else if(scWidget){
+    scWidget.getDuration(dur=>{
+      if(dur>0)scWidget.seekTo(pct*dur);
+    });
+  }
+}
+
+/* ── Update seek desde HTML5 ── */
+audioPlayer.addEventListener('timeupdate',()=>{
+  if(currentPlayerType!=='html5')return;
+  const c=audioPlayer.currentTime;
+  const d=audioPlayer.duration;
+  document.getElementById('pbTimeCurrent').textContent=formatTime(c);
+  if(isFinite(d))document.getElementById('pbTimeDuration').textContent=formatTime(d);
+  if(d>0)document.getElementById('pbSeekProgress').style.width=((c/d)*100)+'%';
+});
+audioPlayer.addEventListener('loadedmetadata',()=>{
+  if(currentPlayerType!=='html5')return;
+  document.getElementById('pbTimeDuration').textContent=formatTime(audioPlayer.duration);
+});
+audioPlayer.addEventListener('ended',()=>{
+  if(currentPlayerType!=='html5')return;
+  playAdj(1);
+});
+// Manejar errores de carga de audio (Drive a veces necesita cors)
+audioPlayer.addEventListener('error',()=>{
+  if(currentPlayerType!=='html5')return;
+  toast('// Error al cargar audio','error');
+  isPlaying=false;
+  setPlayBtnState(false);
+});
+
+/* ── Update seek desde SoundCloud (polling 500ms) ── */
+setInterval(()=>{
+  if(currentPlayerType!=='soundcloud'||!scWidget||!isPlaying)return;
+  scWidget.getPosition(pos=>{
+    scWidget.getDuration(dur=>{
+      document.getElementById('pbTimeCurrent').textContent=formatTime(pos/1000);
+      if(dur>0){
+        document.getElementById('pbTimeDuration').textContent=formatTime(dur/1000);
+        document.getElementById('pbSeekProgress').style.width=((pos/dur)*100)+'%';
+      }
+    });
+  });
+},500);
+
+/* ── Helpers ── */
+function resetSeek(){
   document.getElementById('pbSeekProgress').style.width='0%';
   document.getElementById('pbTimeCurrent').textContent='0:00';
   document.getElementById('pbTimeDuration').textContent='0:00';
-  activeWId=null;
-  isPlaying=false;
+}
+
+function setPlayBtnState(playing){
+  const btn=document.getElementById('pbPlayBtn');
+  // ❚❚ = pause icon, ► = play icon
+  btn.innerHTML=playing?'&#9646;&#9646;':'&#9654;';
 }
 
 function formatTime(secs){
@@ -616,62 +726,8 @@ function formatTime(secs){
   return m+':'+(s<10?'0':'')+s;
 }
 
-audioPlayer.addEventListener('timeupdate',()=>{
-  if(currentPlayerType!=='html5')return;
-  const cur=audioPlayer.currentTime;
-  const dur=audioPlayer.duration;
-  document.getElementById('pbTimeCurrent').textContent=formatTime(cur);
-  document.getElementById('pbTimeDuration').textContent=formatTime(dur);
-  if(dur>0){
-    const pct=(cur/dur)*100;
-    document.getElementById('pbSeekProgress').style.width=pct+'%';
-  }
-});
-
-audioPlayer.addEventListener('loadedmetadata',()=>{
-  if(currentPlayerType!=='html5')return;
-  document.getElementById('pbTimeDuration').textContent=formatTime(audioPlayer.duration);
-});
-
-audioPlayer.addEventListener('ended',()=>{
-  if(currentPlayerType!=='html5')return;
-  playAdj(1);
-});
-
-function handleSeekClick(e){
-  if(!activeWId)return;
-
-  const seekBar=document.getElementById('pbSeek');
-  const rect=seekBar.getBoundingClientRect();
-  const pct=(e.clientX-rect.left)/rect.width;
-
-  if(currentPlayerType==='html5'){
-    if(audioPlayer.duration>0){
-      audioPlayer.currentTime=pct*audioPlayer.duration;
-    }
-  }else if(scWidget){
-    scWidget.getDuration(dur=>{
-      scWidget.seekTo(pct*dur);
-    });
-  }
-}
-
-setInterval(()=>{
-  if(currentPlayerType==='soundcloud'&&scWidget&&isPlaying){
-    scWidget.getPosition(pos=>{
-      scWidget.getDuration(dur=>{
-        document.getElementById('pbTimeCurrent').textContent=formatTime(pos/1000);
-        document.getElementById('pbTimeDuration').textContent=formatTime(dur/1000);
-        if(dur>0){
-          const pct=(pos/dur)*100;
-          document.getElementById('pbSeekProgress').style.width=pct+'%';
-        }
-      });
-    });
-  }
-},500);
-
-function openModal(bid,nombre,estilo,precio){
+/* ── Modal ── */
+function openModal(idx,nombre,estilo,precio){
   document.getElementById('mName').textContent=nombre;
   document.getElementById('mEstilo').textContent=estilo?'// '+estilo:'';
   document.getElementById('mPrice').textContent=precio;
