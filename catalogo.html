@@ -275,19 +275,31 @@ async function load(){
     const[h,...rows]=d.values;
     allBeats=rows.filter(r=>r.some(c=>c&&c.trim())).map(row=>{
       const o={};h.forEach((k,i)=>{o[k.trim()]=(row[i]||'').trim();});
-      // Encode archivo link in memory so it's not plaintext
       if(o['Archivo']) o['_arch']=btoa(o['Archivo']);
       return o;
     });
     buildEstilos();updateStats();applyFilters();
   }catch{
-    document.getElementById('beatsGrid').innerHTML='<div class="empty-state">// No se pudo cargar el catálogo.</div>';
+    document.getElementById('beatsGrid').innerHTML='<div class="empty-state">// No se pudo cargar el catálogo. Revisa los permisos de la hoja.</div>';
   }
+}
+
+// NUEVA FUNCIÓN: Para transformar links de Drive a reproductores
+function getDrivePreviewUrl(url) {
+  if (!url) return '';
+  let id = '';
+  if (url.includes('id=')) {
+    id = url.split('id=')[1].split('&')[0];
+  } else if (url.includes('/d/')) {
+    id = url.split('/d/')[1].split('/')[0];
+  }
+  return id ? `https://drive.google.com/file/d/${id}/preview` : url;
 }
 
 function buildEstilos(){
   const def=['Rap','Trap','Drill','House','Reggaeton','Plugg','Dembow'];
-  const custom=[...new Set(allBeats.map(b=>b.Estilo||'').filter(e=>e&&!def.map(d=>d.toLowerCase()).includes(e.toLowerCase())))];
+  const styles = allBeats.map(b => b.Estilo).filter(Boolean);
+  const custom=[...new Set(styles.filter(e=> !def.map(d=>d.toLowerCase()).includes(e.toLowerCase())))];
   const all=[...def,...custom];
   const el=document.getElementById('estilosList');
   el.innerHTML='<button class="e-btn active" onclick="setEstilo(this,\'\')" data-val="">Todos <span class="cnt">'+allBeats.length+'</span></button>';
@@ -329,37 +341,19 @@ function applyFilters(){
   renderBeats(list);
 }
 
-function getAudioLink(link){
-  if(!link)return null;
-  if(link.includes('soundcloud.com'))return link;
-  let m=link.match(/\/d\/([^\/\?]+)/);if(m)return 'drive:'+m[1];
-  m=link.match(/id=([^&]+)/);if(m)return 'drive:'+m[1];
-  return null;
-}
-function getDriveId(link){ return getAudioLink(link); }
-
-function genBars(seed,n){
-  return Array.from({length:n},(_,i)=>Math.min(95,Math.max(8,12+Math.abs(Math.sin(i*.7+seed*2.1)*52)+Math.abs(Math.sin(i*1.4+seed*.8)*28))));
-}
-
-function safeId(id,i){return (''+( id||i)).replace(/[^a-zA-Z0-9]/g,'x');}
-
 function renderBeats(list){
   const g=document.getElementById('beatsGrid');
   if(!list.length){g.innerHTML='<div class="empty-state">// No se encontraron beats.</div>';return;}
   g.innerHTML=list.map((b,i)=>{
     const est=b.Estado||'Libre';
     const vend=est==='Vendido';
-    const did=getAudioLink(b.Archivo||'');
-    // Store encoded so it's not plaintext in DOM
-    const didEnc=b._arch||'';
-    const bid=safeId(b.ID,i);
-    const bars=genBars(i,38);
-    const bHtml=bars.map((h,j)=>'<div class="wbar" id="wb-'+bid+'-'+j+'" style="height:'+h+'%"></div>').join('');
+    const audioUrl=b.Archivo||'';
+    const bid= (''+(b.ID||i)).replace(/[^a-zA-Z0-9]/g,'x');
     const prec=b.Precio?'$'+parseFloat(b.Precio).toLocaleString():'Consultar';
     const pillCls=est==='Libre'?'p-libre':est==='Apartado'?'p-apartado':'p-vendido';
     const bn=(b.Nombre||'').replace(/'/g,'&#39;');
     const be=(b.Estilo||'').replace(/'/g,'&#39;');
+    
     return '<div class="beat-card'+(vend?' vendido':'')+'">'+
       '<div class="card-top">'+
         '<div class="card-nombre">'+(b.Nombre||'—')+'</div>'+
@@ -374,9 +368,9 @@ function renderBeats(list){
         '<div class="spec"><div class="spec-l">Escala</div><div class="spec-v">'+(b.Escala||'—')+'</div></div>'+
         '<div class="spec"><div class="spec-l">Precio</div><div class="spec-v" style="color:var(--gold)">'+prec+'</div></div>'+
       '</div>'+
-      (did?
+      (audioUrl ? 
         '<div class="drive-player">'+
-          '<iframe src="'+getDrivePreviewUrl(b.Archivo||'')+'" allow="autoplay" sandbox="allow-scripts allow-same-origin allow-presentation allow-autoplay"></iframe>'+
+          '<iframe src="'+getDrivePreviewUrl(audioUrl)+'" allow="autoplay"></iframe>'+
         '</div>':'')+
       '<div class="card-footer">'+
         '<div class="precio">'+prec+'<small>'+(b.Tipo||'')+'</small></div>'+
@@ -386,75 +380,6 @@ function renderBeats(list){
       '</div>'+
     '</div>';
   }).join('');
-}
-
-function getSCUrl(link){
-  if(!link)return '';
-  if(link.startsWith('drive:')){
-    // Drive fallback — use preview iframe
-    const id=link.replace('drive:','');
-    return 'https://drive.google.com/file/d/'+id+'/preview?autoplay=1';
-  }
-  // SoundCloud embed
-  const base='https://w.soundcloud.com/player/?url='+encodeURIComponent(link);
-  return base+'&auto_play=true&hide_related=true&show_comments=false&show_user=false&show_reposts=false&show_teaser=false&visual=false&buying=false&sharing=false&download=false&show_artwork=false&color=%23a855f7';
-}
-
-function playFromData(btn){
-  const bid=btn.dataset.bid;
-  const did=btn.dataset.src?atob(btn.dataset.src):'';
-  togglePlay(bid,did);
-}
-
-function togglePlay(bid,did){
-  const btn=document.getElementById('pb-'+bid);
-  const wv=document.getElementById('wv-'+bid);
-
-  // Stop previous
-  if(activeWId&&activeWId!==bid) stopBeat(activeWId);
-
-  // Same beat toggle
-  if(activeWId===bid){ stopBeat(bid); return; }
-
-  // Start
-  activeWId=bid;
-  btn.innerHTML='&#9632;';btn.classList.add('playing');
-
-  const iframe=document.getElementById('scGlobalFrame');
-  if(iframe) iframe.src=getSCUrl(did);
-  startAnim(bid);
-}
-
-function stopBeat(bid){
-  const btn=document.getElementById('pb-'+bid);
-  const wv=document.getElementById('wv-'+bid);
-
-  if(btn){btn.innerHTML='&#9654;';btn.classList.remove('playing');}
-  if(wv) wv.querySelectorAll('.wbar').forEach(b=>{b.classList.remove('lit','on');});
-  const gf=document.getElementById('scGlobalFrame');
-  if(gf) gf.src='';
-  if(animId){clearInterval(animId);animId=null;}
-  if(activeWId===bid) activeWId=null;
-  const pt=document.getElementById('pt-'+bid);
-  if(pt) pt.textContent='0:00';
-}
-
-function startAnim(bid){
-  if(animId)clearInterval(animId);
-  const wv=document.getElementById('wv-'+bid);
-  if(!wv)return;
-  const bars=wv.querySelectorAll('.wbar');
-  let idx=0,secs=0;
-  animId=setInterval(()=>{
-    const btn=document.getElementById('pb-'+bid);
-    if(!btn||!btn.classList.contains('playing')){clearInterval(animId);return;}
-    bars.forEach((b,i)=>{b.classList.toggle('on',i===idx);b.classList.toggle('lit',i<idx);});
-    idx=(idx+1)%bars.length;
-    // Update fake timer
-    if(idx===0) secs++;
-    const pt=document.getElementById('pt-'+bid);
-    if(pt){const m=Math.floor(secs/60),s=secs%60;pt.textContent=m+':'+(s<10?'0':'')+s;}
-  },110);
 }
 
 function openModal(bid,nombre,estilo,precio){
@@ -486,36 +411,12 @@ function toast(msg,type){
 }
 
 window.addEventListener('load',load);
-
-// ── PROTECCIONES ──
-// Deshabilitar click derecho
 document.addEventListener('contextmenu',e=>e.preventDefault());
-
-// Deshabilitar atajos de teclado comunes
 document.addEventListener('keydown',e=>{
-  // Ctrl/Cmd + S, U, P, Shift+I, F12
   if((e.ctrlKey||e.metaKey)&&['s','u','p'].includes(e.key.toLowerCase())){e.preventDefault();return false;}
   if((e.ctrlKey||e.metaKey)&&e.shiftKey&&['i','j','c'].includes(e.key.toLowerCase())){e.preventDefault();return false;}
   if(e.key==='F12'){e.preventDefault();return false;}
 });
-
-// Detectar DevTools abierto y pausar audio
-let devOpen=false;
-const devCheck=setInterval(()=>{
-  const t=performance.now();
-  debugger;
-  if(performance.now()-t>100){
-    if(!devOpen){
-      devOpen=true;
-      // Detener toda reproducción si abren DevTools
-      if(activeWId) stopBeat(activeWId);
-    }
-  } else { devOpen=false; }
-},1500);
-
-// Ofuscar: decodifica el link solo en memoria, nunca en el DOM
-function dec(s){return atob(s);}
-function enc(s){return btoa(s);}
 </script>
 </body>
 </html>
