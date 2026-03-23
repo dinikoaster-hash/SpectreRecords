@@ -36,7 +36,7 @@ nav{position:sticky;top:0;z-index:100;display:flex;align-items:center;justify-co
 .nav-cta{font-family:DM Mono,monospace;font-size:.65rem;letter-spacing:.1em;text-transform:uppercase;color:var(--pl);border:1px solid rgba(168,85,247,.35);padding:.45rem 1.1rem;text-decoration:none;transition:background .2s,color .2s;}
 .nav-cta:hover{background:var(--purple);color:#fff;border-color:var(--purple);}
 /* LAYOUT */
-.app{display:grid;grid-template-columns:240px 1fr;height:calc(100vh - 53px);overflow:hidden;}
+.app{display:grid;grid-template-columns:240px 1fr;height:calc(100vh - 53px - 88px);overflow:hidden;}
 /* SIDEBAR */
 .sidebar{border-right:1px solid var(--border);overflow-y:auto;display:flex;flex-direction:column;}
 .sidebar::-webkit-scrollbar{width:3px;}
@@ -70,49 +70,102 @@ nav{position:sticky;top:0;z-index:100;display:flex;align-items:center;justify-co
 .main-bar{display:flex;align-items:center;justify-content:space-between;padding:.9rem 1.8rem;border-bottom:1px solid var(--border);background:var(--bg);position:sticky;top:0;z-index:10;}
 .res-info{font-family:DM Mono,monospace;font-size:.62rem;color:var(--muted);}
 .res-info b{color:var(--pl);}
-/* GRID */
-.beats-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:1px;flex:1;}
-/* CARD */
-.beat-card{background:var(--surface);padding:1.4rem;position:relative;transition:background .18s;display:flex;flex-direction:column;gap:.9rem;}
+/* TRACK LIST (Spotify style) */
+@keyframes eq1{0%,100%{height:3px}50%{height:13px}}
+@keyframes eq2{0%,100%{height:9px}50%{height:3px}}
+@keyframes eq3{0%,100%{height:5px}50%{height:15px}}
+
+/* column headers */
+.col-headers{display:grid;grid-template-columns:36px 1fr 70px 70px 80px 130px;gap:.5rem;padding:.45rem 1.4rem;border-bottom:1px solid var(--border);position:sticky;top:0;background:var(--bg);z-index:9;}
+.ch{font-family:DM Mono,monospace;font-size:.46rem;letter-spacing:.18em;text-transform:uppercase;color:var(--m2);}
+.ch.right{text-align:right;}
+
+/* beats-grid becomes a flex column list */
+.beats-grid{display:flex;flex-direction:column;flex:1;}
+
+/* each row */
+.beat-card{display:grid;grid-template-columns:36px 1fr 70px 70px 80px 130px;gap:.5rem;padding:.55rem 1.4rem;align-items:center;border-bottom:1px solid rgba(26,22,37,.6);transition:background .12s;position:relative;cursor:none;}
 .beat-card:hover{background:var(--s2);}
-.beat-card::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,var(--purple),var(--pl));opacity:0;transition:opacity .25s;}
-.beat-card:hover::before{opacity:1;}
-.beat-card.vendido{opacity:.5;}
-.card-top{display:flex;justify-content:space-between;align-items:flex-start;gap:.4rem;}
-.card-nombre{font-family:Bebas Neue,sans-serif;font-size:1.35rem;letter-spacing:.03em;line-height:1;}
-.estado-pill{font-family:DM Mono,monospace;font-size:.5rem;letter-spacing:.1em;text-transform:uppercase;padding:.18rem .5rem;border:1px solid;flex-shrink:0;margin-top:.15rem;}
+.beat-card.vendido{opacity:.45;}
+.beat-card.playing{background:rgba(168,85,247,.05);}
+
+/* col 1: index / play icon */
+.tr-idx{position:relative;display:flex;align-items:center;justify-content:center;}
+.tr-num{font-family:DM Mono,monospace;font-size:.62rem;color:var(--m2);transition:opacity .12s;}
+.beat-card:hover .tr-num,.beat-card.playing .tr-num{opacity:0;}
+.tr-play-ico{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;opacity:0;transition:opacity .12s;font-size:.8rem;color:var(--text);}
+.beat-card:hover .tr-play-ico{opacity:1;}
+/* eq bars when playing */
+.eq-bars{position:absolute;inset:0;display:flex;align-items:flex-end;justify-content:center;gap:2px;padding-bottom:2px;opacity:0;pointer-events:none;}
+.beat-card.playing .eq-bars{opacity:1;}
+.beat-card.playing .tr-num{opacity:0;}
+.beat-card.playing .tr-play-ico{opacity:0;}
+.eq-bar{width:3px;border-radius:1px;background:var(--pl);}
+.eq-bar:nth-child(1){animation:eq1 .7s ease infinite;}
+.eq-bar:nth-child(2){animation:eq2 .7s ease infinite .15s;}
+.eq-bar:nth-child(3){animation:eq3 .7s ease infinite .3s;}
+
+/* col 2: info */
+.tr-info{display:flex;align-items:center;gap:.75rem;min-width:0;}
+.tr-thumb{width:40px;height:40px;background:var(--s3);border:1px solid var(--b2);flex-shrink:0;display:flex;align-items:center;justify-content:center;overflow:hidden;position:relative;}
+.thumb-wave{display:flex;align-items:flex-end;gap:1.5px;height:22px;}
+.thumb-bar{width:3px;border-radius:1px;background:rgba(168,85,247,.3);}
+.beat-card.playing .thumb-bar{background:var(--pl);}
+.tr-text{min-width:0;}
+.tr-name{font-family:Syne,sans-serif;font-weight:700;font-size:.85rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:var(--text);line-height:1.15;}
+.beat-card.playing .tr-name{color:var(--pl);}
+.tr-tags{display:flex;gap:.28rem;margin-top:.2rem;flex-wrap:wrap;}
+
+/* tags */
+.estado-pill{font-family:DM Mono,monospace;font-size:.46rem;letter-spacing:.1em;text-transform:uppercase;padding:.13rem .42rem;border:1px solid;display:inline-block;}
 .p-libre{background:rgba(52,211,153,.07);color:var(--green);border-color:rgba(52,211,153,.18);}
 .p-apartado{background:rgba(251,191,36,.07);color:var(--yellow);border-color:rgba(251,191,36,.18);}
 .p-vendido{background:rgba(248,113,113,.07);color:var(--red);border-color:rgba(248,113,113,.18);}
-.card-tags{display:flex;gap:.35rem;flex-wrap:wrap;}
-.tag{font-family:DM Mono,monospace;font-size:.52rem;letter-spacing:.08em;text-transform:uppercase;padding:.18rem .5rem;}
+.tag{font-family:DM Mono,monospace;font-size:.44rem;letter-spacing:.08em;text-transform:uppercase;padding:.12rem .38rem;}
 .tag-estilo{background:var(--pd);color:var(--pl);border:1px solid rgba(168,85,247,.12);}
 .tag-tipo{background:rgba(201,168,76,.07);color:var(--gold);border:1px solid rgba(201,168,76,.12);}
-.card-specs{display:grid;grid-template-columns:repeat(3,1fr);gap:3px;}
-.spec{background:var(--s3);padding:.45rem .55rem;}
-.spec-l{font-family:DM Mono,monospace;font-size:.46rem;letter-spacing:.14em;text-transform:uppercase;color:var(--m2);margin-bottom:.15rem;}
-.spec-v{font-family:DM Mono,monospace;font-size:.68rem;color:var(--text);}
-/* PLAYER */
-.player{background:var(--s3);border:1px solid var(--b2);padding:.8rem;}
-.player-row{display:flex;align-items:center;gap:.7rem;}
-.play-btn{width:34px;height:34px;border-radius:50%;background:var(--purple);border:none;color:#fff;cursor:none;display:flex;align-items:center;justify-content:center;font-size:.75rem;flex-shrink:0;transition:background .15s,transform .12s;}
-.play-btn:hover{background:var(--pg);transform:scale(1.06);}
-.play-btn:disabled{background:var(--m2);}
-.wave-wrap{flex:1;height:32px;overflow:hidden;}
-.wave-bars{display:flex;align-items:center;gap:1.5px;height:100%;}
+
+/* spec cells */
+.tr-bpm,.tr-escala{font-family:DM Mono,monospace;font-size:.66rem;color:var(--muted);}
+.tr-estado{display:flex;align-items:center;}
+
+/* actions cell */
+.tr-actions{display:flex;align-items:center;justify-content:flex-end;gap:.5rem;}
+.tr-price{font-family:Bebas Neue,sans-serif;font-size:1rem;color:var(--gold);letter-spacing:.04em;}
+.btn-apt{font-family:DM Mono,monospace;font-size:.54rem;letter-spacing:.1em;text-transform:uppercase;background:transparent;color:var(--pl);border:1px solid rgba(168,85,247,.3);padding:.38rem .75rem;cursor:none;transition:all .15s;white-space:nowrap;}
+.btn-apt:hover{background:var(--purple);color:#fff;border-color:var(--purple);}
+.btn-apt:disabled{background:transparent;color:var(--m2);border-color:var(--b2);cursor:not-allowed;}
+
+/* BOTTOM PLAYER BAR */
+.player-bar{position:fixed;bottom:0;left:0;right:0;height:88px;background:rgba(10,8,15,.96);backdrop-filter:blur(24px);border-top:1px solid var(--b2);display:flex;align-items:center;padding:0 1.8rem;gap:1.4rem;z-index:500;}
+.pb-info{display:flex;align-items:center;gap:.8rem;min-width:200px;flex:0 0 200px;}
+.pb-thumb{width:44px;height:44px;background:var(--s3);border:1px solid var(--b2);flex-shrink:0;display:flex;align-items:center;justify-content:center;overflow:hidden;}
+.pb-thumb-wave{display:flex;align-items:flex-end;gap:1.5px;height:22px;}
+.pb-thumb-bar{width:3px;border-radius:1px;background:rgba(168,85,247,.35);}
+.player-bar.active .pb-thumb-bar{background:var(--pl);}
+.pb-name{font-family:Syne,sans-serif;font-weight:700;font-size:.82rem;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:140px;}
+.pb-sub{font-family:DM Mono,monospace;font-size:.5rem;color:var(--muted);letter-spacing:.06em;margin-top:.15rem;}
+.pb-idle{font-family:DM Mono,monospace;font-size:.55rem;color:var(--m2);letter-spacing:.1em;}
+
+.pb-center{flex:1;display:flex;flex-direction:column;align-items:center;gap:.45rem;}
+.pb-controls{display:flex;align-items:center;gap:.9rem;}
+.pb-play{width:38px;height:38px;border-radius:50%;background:var(--pl);border:none;color:#fff;cursor:none;display:flex;align-items:center;justify-content:center;font-size:.9rem;transition:background .15s,transform .12s;}
+.pb-play:hover{background:var(--pg);transform:scale(1.06);}
+.pb-play:disabled{background:var(--m2);}
+.pb-skip{background:none;border:none;color:var(--muted);cursor:none;font-size:.75rem;padding:.3rem;transition:color .15s;}
+.pb-skip:hover{color:var(--text);}
+.pb-wave{width:100%;max-width:380px;height:28px;position:relative;}
+.pb-wave-bars{display:flex;align-items:center;gap:1.5px;height:100%;}
 .wbar{flex:1;min-width:2px;background:var(--b2);border-radius:1px;transition:background .08s;}
-.wbar.lit{background:rgba(168,85,247,.45);}
+.wbar.lit{background:rgba(168,85,247,.4);}
 .wbar.on{background:var(--pl);animation:blink .4s ease infinite;}
-.p-time{font-family:DM Mono,monospace;font-size:.55rem;color:var(--muted);flex-shrink:0;min-width:32px;text-align:right;}
-.p-note{font-family:DM Mono,monospace;font-size:.52rem;color:var(--m2);margin-top:.4rem;}
+.pb-time{font-family:DM Mono,monospace;font-size:.52rem;color:var(--muted);white-space:nowrap;}
+
+.pb-right{display:flex;align-items:center;gap:.5rem;min-width:130px;justify-content:flex-end;}
+.pb-preview-note{font-family:DM Mono,monospace;font-size:.48rem;color:var(--m2);letter-spacing:.06em;}
+
+/* hide the old in-card player and sc-wrap */
 .sc-wrap{position:fixed;bottom:-9999px;left:0;width:300px;height:166px;overflow:hidden;opacity:.001;pointer-events:none;z-index:-999;}
-/* FOOTER */
-.card-footer{display:flex;align-items:center;justify-content:space-between;gap:.6rem;margin-top:auto;}
-.precio{font-family:Bebas Neue,sans-serif;font-size:1.75rem;color:var(--gold);line-height:1;}
-.precio small{font-family:DM Mono,monospace;font-size:.5rem;color:var(--muted);letter-spacing:.07em;display:block;}
-.btn-apt{font-family:DM Mono,monospace;font-size:.6rem;letter-spacing:.1em;text-transform:uppercase;background:var(--purple);color:#fff;border:none;padding:.6rem 1.1rem;cursor:none;transition:background .15s;}
-.btn-apt:hover{background:var(--pg);}
-.btn-apt:disabled{background:var(--s2);color:var(--muted);}
 /* EMPTY / SPINNER */
 .empty-state{font-family:DM Mono,monospace;font-size:.68rem;color:var(--m2);padding:4rem 2rem;text-align:center;letter-spacing:.08em;grid-column:1/-1;}
 .loading-state{padding:4rem;text-align:center;grid-column:1/-1;}
@@ -158,13 +211,19 @@ nav{position:sticky;top:0;z-index:100;display:flex;align-items:center;justify-co
   .disp-btns{flex-direction:row;gap:4px;}
   .sidebar-stats{display:none;}
   .main{overflow:visible;}
-  .beats-grid{grid-template-columns:1fr;}
+  .col-headers{display:none;}
+  .beat-card{grid-template-columns:28px 1fr auto;gap:.4rem;}
+  .tr-bpm,.tr-escala,.tr-estado{display:none;}
+  .tr-actions{flex-direction:column;align-items:flex-end;gap:.25rem;}
   nav{padding:.8rem 1.2rem;}
   .main-bar{padding:.7rem 1.2rem;}
+  .player-bar{padding:0 1rem;gap:.8rem;}
+  .pb-info{min-width:120px;flex:0 0 120px;}
+  .pb-right{display:none;}
 }
 @media(max-width:500px){
-  .beats-grid{grid-template-columns:1fr;}
-  .card-specs{grid-template-columns:1fr 1fr;}
+  .beat-card{grid-template-columns:24px 1fr auto;}
+  .tr-thumb{display:none;}
 }
 </style>
 </head>
@@ -220,10 +279,45 @@ nav{position:sticky;top:0;z-index:100;display:flex;align-items:center;justify-co
     <div class="main-bar">
       <div class="res-info" id="resInfo">Cargando...</div>
     </div>
+    <div class="col-headers">
+      <div class="ch">#</div>
+      <div class="ch">TÍTULO</div>
+      <div class="ch">BPM</div>
+      <div class="ch">ESCALA</div>
+      <div class="ch">ESTADO</div>
+      <div class="ch right">PRECIO / ACCIÓN</div>
+    </div>
     <div class="beats-grid" id="beatsGrid">
       <div class="loading-state"><div class="spinner"></div><div class="spin-txt">Cargando catálogo...</div></div>
     </div>
   </main>
+</div>
+
+<!-- BOTTOM PLAYER BAR -->
+<div class="player-bar" id="playerBar">
+  <div class="pb-info">
+    <div class="pb-thumb" id="pbThumb">
+      <div class="pb-thumb-wave" id="pbThumbWave"></div>
+    </div>
+    <div>
+      <div class="pb-name" id="pbName"><span class="pb-idle">// Sin reproducción</span></div>
+      <div class="pb-sub" id="pbSub"></div>
+    </div>
+  </div>
+  <div class="pb-center">
+    <div class="pb-controls">
+      <button class="pb-skip" id="btnPrev" onclick="playAdj(-1)" title="Anterior">&#9664;&#9664;</button>
+      <button class="pb-play" id="pbPlayBtn" onclick="toggleBarPlay()" disabled>&#9654;</button>
+      <button class="pb-skip" id="btnNext" onclick="playAdj(1)" title="Siguiente">&#9654;&#9654;</button>
+    </div>
+    <div class="pb-wave">
+      <div class="pb-wave-bars" id="pbWaveBars"></div>
+    </div>
+  </div>
+  <div class="pb-right">
+    <span class="pb-time" id="pbTime">0:00</span>
+    <span class="pb-preview-note">// Preview · sin descarga</span>
+  </div>
 </div>
 
 <div class="overlay" id="overlay">
@@ -264,7 +358,17 @@ document.addEventListener('mousemove',e=>{mx=e.clientX;my=e.clientY;cur.style.le
 (function loop(){rx+=(mx-rx)*.12;ry+=(my-ry)*.12;ring.style.left=rx+'px';ring.style.top=ry+'px';requestAnimationFrame(loop);})();
 
 // State
-let allBeats=[],fEstilo='',soloLibres=true,animId=null,activeWId=null;
+let allBeats=[],fEstilo='',soloLibres=true,animId=null,activeWId=null,isPlaying=false;
+
+function getSCUrl(link){
+  if(!link)return '';
+  if(link.startsWith('drive:')){
+    const id=link.replace('drive:','');
+    return 'https://drive.google.com/file/d/'+id+'/preview?autoplay=1';
+  }
+  const base='https://w.soundcloud.com/player/?url='+encodeURIComponent(link);
+  return base+'&auto_play=true&hide_related=true&show_comments=false&show_user=false&show_reposts=false&show_teaser=false&visual=false&buying=false&sharing=false&download=false&show_artwork=false&color=%23a855f7';
+}
 
 async function load(){
   try{
@@ -343,7 +447,29 @@ function genBars(seed,n){
 
 function safeId(id,i){return (''+( id||i)).replace(/[^a-zA-Z0-9]/g,'x');}
 
+// Build thumb wave bars for mini artwork
+function thumbWaveHtml(seed,n){
+  const bars=genBars(seed,n);
+  return bars.map(h=>'<div class="thumb-bar" style="height:'+Math.round(h*.22)+'px"></div>').join('');
+}
+
+// Build bottom bar wave bars once
+(function initPbWave(){
+  const bars=genBars(42,52);
+  const pbWave=document.getElementById('pbWaveBars');
+  if(pbWave) pbWave.innerHTML=bars.map((h,j)=>'<div class="wbar" id="pwb-'+j+'" style="height:'+h+'%"></div>').join('');
+})();
+
+// Build thumb wave for bottom bar
+(function initPbThumb(){
+  const tw=document.getElementById('pbThumbWave');
+  if(tw) tw.innerHTML=thumbWaveHtml(42,12);
+})();
+
+let currentList=[];
+
 function renderBeats(list){
+  currentList=list;
   const g=document.getElementById('beatsGrid');
   if(!list.length){g.innerHTML='<div class="empty-state">// No se encontraron beats.</div>';return;}
   g.innerHTML=list.map((b,i)=>{
@@ -351,105 +477,139 @@ function renderBeats(list){
     const vend=est==='Vendido';
     const did=getAudioLink(b.Archivo||'');
     const bid=safeId(b.ID,i);
-    const bars=genBars(i,38);
-    const bHtml=bars.map((h,j)=>'<div class="wbar" id="wb-'+bid+'-'+j+'" style="height:'+h+'%"></div>').join('');
     const prec=b.Precio?'$'+parseFloat(b.Precio).toLocaleString():'Consultar';
     const pillCls=est==='Libre'?'p-libre':est==='Apartado'?'p-apartado':'p-vendido';
     const bn=(b.Nombre||'').replace(/'/g,'&#39;');
     const be=(b.Estilo||'').replace(/'/g,'&#39;');
-    return '<div class="beat-card'+(vend?' vendido':'')+'">'+
-      '<div class="card-top">'+
-        '<div class="card-nombre">'+(b.Nombre||'—')+'</div>'+
-        '<span class="estado-pill '+pillCls+'">'+est+'</span>'+
+    const thumbW=thumbWaveHtml(i,12);
+    const canPlay=did&&!vend;
+    return '<div class="beat-card'+(vend?' vendido':'')+'" id="card-'+bid+'" '+
+        (canPlay?'onclick="rowClick(\''+bid+'\',\''+did+'\')" ':'')+'>'+
+      // col 1: index
+      '<div class="tr-idx">'+
+        '<span class="tr-num">'+(i+1)+'</span>'+
+        (canPlay?'<span class="tr-play-ico">&#9654;</span>':'')+
+        '<div class="eq-bars"><div class="eq-bar"></div><div class="eq-bar"></div><div class="eq-bar"></div></div>'+
       '</div>'+
-      '<div class="card-tags">'+
-        (b.Estilo?'<span class="tag tag-estilo">'+b.Estilo+'</span>':'')+
-        (b.Tipo?'<span class="tag tag-tipo">'+b.Tipo+'</span>':'')+
-      '</div>'+
-      '<div class="card-specs">'+
-        '<div class="spec"><div class="spec-l">BPM</div><div class="spec-v">'+(b.BPM||'—')+'</div></div>'+
-        '<div class="spec"><div class="spec-l">Escala</div><div class="spec-v">'+(b.Escala||'—')+'</div></div>'+
-        '<div class="spec"><div class="spec-l">Precio</div><div class="spec-v" style="color:var(--gold)">'+prec+'</div></div>'+
-      '</div>'+
-      (did?
-        '<div class="player" id="pl-'+bid+'">'+
-          '<div class="player-row">'+
-            '<button class="play-btn" id="pb-'+bid+'" onclick="togglePlay(\''+bid+'\',\''+did+'\')" '+(vend?'disabled':'')+'>&#9654;</button>'+
-            '<div class="wave-wrap"><div class="wave-bars" id="wv-'+bid+'">'+bHtml+'</div></div>'+
-            '<div class="p-time" id="pt-'+bid+'">0:00</div>'+
+      // col 2: info
+      '<div class="tr-info">'+
+        '<div class="tr-thumb"><div class="thumb-wave">'+thumbW+'</div></div>'+
+        '<div class="tr-text">'+
+          '<div class="tr-name">'+(b.Nombre||'—')+'</div>'+
+          '<div class="tr-tags">'+
+            (b.Estilo?'<span class="tag tag-estilo">'+b.Estilo+'</span>':'')+
+            (b.Tipo?'<span class="tag tag-tipo">'+b.Tipo+'</span>':'')+
           '</div>'+
-          '<div class="p-note">// Preview · sin descarga</div>'+
-        '</div>':'')+
-      '<div class="card-footer">'+
-        '<div class="precio">'+prec+'<small>'+(b.Tipo||'')+'</small></div>'+
+        '</div>'+
+      '</div>'+
+      // col 3: BPM
+      '<div class="tr-bpm">'+(b.BPM||'—')+'</div>'+
+      // col 4: Escala
+      '<div class="tr-escala">'+(b.Escala||'—')+'</div>'+
+      // col 5: Estado
+      '<div class="tr-estado"><span class="estado-pill '+pillCls+'">'+est+'</span></div>'+
+      // col 6: Price + action
+      '<div class="tr-actions" onclick="event.stopPropagation()">'+
+        '<span class="tr-price">'+prec+'</span>'+
         '<button class="btn-apt" onclick="openModal(\''+bid+'\',\''+bn+'\',\''+be+'\',\''+prec+'\')" '+(vend||est==='Apartado'?'disabled':'')+'>'+
-          (vend?'Vendido':est==='Apartado'?'Apartado':'Apartar &#8594;')+
+          (vend?'Vendido':est==='Apartado'?'Apartado':'Apartar →')+
         '</button>'+
       '</div>'+
     '</div>';
   }).join('');
 }
 
-function getSCUrl(link){
-  if(!link)return '';
-  if(link.startsWith('drive:')){
-    // Drive fallback — use preview iframe
-    const id=link.replace('drive:','');
-    return 'https://drive.google.com/file/d/'+id+'/preview?autoplay=1';
-  }
-  // SoundCloud embed
-  const base='https://w.soundcloud.com/player/?url='+encodeURIComponent(link);
-  return base+'&auto_play=true&hide_related=true&show_comments=false&show_user=false&show_reposts=false&show_teaser=false&visual=false&buying=false&sharing=false&download=false&show_artwork=false&color=%23a855f7';
+function rowClick(bid,did){
+  if(activeWId===bid){toggleBarPlay();return;}
+  playBeat(bid,did);
 }
 
-function togglePlay(bid,did){
-  const btn=document.getElementById('pb-'+bid);
-  const wv=document.getElementById('wv-'+bid);
+function playBeat(bid,did){
+  if(activeWId&&activeWId!==bid) stopCurrentCard();
 
-  // Stop previous
-  if(activeWId&&activeWId!==bid) stopBeat(activeWId);
-
-  // Same beat toggle
-  if(activeWId===bid){ stopBeat(bid); return; }
-
-  // Start
   activeWId=bid;
-  btn.innerHTML='&#9632;';btn.classList.add('playing');
 
+  // Update card styling
+  document.querySelectorAll('.beat-card').forEach(c=>c.classList.remove('playing'));
+  const card=document.getElementById('card-'+bid);
+  if(card) card.classList.add('playing');
+
+  // Update bottom bar info
+  const beat=currentList.find((_,i)=>safeId(_.ID,i)===bid)||{};
+  document.getElementById('pbName').textContent=beat.Nombre||'—';
+  document.getElementById('pbSub').textContent=(beat.Estilo?beat.Estilo+' · ':'')+( beat.BPM?beat.BPM+' BPM':'');
+  document.getElementById('pbPlayBtn').disabled=false;
+  document.getElementById('pbPlayBtn').innerHTML='&#9646;&#9646;';
+  document.getElementById('playerBar').classList.add('active');
+
+  // Start SoundCloud
   const iframe=document.getElementById('scGlobalFrame');
   if(iframe) iframe.src=getSCUrl(did);
+
+  // Start wave animation
   startAnim(bid);
 }
 
-function stopBeat(bid){
-  const btn=document.getElementById('pb-'+bid);
-  const wv=document.getElementById('wv-'+bid);
+function toggleBarPlay(){
+  if(!activeWId) return;
+  const btn=document.getElementById('pbPlayBtn');
+  const card=document.getElementById('card-'+activeWId);
+  if(isPlaying){
+    // Pause
+    isPlaying=false;
+    if(animId){clearInterval(animId);animId=null;}
+    btn.innerHTML='&#9654;';
+    if(card) card.classList.remove('playing');
+    const iframe=document.getElementById('scGlobalFrame');
+    if(iframe) iframe.src='';
+  } else {
+    // Resume — re-fire the beat
+    isPlaying=true;
+    btn.innerHTML='&#9646;&#9646;';
+    if(card) card.classList.add('playing');
+    const beat=currentList.find((_,i)=>safeId(_.ID,i)===activeWId);
+    const did=beat?getAudioLink(beat.Archivo||''):null;
+    if(did){const iframe=document.getElementById('scGlobalFrame');if(iframe) iframe.src=getSCUrl(did);}
+    startAnim(activeWId);
+  }
+}
 
-  if(btn){btn.innerHTML='&#9654;';btn.classList.remove('playing');}
-  if(wv) wv.querySelectorAll('.wbar').forEach(b=>{b.classList.remove('lit','on');});
-  const gf=document.getElementById('scGlobalFrame');
-  if(gf) gf.src='';
+function playAdj(dir){
+  if(!activeWId||!currentList.length) return;
+  const idx=currentList.findIndex((_,i)=>safeId(_.ID,i)===activeWId);
+  const next=currentList[idx+dir];
+  if(!next) return;
+  const nextId=safeId(next.ID,idx+dir);
+  const nextDid=getAudioLink(next.Archivo||'');
+  if(nextDid) playBeat(nextId,nextDid);
+}
+
+function stopCurrentCard(){
+  if(!activeWId) return;
+  const card=document.getElementById('card-'+activeWId);
+  if(card) card.classList.remove('playing');
   if(animId){clearInterval(animId);animId=null;}
-  if(activeWId===bid) activeWId=null;
-  const pt=document.getElementById('pt-'+bid);
-  if(pt) pt.textContent='0:00';
+  // reset bottom wave
+  document.querySelectorAll('#pbWaveBars .wbar').forEach(b=>b.classList.remove('lit','on'));
+  document.getElementById('pbTime').textContent='0:00';
+  activeWId=null;
+  isPlaying=false;
 }
 
 function startAnim(bid){
-  if(animId)clearInterval(animId);
-  const wv=document.getElementById('wv-'+bid);
-  if(!wv)return;
-  const bars=wv.querySelectorAll('.wbar');
+  isPlaying=true;
+  if(animId) clearInterval(animId);
+  const bars=document.querySelectorAll('#pbWaveBars .wbar');
   let idx=0,secs=0;
   animId=setInterval(()=>{
-    const btn=document.getElementById('pb-'+bid);
-    if(!btn||!btn.classList.contains('playing')){clearInterval(animId);return;}
+    // check card still playing
+    const card=document.getElementById('card-'+bid);
+    if(!card||!card.classList.contains('playing')){clearInterval(animId);return;}
     bars.forEach((b,i)=>{b.classList.toggle('on',i===idx);b.classList.toggle('lit',i<idx);});
     idx=(idx+1)%bars.length;
-    // Update fake timer
     if(idx===0) secs++;
-    const pt=document.getElementById('pt-'+bid);
-    if(pt){const m=Math.floor(secs/60),s=secs%60;pt.textContent=m+':'+(s<10?'0':'')+s;}
+    const m=Math.floor(secs/60),s=secs%60;
+    document.getElementById('pbTime').textContent=m+':'+(s<10?'0':'')+s;
   },110);
 }
 
