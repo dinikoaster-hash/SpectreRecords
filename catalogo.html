@@ -105,9 +105,7 @@ nav{position:sticky;top:0;z-index:100;display:flex;align-items:center;justify-co
 .wbar.on{background:var(--pl);animation:blink .4s ease infinite;}
 .p-time{font-family:DM Mono,monospace;font-size:.55rem;color:var(--muted);flex-shrink:0;min-width:32px;text-align:right;}
 .p-note{font-family:DM Mono,monospace;font-size:.52rem;color:var(--m2);margin-top:.4rem;}
-.sc-wrap{position:relative;height:0;overflow:hidden;margin-top:.4rem;}
-.sc-wrap.active{height:20px;}
-.sc-wrap iframe{position:absolute;top:0;left:0;width:100%;height:166px;border:none;margin-top:-146px;}
+.sc-wrap{position:fixed;bottom:-9999px;left:0;width:300px;height:166px;overflow:hidden;opacity:.001;pointer-events:none;z-index:-999;}
 /* FOOTER */
 .card-footer{display:flex;align-items:center;justify-content:space-between;gap:.6rem;margin-top:auto;}
 .precio{font-family:Bebas Neue,sans-serif;font-size:1.75rem;color:var(--gold);line-height:1;}
@@ -251,6 +249,9 @@ nav{position:sticky;top:0;z-index:100;display:flex;align-items:center;justify-co
   </div>
 </div>
 
+<div class="sc-wrap" id="scGlobal">
+  <iframe id="scGlobalFrame" allow="autoplay" scrolling="no" src=""></iframe>
+</div>
 <script>
 const SID='18-hf-2pCs1UhUUi66Ke_JmheavXk_V-Enus0p3yfNd0';
 const AK='AIzaSyC6K7d8zJc2TVrchsJQeIAfHEGJ5drA74c';
@@ -325,12 +326,16 @@ function applyFilters(){
   renderBeats(list);
 }
 
-function getDriveId(link){
+function getAudioLink(link){
+  // Returns the link as-is if SoundCloud, or Drive file ID if Drive
   if(!link)return null;
-  let m=link.match(/\/d\/([^\/\?]+)/);if(m)return m[1];
-  m=link.match(/id=([^&]+)/);if(m)return m[1];
+  if(link.includes('soundcloud.com'))return link;
+  let m=link.match(/\/d\/([^\/\?]+)/);if(m)return 'drive:'+m[1];
+  m=link.match(/id=([^&]+)/);if(m)return 'drive:'+m[1];
   return null;
 }
+// Keep getDriveId for backward compat
+function getDriveId(link){ return getAudioLink(link); }
 
 function genBars(seed,n){
   return Array.from({length:n},(_,i)=>Math.min(95,Math.max(8,12+Math.abs(Math.sin(i*.7+seed*2.1)*52)+Math.abs(Math.sin(i*1.4+seed*.8)*28))));
@@ -344,7 +349,7 @@ function renderBeats(list){
   g.innerHTML=list.map((b,i)=>{
     const est=b.Estado||'Libre';
     const vend=est==='Vendido';
-    const did=getDriveId(b.Archivo||'');
+    const did=getAudioLink(b.Archivo||'');
     const bid=safeId(b.ID,i);
     const bars=genBars(i,38);
     const bHtml=bars.map((h,j)=>'<div class="wbar" id="wb-'+bid+'-'+j+'" style="height:'+h+'%"></div>').join('');
@@ -386,7 +391,13 @@ function renderBeats(list){
 }
 
 function getSCUrl(link){
-  // Build SoundCloud embed URL from any SC link
+  if(!link)return '';
+  if(link.startsWith('drive:')){
+    // Drive fallback — use preview iframe
+    const id=link.replace('drive:','');
+    return 'https://drive.google.com/file/d/'+id+'/preview?autoplay=1';
+  }
+  // SoundCloud embed
   const base='https://w.soundcloud.com/player/?url='+encodeURIComponent(link);
   return base+'&auto_play=true&hide_related=true&show_comments=false&show_user=false&show_reposts=false&show_teaser=false&visual=false&buying=false&sharing=false&download=false&show_artwork=false&color=%23a855f7';
 }
@@ -405,24 +416,19 @@ function togglePlay(bid,did){
   activeWId=bid;
   btn.innerHTML='&#9632;';btn.classList.add('playing');
 
-  const iframe=document.getElementById('scf-'+bid);
-  const wrap=document.getElementById('scw-'+bid);
-  if(iframe){
-    iframe.src=getSCUrl(did);
-    if(wrap) wrap.classList.add('active');
-  }
+  const iframe=document.getElementById('scGlobalFrame');
+  if(iframe) iframe.src=getSCUrl(did);
   startAnim(bid);
 }
 
 function stopBeat(bid){
   const btn=document.getElementById('pb-'+bid);
   const wv=document.getElementById('wv-'+bid);
-  const iframe=document.getElementById('scf-'+bid);
-  const wrap=document.getElementById('scw-'+bid);
+
   if(btn){btn.innerHTML='&#9654;';btn.classList.remove('playing');}
   if(wv) wv.querySelectorAll('.wbar').forEach(b=>{b.classList.remove('lit','on');});
-  if(iframe) iframe.src='';
-  if(wrap) wrap.classList.remove('active');
+  const gf=document.getElementById('scGlobalFrame');
+  if(gf) gf.src='';
   if(animId){clearInterval(animId);animId=null;}
   if(activeWId===bid) activeWId=null;
   const pt=document.getElementById('pt-'+bid);
