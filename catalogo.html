@@ -17,7 +17,8 @@
 }
 *,*::before,*::after{margin:0;padding:0;box-sizing:border-box;}
 html{scroll-behavior:smooth;}
-body{background:var(--bg);color:var(--text);font-family:Syne,sans-serif;min-height:100vh;overflow-x:hidden;cursor:none;}
+body{background:var(--bg);color:var(--text);font-family:Syne,sans-serif;min-height:100vh;overflow-x:hidden;cursor:none;-webkit-user-select:none;user-select:none;}
+img,iframe{pointer-events:none;-webkit-user-drag:none;user-drag:none;}
 body::before{content:'';position:fixed;inset:0;background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.035'/%3E%3C/svg%3E");pointer-events:none;z-index:9000;}
 @media(hover:none),(pointer:coarse){body{cursor:auto;}.cursor,.cursor-ring{display:none!important;}button,a,input,select{cursor:pointer;}}
 .cursor{position:fixed;width:8px;height:8px;background:var(--pl);border-radius:50%;pointer-events:none;z-index:9999;transform:translate(-50%,-50%);mix-blend-mode:screen;}
@@ -275,7 +276,10 @@ async function load(){
     if(!d.values||d.values.length<2){renderBeats([]);return;}
     const[h,...rows]=d.values;
     allBeats=rows.filter(r=>r.some(c=>c&&c.trim())).map(row=>{
-      const o={};h.forEach((k,i)=>{o[k.trim()]=(row[i]||'').trim();});return o;
+      const o={};h.forEach((k,i)=>{o[k.trim()]=(row[i]||'').trim();});
+      // Encode archivo link in memory so it's not plaintext
+      if(o['Archivo']) o['_arch']=btoa(o['Archivo']);
+      return o;
     });
     buildEstilos();updateStats();applyFilters();
   }catch{
@@ -328,14 +332,12 @@ function applyFilters(){
 }
 
 function getAudioLink(link){
-  // Returns the link as-is if SoundCloud, or Drive file ID if Drive
   if(!link)return null;
   if(link.includes('soundcloud.com'))return link;
   let m=link.match(/\/d\/([^\/\?]+)/);if(m)return 'drive:'+m[1];
   m=link.match(/id=([^&]+)/);if(m)return 'drive:'+m[1];
   return null;
 }
-// Keep getDriveId for backward compat
 function getDriveId(link){ return getAudioLink(link); }
 
 function genBars(seed,n){
@@ -351,6 +353,8 @@ function renderBeats(list){
     const est=b.Estado||'Libre';
     const vend=est==='Vendido';
     const did=getAudioLink(b.Archivo||'');
+    // Store encoded so it's not plaintext in DOM
+    const didEnc=b._arch||'';
     const bid=safeId(b.ID,i);
     const bars=genBars(i,38);
     const bHtml=bars.map((h,j)=>'<div class="wbar" id="wb-'+bid+'-'+j+'" style="height:'+h+'%"></div>').join('');
@@ -375,12 +379,12 @@ function renderBeats(list){
       (did?
         '<div class="player" id="pl-'+bid+'">'+
           '<div class="player-row">'+
-            '<button class="play-btn" id="pb-'+bid+'" onclick="togglePlay(\''+bid+'\',\''+did+'\')" '+(vend?'disabled':'')+'>&#9654;</button>'+
+            '<button class="play-btn" id="pb-'+bid+'" onclick="playFromData(this)" data-bid="'+bid+'" data-src="'+didEnc+'" '+(vend?'disabled':'')+'>&#9654;</button>'+
             '<div class="wave-wrap"><div class="wave-bars" id="wv-'+bid+'">'+bHtml+'</div></div>'+
             '<div class="p-time" id="pt-'+bid+'">0:00</div>'+
           '</div>'+
           '<div class="drive-player" id="dp-'+bid+'">'+
-            '<iframe id="dif-'+bid+'" src="" allow="autoplay" sandbox="allow-scripts allow-same-origin allow-presentation"></iframe>'+
+            '<iframe id="dif-'+bid+'" src="" allow="autoplay" referrerpolicy="no-referrer" sandbox="allow-scripts allow-same-origin allow-presentation allow-autoplay" data-protected="true"></iframe>'+
             '<div class="drive-player-cover">'+
               '<span>// Preview · sin descarga</span>'+
             '</div>'+
@@ -406,6 +410,12 @@ function getSCUrl(link){
   // SoundCloud embed
   const base='https://w.soundcloud.com/player/?url='+encodeURIComponent(link);
   return base+'&auto_play=true&hide_related=true&show_comments=false&show_user=false&show_reposts=false&show_teaser=false&visual=false&buying=false&sharing=false&download=false&show_artwork=false&color=%23a855f7';
+}
+
+function playFromData(btn){
+  const bid=btn.dataset.bid;
+  const did=btn.dataset.src?atob(btn.dataset.src):'';
+  togglePlay(bid,did);
 }
 
 function togglePlay(bid,did){
@@ -488,6 +498,36 @@ function toast(msg,type){
 }
 
 window.addEventListener('load',load);
+
+// ── PROTECCIONES ──
+// Deshabilitar click derecho
+document.addEventListener('contextmenu',e=>e.preventDefault());
+
+// Deshabilitar atajos de teclado comunes
+document.addEventListener('keydown',e=>{
+  // Ctrl/Cmd + S, U, P, Shift+I, F12
+  if((e.ctrlKey||e.metaKey)&&['s','u','p'].includes(e.key.toLowerCase())){e.preventDefault();return false;}
+  if((e.ctrlKey||e.metaKey)&&e.shiftKey&&['i','j','c'].includes(e.key.toLowerCase())){e.preventDefault();return false;}
+  if(e.key==='F12'){e.preventDefault();return false;}
+});
+
+// Detectar DevTools abierto y pausar audio
+let devOpen=false;
+const devCheck=setInterval(()=>{
+  const t=performance.now();
+  debugger;
+  if(performance.now()-t>100){
+    if(!devOpen){
+      devOpen=true;
+      // Detener toda reproducción si abren DevTools
+      if(activeWId) stopBeat(activeWId);
+    }
+  } else { devOpen=false; }
+},1500);
+
+// Ofuscar: decodifica el link solo en memoria, nunca en el DOM
+function dec(s){return atob(s);}
+function enc(s){return btoa(s);}
 </script>
 </body>
 </html>
