@@ -668,6 +668,18 @@ function getAudioLink(link){
 function rowClick(idx){
   unlockAudio();
   if(idx===currentIndex){toggleBarPlay();return;}
+
+  // iOS Safari: play() DEBE llamarse síncronamente dentro del gesto táctil.
+  // Lo llamamos aquí, antes de cualquier otra cosa, para que Safari lo acepte.
+  // Luego asignamos src — el browser retoma la reproducción cuando los datos lleguen.
+  if(currentPlayerType==='html5'||currentIndex<0){
+    // Llamada síncrona dentro del gesto
+    audioPlayer.pause();
+    audioPlayer.src='';
+    const p=audioPlayer.play();
+    if(p&&p.catch)p.catch(()=>{});
+  }
+
   playBeatAtIndex(idx);
 }
 
@@ -717,39 +729,25 @@ function playBeatAtIndex(idx){
   }
 }
 
-/* ── Motor HTML5 ──
-   iOS Safari: el AudioContext ya fue desbloqueado en unlockAudio().
-   Una vez desbloqueado el contexto, podemos llamar .play() desde
-   cualquier lugar — ya NO necesita estar en el gesto táctil directo.
-   Usamos el evento 'canplay' para disparar play() justo cuando
-   el browser tiene suficientes datos, evitando el race condition
-   donde src se asigna pero el buffer aún está vacío.            ── */
+/* ── Motor HTML5 ── */
 function _startHTML5(url){
-  // Limpiar listener anterior si existe
+  // Limpiar listener canplay anterior
   if(audioPlayer._canplayHandler){
     audioPlayer.removeEventListener('canplay',audioPlayer._canplayHandler);
     audioPlayer._canplayHandler=null;
   }
-
-  function doPlay(){
-    const p=audioPlayer.play();
-    if(p&&p.catch){
-      p.catch(()=>{
-        isPlaying=false;setPlayBtnState(false);
-        const card=document.getElementById('card-idx-'+currentIndex);
-        if(card)card.classList.remove('playing');
-      });
-    }
-  }
-
-  audioPlayer._canplayHandler=function(){
-    audioPlayer.removeEventListener('canplay',audioPlayer._canplayHandler);
-    audioPlayer._canplayHandler=null;
-    doPlay();
-  };
-  audioPlayer.addEventListener('canplay',audioPlayer._canplayHandler,{once:true});
   audioPlayer.src=url;
-  audioPlayer.load();
+  // En iOS el play() ya fue llamado síncronamente en rowClick/toggleBarPlay.
+  // En Android/desktop llamamos play() aquí también — si ya fue llamado, el
+  // browser lo ignora o lo encadena correctamente.
+  const p=audioPlayer.play();
+  if(p&&p.catch){
+    p.catch(()=>{
+      isPlaying=false;setPlayBtnState(false);
+      const card=document.getElementById('card-idx-'+currentIndex);
+      if(card)card.classList.remove('playing');
+    });
+  }
 }
 
 /* ── Motor SoundCloud ── */
@@ -796,8 +794,12 @@ function toggleBarPlay(){
     isPlaying=true;setPlayBtnState(true);
     if(card)card.classList.add('playing');
     if(currentPlayerType==='html5'){
+      // play() directo en el gesto — funciona en iOS porque ya está desbloqueado
       const p=audioPlayer.play();
-      if(p&&p.catch)p.catch(()=>{isPlaying=false;setPlayBtnState(false);if(card)card.classList.remove('playing');});
+      if(p&&p.catch)p.catch(()=>{
+        isPlaying=false;setPlayBtnState(false);
+        if(card)card.classList.remove('playing');
+      });
     }else if(scWidget)try{scWidget.play();}catch(e){}
   }
 }
