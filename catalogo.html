@@ -399,6 +399,7 @@ let _audioCtx=null;
 function unlockAudio(){
   if(audioUnlocked)return;
   audioUnlocked=true;
+  // Desbloquear Web Audio Context (necesario en iOS Safari)
   try{
     _audioCtx=new(window.AudioContext||window.webkitAudioContext)();
     const buf=_audioCtx.createBuffer(1,1,22050);
@@ -407,8 +408,7 @@ function unlockAudio(){
     src.start(0);
     if(_audioCtx.state==='suspended')_audioCtx.resume();
   }catch(e){}
-  // También desbloquear el elemento <audio> con datos vacíos
-  audioPlayer.load();
+  // Desbloquear <audio> — solo .play() sin .load() para no romper el gesto
   const p=audioPlayer.play();
   if(p&&p.then)p.then(()=>audioPlayer.pause()).catch(()=>{});
 }
@@ -720,16 +720,17 @@ function playBeatAtIndex(idx){
 }
 
 /* ── Motor HTML5 ──
-   En iOS Safari el play() DEBE ejecutarse en el mismo call-stack
-   que el gesto táctil. unlockAudio() ya corrió en rowClick(),
-   así que aquí solo llamamos play() directamente.              ── */
+   REGLA iOS: NO llamar .load() antes de .play().
+   .load() interrumpe la cadena síncrona del gesto táctil y hace
+   que Safari bloquee el play() siguiente con NotAllowedError.
+   Basta con asignar .src y llamar .play() directo — el navegador
+   carga y reproduce en paralelo.                                ── */
 function _startHTML5(url){
   audioPlayer.src=url;
-  audioPlayer.load();
+  // NO llamar audioPlayer.load() — rompe el gesto en iOS
   const p=audioPlayer.play();
   if(p&&p.catch){
     p.catch(err=>{
-      // NotAllowedError = autoplay bloqueado; mostrar botón play para que el usuario toque
       isPlaying=false;setPlayBtnState(false);
       const card=document.getElementById('card-idx-'+currentIndex);
       if(card)card.classList.remove('playing');
@@ -790,6 +791,7 @@ function toggleBarPlay(){
 /* ── Siguiente / Anterior ── */
 function playAdj(dir){
   if(!currentList.length)return;
+  unlockAudio(); // asegurar unlock en caso de que se llame desde botón skip
   const startIdx=currentIndex>=0?currentIndex:(dir>0?-1:currentList.length);
   let nextIdx=startIdx+dir;
   while(nextIdx>=0&&nextIdx<currentList.length){
