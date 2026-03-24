@@ -399,18 +399,16 @@ let _audioCtx=null;
 function unlockAudio(){
   if(audioUnlocked)return;
   audioUnlocked=true;
-  // Desbloquear Web Audio Context (necesario en iOS Safari)
+  // Crear y resumir AudioContext en el gesto del usuario (iOS requiere esto)
   try{
     _audioCtx=new(window.AudioContext||window.webkitAudioContext)();
     const buf=_audioCtx.createBuffer(1,1,22050);
     const src=_audioCtx.createBufferSource();
     src.buffer=buf;src.connect(_audioCtx.destination);
     src.start(0);
-    if(_audioCtx.state==='suspended')_audioCtx.resume();
+    _audioCtx.resume().catch(()=>{});
   }catch(e){}
-  // Desbloquear <audio> — solo .play() sin .load() para no romper el gesto
-  const p=audioPlayer.play();
-  if(p&&p.then)p.then(()=>audioPlayer.pause()).catch(()=>{});
+  // No intentar play() sobre src vacío — eso causa errores en iOS
 }
 document.addEventListener('touchstart',unlockAudio,{once:true,passive:true});
 document.addEventListener('touchend',unlockAudio,{once:true,passive:true});
@@ -720,22 +718,38 @@ function playBeatAtIndex(idx){
 }
 
 /* ── Motor HTML5 ──
-   REGLA iOS: NO llamar .load() antes de .play().
-   .load() interrumpe la cadena síncrona del gesto táctil y hace
-   que Safari bloquee el play() siguiente con NotAllowedError.
-   Basta con asignar .src y llamar .play() directo — el navegador
-   carga y reproduce en paralelo.                                ── */
+   iOS Safari: el AudioContext ya fue desbloqueado en unlockAudio().
+   Una vez desbloqueado el contexto, podemos llamar .play() desde
+   cualquier lugar — ya NO necesita estar en el gesto táctil directo.
+   Usamos el evento 'canplay' para disparar play() justo cuando
+   el browser tiene suficientes datos, evitando el race condition
+   donde src se asigna pero el buffer aún está vacío.            ── */
 function _startHTML5(url){
-  audioPlayer.src=url;
-  // NO llamar audioPlayer.load() — rompe el gesto en iOS
-  const p=audioPlayer.play();
-  if(p&&p.catch){
-    p.catch(err=>{
-      isPlaying=false;setPlayBtnState(false);
-      const card=document.getElementById('card-idx-'+currentIndex);
-      if(card)card.classList.remove('playing');
-    });
+  // Limpiar listener anterior si existe
+  if(audioPlayer._canplayHandler){
+    audioPlayer.removeEventListener('canplay',audioPlayer._canplayHandler);
+    audioPlayer._canplayHandler=null;
   }
+
+  function doPlay(){
+    const p=audioPlayer.play();
+    if(p&&p.catch){
+      p.catch(()=>{
+        isPlaying=false;setPlayBtnState(false);
+        const card=document.getElementById('card-idx-'+currentIndex);
+        if(card)card.classList.remove('playing');
+      });
+    }
+  }
+
+  audioPlayer._canplayHandler=function(){
+    audioPlayer.removeEventListener('canplay',audioPlayer._canplayHandler);
+    audioPlayer._canplayHandler=null;
+    doPlay();
+  };
+  audioPlayer.addEventListener('canplay',audioPlayer._canplayHandler,{once:true});
+  audioPlayer.src=url;
+  audioPlayer.load();
 }
 
 /* ── Motor SoundCloud ── */
