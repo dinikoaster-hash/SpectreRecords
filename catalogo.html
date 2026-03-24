@@ -14,6 +14,8 @@
   --text:#f0eaf8;--muted:#6b6378;--m2:#4a4356;
   --border:#1a1625;--b2:#221e30;
   --green:#34d399;--yellow:#fbbf24;--red:#f87171;--gold:#C9A84C;
+  /* Promo colors */
+  --promo-hot:#ff3d3d;--promo-hot2:#ff6b35;--promo-bg:rgba(255,61,61,.08);--promo-border:rgba(255,61,61,.25);
 }
 *,*::before,*::after{margin:0;padding:0;box-sizing:border-box;}
 html{scroll-behavior:smooth;}
@@ -25,6 +27,26 @@ body::before{content:'';position:fixed;inset:0;background-image:url("data:image/
 @keyframes spin{to{transform:rotate(360deg)}}
 @keyframes blink{0%,100%{opacity:1}50%{opacity:.3}}
 @keyframes marquee{0%{transform:translateX(0)}100%{transform:translateX(-50%)}}
+
+/* ── PROMO ANIMATIONS ── */
+@keyframes promoShimmer{
+  0%{background-position:200% center}
+  100%{background-position:-200% center}
+}
+@keyframes promoPulse{
+  0%,100%{box-shadow:0 0 0 0 rgba(255,61,61,.4),0 0 12px rgba(255,61,61,.15)}
+  50%{box-shadow:0 0 0 4px rgba(255,61,61,.0),0 0 20px rgba(255,61,61,.3)}
+}
+@keyframes badgeBounce{
+  0%,100%{transform:rotate(-2deg) scale(1)}
+  50%{transform:rotate(-2deg) scale(1.08)}
+}
+@keyframes fireFlicker{
+  0%,100%{opacity:1;transform:scaleY(1)}
+  33%{opacity:.85;transform:scaleY(.92) scaleX(1.05)}
+  66%{opacity:.95;transform:scaleY(1.04)}
+}
+
 nav{position:sticky;top:0;z-index:100;display:flex;align-items:center;justify-content:space-between;padding:.9rem 2.5rem;background:rgba(8,8,8,.94);backdrop-filter:blur(20px);border-bottom:1px solid var(--border);}
 .nav-logo{display:flex;align-items:center;gap:.7rem;text-decoration:none;}
 .nav-logo img{height:30px;width:auto;}
@@ -71,15 +93,32 @@ nav{position:sticky;top:0;z-index:100;display:flex;align-items:center;justify-co
 @keyframes eq1{0%,100%{height:3px}50%{height:13px}}
 @keyframes eq2{0%,100%{height:9px}50%{height:3px}}
 @keyframes eq3{0%,100%{height:5px}50%{height:15px}}
-/* ── DESKTOP track list ── */
-.col-headers{display:grid;grid-template-columns:36px 1fr 70px 70px 80px 130px;gap:.5rem;padding:.45rem 1.4rem;border-bottom:1px solid var(--border);position:sticky;top:0;background:var(--bg);z-index:9;}
+.col-headers{display:grid;grid-template-columns:36px 1fr 70px 70px 80px 180px;gap:.5rem;padding:.45rem 1.4rem;border-bottom:1px solid var(--border);position:sticky;top:0;background:var(--bg);z-index:9;}
 .ch{font-family:DM Mono,monospace;font-size:.46rem;letter-spacing:.18em;text-transform:uppercase;color:var(--m2);}
 .ch.right{text-align:right;}
 .beats-grid{display:flex;flex-direction:column;flex:1;}
-.beat-card{display:grid;grid-template-columns:36px 1fr 70px 70px 80px 130px;gap:.5rem;padding:.55rem 1.4rem;align-items:center;border-bottom:1px solid rgba(26,22,37,.6);transition:background .12s;position:relative;cursor:none;}
+
+/* ── BEAT CARD ── */
+.beat-card{display:grid;grid-template-columns:36px 1fr 70px 70px 80px 180px;gap:.5rem;padding:.55rem 1.4rem;align-items:center;border-bottom:1px solid rgba(26,22,37,.6);transition:background .12s;position:relative;cursor:none;}
 .beat-card:hover{background:var(--s2);}
 .beat-card.vendido{opacity:.45;}
 .beat-card.playing{background:rgba(168,85,247,.05);}
+
+/* ── PROMO CARD HIGHLIGHT ── */
+.beat-card.is-promo{
+  background:var(--promo-bg);
+  border-bottom:1px solid var(--promo-border);
+  animation:promoPulse 2.8s ease-in-out infinite;
+}
+.beat-card.is-promo:hover{
+  background:rgba(255,61,61,.13);
+  animation:none;
+}
+.beat-card.is-promo.playing{
+  background:rgba(255,61,61,.1);
+  animation:none;
+}
+
 .tr-idx{position:relative;display:flex;align-items:center;justify-content:center;}
 .tr-num{font-family:DM Mono,monospace;font-size:.62rem;color:var(--m2);transition:opacity .12s;}
 .beat-card:hover .tr-num,.beat-card.playing .tr-num{opacity:0;}
@@ -90,19 +129,25 @@ nav{position:sticky;top:0;z-index:100;display:flex;align-items:center;justify-co
 .beat-card.playing .tr-num{opacity:0;}
 .beat-card.playing .tr-play-ico{opacity:0;}
 .eq-bar{width:3px;border-radius:1px;background:var(--pl);}
+.beat-card.is-promo .eq-bar{background:var(--promo-hot);}
 .eq-bar:nth-child(1){animation:eq1 .7s ease infinite;}
 .eq-bar:nth-child(2){animation:eq2 .7s ease infinite .15s;}
 .eq-bar:nth-child(3){animation:eq3 .7s ease infinite .3s;}
 .tr-info{display:flex;align-items:center;gap:.75rem;min-width:0;}
 .tr-thumb{width:40px;height:40px;background:var(--s3);border:1px solid var(--b2);flex-shrink:0;display:flex;align-items:center;justify-content:center;overflow:hidden;position:relative;}
+.beat-card.is-promo .tr-thumb{border-color:rgba(255,61,61,.3);}
 .tr-thumb img{width:100%;height:100%;object-fit:cover;position:absolute;inset:0;}
 .thumb-wave{display:flex;align-items:flex-end;gap:1.5px;height:22px;position:relative;z-index:1;}
 .thumb-bar{width:3px;border-radius:1px;background:rgba(168,85,247,.3);}
 .beat-card.playing .thumb-bar{background:var(--pl);}
+.beat-card.is-promo .thumb-bar{background:rgba(255,61,61,.3);}
+.beat-card.is-promo.playing .thumb-bar{background:var(--promo-hot);}
 .tr-text{min-width:0;}
 .tr-name{font-family:Syne,sans-serif;font-weight:700;font-size:.85rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:var(--text);line-height:1.15;}
 .beat-card.playing .tr-name{color:var(--pl);}
-.tr-tags{display:flex;gap:.28rem;margin-top:.2rem;flex-wrap:wrap;}
+.beat-card.is-promo .tr-name{color:#fff;}
+.beat-card.is-promo.playing .tr-name{color:var(--promo-hot);}
+.tr-tags{display:flex;gap:.28rem;margin-top:.2rem;flex-wrap:wrap;align-items:center;}
 .estado-pill{font-family:DM Mono,monospace;font-size:.46rem;letter-spacing:.1em;text-transform:uppercase;padding:.13rem .42rem;border:1px solid;display:inline-block;}
 .p-libre{background:rgba(52,211,153,.07);color:var(--green);border-color:rgba(52,211,153,.18);}
 .p-apartado{background:rgba(251,191,36,.07);color:var(--yellow);border-color:rgba(251,191,36,.18);}
@@ -110,13 +155,68 @@ nav{position:sticky;top:0;z-index:100;display:flex;align-items:center;justify-co
 .tag{font-family:DM Mono,monospace;font-size:.44rem;letter-spacing:.08em;text-transform:uppercase;padding:.12rem .38rem;}
 .tag-estilo{background:var(--pd);color:var(--pl);border:1px solid rgba(168,85,247,.12);}
 .tag-tipo{background:rgba(201,168,76,.07);color:var(--gold);border:1px solid rgba(201,168,76,.12);}
+
+/* ── PROMO BADGE (inline en tr-tags) ── */
+.tag-promo{
+  display:inline-flex;align-items:center;gap:.22rem;
+  font-family:DM Mono,monospace;font-size:.44rem;letter-spacing:.06em;text-transform:uppercase;
+  padding:.12rem .42rem;
+  background:linear-gradient(90deg,var(--promo-hot),var(--promo-hot2),var(--promo-hot));
+  background-size:200% auto;
+  color:#fff;
+  border:1px solid rgba(255,61,61,.5);
+  font-weight:700;
+  animation:promoShimmer 2s linear infinite;
+}
+.tag-promo-fire{
+  display:inline-block;
+  animation:fireFlicker .6s ease infinite;
+  line-height:1;
+}
+
+/* ── PRECIO CON DESCUENTO ── */
+.tr-price-wrap{display:flex;flex-direction:column;align-items:flex-end;gap:.1rem;}
+.tr-price{font-family:Bebas Neue,sans-serif;font-size:1rem;color:var(--gold);letter-spacing:.04em;}
+.tr-price.is-final{color:var(--promo-hot);font-size:1.1rem;}
+.tr-price-original{
+  font-family:Bebas Neue,sans-serif;font-size:.75rem;
+  color:var(--m2);text-decoration:line-through;letter-spacing:.04em;
+  line-height:1;
+}
+
+/* ── PROMO BADGE grande (esquina superior derecha de la row) ── */
+.promo-sticker{
+  position:absolute;top:-1px;right:0;
+  font-family:Bebas Neue,sans-serif;font-size:.7rem;
+  letter-spacing:.06em;
+  background:linear-gradient(135deg,var(--promo-hot),var(--promo-hot2));
+  color:#fff;
+  padding:.18rem .55rem .18rem .45rem;
+  clip-path:polygon(8px 0%,100% 0%,100% 100%,0% 100%);
+  z-index:2;
+  animation:badgeBounce 2s ease-in-out infinite;
+  pointer-events:none;
+  white-space:nowrap;
+}
+
 .tr-bpm,.tr-escala{font-family:DM Mono,monospace;font-size:.66rem;color:var(--muted);}
 .tr-estado{display:flex;align-items:center;}
 .tr-actions{display:flex;align-items:center;justify-content:flex-end;gap:.5rem;}
-.tr-price{font-family:Bebas Neue,sans-serif;font-size:1rem;color:var(--gold);letter-spacing:.04em;}
 .btn-apt{font-family:DM Mono,monospace;font-size:.54rem;letter-spacing:.1em;text-transform:uppercase;background:transparent;color:var(--pl);border:1px solid rgba(168,85,247,.3);padding:.38rem .75rem;cursor:none;transition:all .15s;white-space:nowrap;}
 .btn-apt:hover{background:var(--purple);color:#fff;border-color:var(--purple);}
 .btn-apt:disabled{background:transparent;color:var(--m2);border-color:var(--b2);cursor:not-allowed;}
+/* Promo buy button */
+.beat-card.is-promo .btn-apt:not(:disabled){
+  background:rgba(255,61,61,.1);
+  color:var(--promo-hot);
+  border-color:rgba(255,61,61,.4);
+}
+.beat-card.is-promo .btn-apt:not(:disabled):hover{
+  background:var(--promo-hot);
+  color:#fff;
+  border-color:var(--promo-hot);
+}
+
 /* ── PLAYER BAR ── */
 .player-bar{position:fixed;bottom:0;left:0;right:0;height:105px;background:rgba(10,8,15,.96);backdrop-filter:blur(24px);border-top:1px solid var(--b2);display:flex;align-items:center;padding:0 1.8rem;gap:1.4rem;z-index:500;transform:translateY(100%);transition:transform .3s ease;}
 .player-bar.visible{transform:translateY(0);}
@@ -126,7 +226,6 @@ nav{position:sticky;top:0;z-index:100;display:flex;align-items:center;justify-co
 .pb-thumb-wave{display:flex;align-items:flex-end;gap:1.5px;height:22px;position:relative;z-index:1;}
 .pb-thumb-bar{width:3px;border-radius:1px;background:rgba(168,85,247,.35);}
 .player-bar.active .pb-thumb-bar{background:var(--pl);}
-/* Marquee title */
 .pb-name-wrap{overflow:hidden;max-width:140px;position:relative;}
 .pb-name{font-family:Syne,sans-serif;font-weight:700;font-size:.82rem;color:var(--text);white-space:nowrap;display:inline-block;}
 .pb-name.marquee{animation:marquee 6s linear infinite;}
@@ -140,7 +239,6 @@ nav{position:sticky;top:0;z-index:100;display:flex;align-items:center;justify-co
 .pb-skip:hover{color:var(--text);}
 .pb-seek-container{width:100%;max-width:480px;display:flex;align-items:center;gap:.7rem;}
 .pb-time{font-family:DM Mono,monospace;font-size:.52rem;color:var(--muted);white-space:nowrap;min-width:36px;}
-/* Touch-friendly seek bar */
 .pb-seek{flex:1;height:8px;background:var(--b2);border-radius:4px;position:relative;cursor:pointer;overflow:visible;touch-action:none;}
 .pb-seek-progress{height:100%;background:var(--pl);border-radius:4px;position:relative;pointer-events:none;}
 .pb-seek-handle{position:absolute;right:-8px;top:50%;transform:translateY(-50%);width:16px;height:16px;background:var(--pl);border-radius:50%;box-shadow:0 0 8px rgba(168,85,247,.6);opacity:0;transition:opacity .2s;}
@@ -163,6 +261,9 @@ nav{position:sticky;top:0;z-index:100;display:flex;align-items:center;justify-co
 .m-name{font-family:Bebas Neue,sans-serif;font-size:1.05rem;letter-spacing:.04em;}
 .m-sub{font-family:DM Mono,monospace;font-size:.52rem;color:var(--muted);margin-top:.12rem;}
 .m-price{font-family:Bebas Neue,sans-serif;font-size:1.3rem;color:var(--gold);}
+.m-price-wrap{text-align:right;}
+.m-price-original{font-family:Bebas Neue,sans-serif;font-size:.85rem;color:var(--m2);text-decoration:line-through;display:block;}
+.m-price-final{font-family:Bebas Neue,sans-serif;font-size:1.3rem;color:var(--promo-hot);}
 .fg{display:flex;flex-direction:column;gap:.3rem;margin-bottom:.8rem;}
 .fl{font-family:DM Mono,monospace;font-size:.54rem;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);}
 .fi{background:var(--s2);border:1px solid var(--b2);color:var(--text);font-family:DM Mono,monospace;font-size:.74rem;padding:.62rem .85rem;outline:none;transition:border-color .2s;width:100%;}
@@ -176,9 +277,9 @@ nav{position:sticky;top:0;z-index:100;display:flex;align-items:center;justify-co
 .toast.success{border-left-color:var(--green);}
 .toast.error{border-left-color:var(--red);}
 
-/* ═══════════════════════════════════════════════
+/* ══════════════════════════════════
    MOBILE RESPONSIVE
-   ═══════════════════════════════════════════════ */
+══════════════════════════════════ */
 @media(max-width:900px){
   .app{grid-template-columns:1fr;height:auto;overflow:visible;}
   .app.has-player{height:auto;}
@@ -195,9 +296,6 @@ nav{position:sticky;top:0;z-index:100;display:flex;align-items:center;justify-co
   .main{overflow:visible;padding-bottom:0;}
   body.player-open .main{padding-bottom:130px;}
   .col-headers{display:none;}
-
-  /* MOBILE card layout:
-     col1=idx  col2=thumb+info(flex)  col3=precio+btn */
   .beat-card{
     grid-template-columns:24px 1fr auto;
     grid-template-rows:auto auto;
@@ -205,29 +303,18 @@ nav{position:sticky;top:0;z-index:100;display:flex;align-items:center;justify-co
     padding:.7rem 1rem;
     align-items:start;
   }
-  /* idx spans 2 rows */
   .tr-idx{grid-row:1/3;align-self:center;}
-  /* info col: thumb + text stacked */
   .tr-info{grid-column:2;grid-row:1;align-items:center;gap:.55rem;}
-  /* bpm/escala row visible on mobile, below info */
   .tr-bpm,.tr-escala{display:inline-flex !important;align-items:center;gap:.2rem;}
   .tr-specs-mobile{grid-column:2;grid-row:2;display:flex;gap:.5rem;align-items:center;}
-  /* estado hidden (se ve en tags) */
   .tr-estado{display:none;}
-  /* actions col spans 2 rows */
   .tr-actions{grid-column:3;grid-row:1/3;align-self:center;flex-direction:column;align-items:flex-end;gap:.3rem;}
-
   nav{padding:.8rem 1.2rem;}
   .main-bar{padding:.7rem 1.2rem;}
-
-  /* Player bar mobile */
+  .promo-sticker{font-size:.58rem;padding:.14rem .45rem .14rem .35rem;}
   .player-bar{
-    height:auto;
-    min-height:110px;
-    padding:.8rem 1rem;
-    flex-direction:column;
-    gap:.5rem;
-    align-items:stretch;
+    height:auto;min-height:110px;padding:.8rem 1rem;
+    flex-direction:column;gap:.5rem;align-items:stretch;
   }
   .pb-info{min-width:0;flex:none;width:100%;}
   .pb-name-wrap{max-width:calc(100% - 50px);}
@@ -341,6 +428,7 @@ nav{position:sticky;top:0;z-index:100;display:flex;align-items:center;justify-co
   </div>
 </div>
 
+<!-- MODAL APARTAR -->
 <div class="overlay" id="overlay">
   <div class="modal">
     <div class="m-head">
@@ -350,7 +438,9 @@ nav{position:sticky;top:0;z-index:100;display:flex;align-items:center;justify-co
     <div class="m-body">
       <div class="m-preview">
         <div><div class="m-name" id="mName">&#x2014;</div><div class="m-sub" id="mEstilo"></div></div>
-        <div class="m-price" id="mPrice">&#x2014;</div>
+        <div class="m-price-wrap" id="mPriceWrap">
+          <span class="m-price" id="mPrice">&#x2014;</span>
+        </div>
       </div>
       <div class="fg"><label class="fl">Tu nombre</label><input class="fi" id="sNombre" placeholder="&#xBF;C&#xF3;mo te llamas?"/></div>
       <div class="fg"><label class="fl">Correo</label><input class="fi" id="sCorreo" type="email" placeholder="tu@correo.com"/></div>
@@ -392,14 +482,23 @@ let playerVisible=false;
 
 const audioPlayer=document.getElementById('audioPlayer');
 
-/* ── Audio Context unlock — iOS requiere llamar play() dentro de un gesto ──
-   Técnica: creamos un AudioContext y lo resumimos en el primer toque.
-   Esto desbloquea TANTO Web Audio como <audio> en Safari iOS.          ── */
+/* ════════════════════════════════════════════════════════
+   FIX iOS SAFARI — AUDIO UNLOCK
+   ════════════════════════════════════════════════════════
+   Safari requiere que play() sea llamado SINCRÓNICAMENTE
+   dentro del gesto táctil (touchend/touchstart/mousedown).
+   La clave del fix es:
+   1. En el primer gesto: crear AudioContext y reproducir
+      un buffer vacío para "desbloquear" el subsistema.
+   2. Al hacer click en una fila: primero asignar `src`,
+      luego llamar play() — todo dentro del mismo gesto.
+   3. NO llamar play() antes de asignar src (bug original).
+   ════════════════════════════════════════════════════════ */
 let _audioCtx=null;
+
 function unlockAudio(){
   if(audioUnlocked)return;
   audioUnlocked=true;
-  // Crear y resumir AudioContext en el gesto del usuario (iOS requiere esto)
   try{
     _audioCtx=new(window.AudioContext||window.webkitAudioContext)();
     const buf=_audioCtx.createBuffer(1,1,22050);
@@ -408,7 +507,6 @@ function unlockAudio(){
     src.start(0);
     _audioCtx.resume().catch(()=>{});
   }catch(e){}
-  // No intentar play() sobre src vacío — eso causa errores en iOS
 }
 document.addEventListener('touchstart',unlockAudio,{once:true,passive:true});
 document.addEventListener('touchend',unlockAudio,{once:true,passive:true});
@@ -419,7 +517,6 @@ document.addEventListener('mousedown',unlockAudio,{once:true,passive:true});
   const seek=document.getElementById('pbSeek');
   if(!seek)return;
   let dragging=false;
-
   function getSeekPct(clientX){
     const rect=seek.getBoundingClientRect();
     return Math.min(1,Math.max(0,(clientX-rect.left)/rect.width));
@@ -432,25 +529,18 @@ document.addEventListener('mousedown',unlockAudio,{once:true,passive:true});
       scWidget.getDuration(dur=>{if(dur>0)scWidget.seekTo(pct*dur);});
     }
   }
-
-  // Mouse
   seek.addEventListener('mousedown',e=>{
     if(currentIndex<0)return;
-    dragging=true;seek.classList.add('seeking');
-    applySeek(getSeekPct(e.clientX));
+    dragging=true;seek.classList.add('seeking');applySeek(getSeekPct(e.clientX));
   });
   document.addEventListener('mousemove',e=>{if(!dragging)return;applySeek(getSeekPct(e.clientX));});
   document.addEventListener('mouseup',()=>{if(dragging){dragging=false;seek.classList.remove('seeking');}});
-
-  // Touch
   seek.addEventListener('touchstart',e=>{
     if(currentIndex<0)return;
-    dragging=true;seek.classList.add('seeking');
-    applySeek(getSeekPct(e.touches[0].clientX));
+    dragging=true;seek.classList.add('seeking');applySeek(getSeekPct(e.touches[0].clientX));
   },{passive:true});
   seek.addEventListener('touchmove',e=>{
-    if(!dragging)return;
-    applySeek(getSeekPct(e.touches[0].clientX));
+    if(!dragging)return;applySeek(getSeekPct(e.touches[0].clientX));
   },{passive:true});
   seek.addEventListener('touchend',()=>{if(dragging){dragging=false;seek.classList.remove('seeking');}});
 })();
@@ -477,7 +567,7 @@ async function load(){
     });
     buildEstilos();updateStats();applyFilters();
   }catch{
-    document.getElementById('beatsGrid').innerHTML='<div class="empty-state">// No se pudo cargar el cat\u00e1logo.</div>';
+    document.getElementById('beatsGrid').innerHTML='<div class="empty-state">// No se pudo cargar el catálogo.</div>';
   }
 }
 
@@ -556,20 +646,28 @@ function resetSeek(){
 function setPlayBtnState(playing){
   document.getElementById('pbPlayBtn').innerHTML=playing?'&#9646;&#9646;':'&#9654;';
 }
-/* Marquee: activa animación si el texto es más ancho que el contenedor */
 function updateMarquee(){
   const wrap=document.getElementById('pbName').parentElement;
   const name=document.getElementById('pbName');
   name.classList.remove('marquee');
-  // Necesitamos medir después de que el texto se haya establecido
   requestAnimationFrame(()=>{
     if(name.scrollWidth>wrap.clientWidth+4){
-      // Duplicar texto para efecto continuo
       const txt=name.textContent;
       name.textContent=txt+'\u00a0\u00a0\u00a0\u2014\u00a0\u00a0\u00a0'+txt;
       name.classList.add('marquee');
     }
   });
+}
+
+/* ── Calcular precio con descuento ── */
+function calcPromo(beat){
+  const raw=beat.Descuento||beat.descuento||'';
+  const pct=parseInt(raw,10);
+  if(!pct||pct<=0||pct>100)return null;
+  const precio=parseFloat(beat.Precio);
+  if(!precio||isNaN(precio))return null;
+  const final=Math.round(precio*(1-pct/100));
+  return {pct,original:precio,final};
 }
 
 (function initPbThumb(){
@@ -586,18 +684,39 @@ function renderBeats(list){
     const est=b.Estado||'Libre';
     const vend=est==='Vendido';
     const linkObj=getAudioLink(b.Archivo||'');
-    const prec=b.Precio?'$'+parseFloat(b.Precio).toLocaleString():'Consultar';
+    const promo=calcPromo(b);
+    const isPromo=!!promo;
+
+    // Precio display
+    let precioDisplay='';
+    let precioParaModal='';
+    if(promo){
+      precioDisplay='<div class="tr-price-wrap">'
+        +'<span class="tr-price-original">$'+promo.original.toLocaleString()+'</span>'
+        +'<span class="tr-price is-final">$'+promo.final.toLocaleString()+'</span>'
+        +'</div>';
+      precioParaModal='$'+promo.final.toLocaleString();
+    }else{
+      const p=b.Precio?'$'+parseFloat(b.Precio).toLocaleString():'Consultar';
+      precioDisplay='<div class="tr-price-wrap"><span class="tr-price">'+p+'</span></div>';
+      precioParaModal=p;
+    }
+
     const pillCls=est==='Libre'?'p-libre':est==='Apartado'?'p-apartado':'p-vendido';
-    const bn=(b.Nombre||'').replace(/'/g,'&#39;');
-    const be=(b.Estilo||'').replace(/'/g,'&#39;');
+    const bn=(b.Nombre||'').replace(/'/g,'&#39;').replace(/"/g,'&quot;');
+    const be=(b.Estilo||'').replace(/'/g,'&#39;').replace(/"/g,'&quot;');
+    const pm=precioParaModal.replace(/'/g,'&#39;');
     const thumbW=thumbWaveHtml(i,12);
     const canPlay=!!(linkObj&&!vend);
     const isActivePlaying=(isPlaying&&i===currentIndex);
     const coverUrl=getCoverUrl(b);
     const bpmTxt=b.BPM?b.BPM+' BPM':'';
     const escTxt=b.Escala?b.Escala.toUpperCase():'';
-    return '<div class="beat-card'+(vend?' vendido':'')+(isActivePlaying?' playing':'')+'" id="card-idx-'+i+'" '+
-        (canPlay?'onclick="rowClick('+i+')" ':'')+'>'+
+    const cardClass='beat-card'+(vend?' vendido':'')+(isActivePlaying?' playing':'')+(isPromo?' is-promo':'');
+
+    return '<div class="'+cardClass+'" id="card-idx-'+i+'" '+(canPlay?'onclick="rowClick('+i+')" ':'')+'>'+
+      // Promo sticker
+      (isPromo?'<div class="promo-sticker">🔥 -'+promo.pct+'% OFF</div>':'')+
       // Col 1: índice / eq
       '<div class="tr-idx">'+
         '<span class="tr-num">'+(i+1)+'</span>'+
@@ -613,18 +732,19 @@ function renderBeats(list){
         '<div class="tr-text">'+
           '<div class="tr-name">'+(b.Nombre||'&#x2014;')+'</div>'+
           '<div class="tr-tags">'+
+            (isPromo?'<span class="tag-promo"><span class="tag-promo-fire">🔥</span> OFERTA -'+promo.pct+'%</span>':'')+
             (b.Estilo?'<span class="tag tag-estilo">'+b.Estilo+'</span>':'')+
             (b.Tipo?'<span class="tag tag-tipo">'+b.Tipo+'</span>':'')+
           '</div>'+
         '</div>'+
       '</div>'+
-      // Col 3: BPM (desktop)
+      // Col 3: BPM
       '<div class="tr-bpm">'+(b.BPM||'&#x2014;')+'</div>'+
-      // Col 4: Escala (desktop)
+      // Col 4: Escala
       '<div class="tr-escala">'+(b.Escala||'&#x2014;')+'</div>'+
-      // Col 5: Estado (desktop)
+      // Col 5: Estado
       '<div class="tr-estado"><span class="estado-pill '+pillCls+'">'+est+'</span></div>'+
-      // Mobile: specs row (bpm + escala visibles en móvil) — renderizado como fila extra via CSS grid
+      // Mobile specs row
       '<div class="tr-specs-mobile" style="display:none">'+
         (bpmTxt?'<span class="tr-bpm">'+bpmTxt+'</span>':'')+
         (escTxt&&bpmTxt?'<span style="color:var(--m2);font-family:DM Mono,monospace;font-size:.5rem">·</span>':'')+
@@ -633,23 +753,19 @@ function renderBeats(list){
       '</div>'+
       // Col 6: precio + botón
       '<div class="tr-actions" onclick="event.stopPropagation()">'+
-        '<span class="tr-price">'+prec+'</span>'+
-        '<button class="btn-apt" onclick="openModal('+i+',\''+bn+'\',\''+be+'\',\''+prec+'\')" '+(vend||est==='Apartado'?'disabled':'')+'>'+
+        precioDisplay+
+        '<button class="btn-apt" onclick="openModal('+i+',\''+bn+'\',\''+be+'\',\''+pm+'\')" '+(vend||est==='Apartado'?'disabled':'')+'>'+
           (vend?'Vendido':est==='Apartado'?'Apartado':'Apartar &#x2192;')+
         '</button>'+
       '</div>'+
     '</div>';
   }).join('');
-
-  // Mostrar specs-mobile solo en pantallas pequeñas
   applyMobileSpecs();
 }
 
 function applyMobileSpecs(){
   const isMobile=window.innerWidth<=900;
-  document.querySelectorAll('.tr-specs-mobile').forEach(el=>{
-    el.style.display=isMobile?'flex':'none';
-  });
+  document.querySelectorAll('.tr-specs-mobile').forEach(el=>{el.style.display=isMobile?'flex':'none';});
 }
 window.addEventListener('resize',applyMobileSpecs);
 
@@ -664,22 +780,24 @@ function getAudioLink(link){
   return null;
 }
 
-/* ── Click fila ── */
+/* ════════════════════════════════════════════════════════
+   FIX iOS SAFARI — rowClick
+   ════════════════════════════════════════════════════════
+   El bug original: se llamaba audioPlayer.play() ANTES de
+   asignar audioPlayer.src, causando que Safari lo rechazara.
+   Luego cuando se asignaba src y se intentaba play() de
+   nuevo, ya no estaba dentro del gesto y Safari lo bloqueaba.
+
+   Fix: dentro del gesto táctil:
+     1. Desbloquear AudioContext (unlockAudio)
+     2. Asignar src PRIMERO
+     3. Llamar play() DESPUÉS — todo síncrono en el mismo gesto
+   Para SoundCloud no hay problema porque el iframe tiene
+   autoplay permitido.
+   ════════════════════════════════════════════════════════ */
 function rowClick(idx){
   unlockAudio();
   if(idx===currentIndex){toggleBarPlay();return;}
-
-  // iOS Safari: play() DEBE llamarse síncronamente dentro del gesto táctil.
-  // Lo llamamos aquí, antes de cualquier otra cosa, para que Safari lo acepte.
-  // Luego asignamos src — el browser retoma la reproducción cuando los datos lleguen.
-  if(currentPlayerType==='html5'||currentIndex<0){
-    // Llamada síncrona dentro del gesto
-    audioPlayer.pause();
-    audioPlayer.src='';
-    const p=audioPlayer.play();
-    if(p&&p.catch)p.catch(()=>{});
-  }
-
   playBeatAtIndex(idx);
 }
 
@@ -698,7 +816,6 @@ function playBeatAtIndex(idx){
   const card=document.getElementById('card-idx-'+idx);
   if(card)card.classList.add('playing');
 
-  // Nombre con marquee
   const pbNameEl=document.getElementById('pbName');
   pbNameEl.textContent=beat.Nombre||'';
   pbNameEl.classList.remove('marquee');
@@ -717,7 +834,6 @@ function playBeatAtIndex(idx){
   img.style.display='';
 
   showPlayerBar();
-  // Activar marquee después de mostrar
   setTimeout(updateMarquee,100);
 
   if(linkObj.type==='soundcloud'){
@@ -729,23 +845,38 @@ function playBeatAtIndex(idx){
   }
 }
 
-/* ── Motor HTML5 ── */
+/* ════════════════════════════════════════════════════════
+   FIX iOS SAFARI — _startHTML5
+   ════════════════════════════════════════════════════════
+   Orden correcto para Safari:
+     1. pause() para detener cualquier audio previo
+     2. Asignar src (PRIMERO que play)
+     3. load() para forzar que Safari cargue el recurso
+     4. play() — ahora sí funciona porque:
+        a) src ya está asignado
+        b) Estamos dentro del gesto del usuario (call stack)
+        c) AudioContext ya fue desbloqueado por unlockAudio()
+   ════════════════════════════════════════════════════════ */
 function _startHTML5(url){
-  // Limpiar listener canplay anterior
+  audioPlayer.pause();
+  // Limpiar handler canplay anterior
   if(audioPlayer._canplayHandler){
     audioPlayer.removeEventListener('canplay',audioPlayer._canplayHandler);
     audioPlayer._canplayHandler=null;
   }
+  // CRÍTICO: asignar src ANTES de play()
   audioPlayer.src=url;
-  // En iOS el play() ya fue llamado síncronamente en rowClick/toggleBarPlay.
-  // En Android/desktop llamamos play() aquí también — si ya fue llamado, el
-  // browser lo ignora o lo encadena correctamente.
+  audioPlayer.load(); // Forzar carga en Safari/iOS
   const p=audioPlayer.play();
   if(p&&p.catch){
-    p.catch(()=>{
-      isPlaying=false;setPlayBtnState(false);
+    p.catch(err=>{
+      // Si falla (p.ej. usuario no ha interactuado), marcar como pausado
+      // pero NO limpiar src para que un segundo tap funcione
+      isPlaying=false;
+      setPlayBtnState(false);
       const card=document.getElementById('card-idx-'+currentIndex);
       if(card)card.classList.remove('playing');
+      console.warn('iOS audio play() blocked:',err.message||err);
     });
   }
 }
@@ -794,7 +925,6 @@ function toggleBarPlay(){
     isPlaying=true;setPlayBtnState(true);
     if(card)card.classList.add('playing');
     if(currentPlayerType==='html5'){
-      // play() directo en el gesto — funciona en iOS porque ya está desbloqueado
       const p=audioPlayer.play();
       if(p&&p.catch)p.catch(()=>{
         isPlaying=false;setPlayBtnState(false);
@@ -807,7 +937,7 @@ function toggleBarPlay(){
 /* ── Siguiente / Anterior ── */
 function playAdj(dir){
   if(!currentList.length)return;
-  unlockAudio(); // asegurar unlock en caso de que se llame desde botón skip
+  unlockAudio();
   const startIdx=currentIndex>=0?currentIndex:(dir>0?-1:currentList.length);
   let nextIdx=startIdx+dir;
   while(nextIdx>=0&&nextIdx<currentList.length){
@@ -872,7 +1002,18 @@ setInterval(()=>{
 function openModal(idx,nombre,estilo,precio){
   document.getElementById('mName').textContent=nombre;
   document.getElementById('mEstilo').textContent=estilo?'// '+estilo:'';
-  document.getElementById('mPrice').textContent=precio;
+
+  // Detectar si es promo para mostrar precio original + final en el modal
+  const beat=currentList[idx]||allBeats.find(b=>(b.Nombre||'').replace(/'/g,'&#39;').replace(/"/g,'&quot;')===nombre);
+  const promo=beat?calcPromo(beat):null;
+  const priceWrap=document.getElementById('mPriceWrap');
+  if(promo&&beat){
+    priceWrap.innerHTML='<span class="m-price-original">$'+promo.original.toLocaleString()+'</span>'
+      +'<span class="m-price-final">$'+promo.final.toLocaleString()+'</span>';
+  }else{
+    priceWrap.innerHTML='<span class="m-price">'+precio+'</span>';
+  }
+
   ['sNombre','sCorreo','sMensaje'].forEach(id=>{document.getElementById(id).value='';});
   document.getElementById('overlay').classList.add('show');
   window._beat={nombre,precio};
@@ -884,11 +1025,11 @@ function enviar(){
   const c=document.getElementById('sCorreo').value.trim();
   const m=document.getElementById('sMensaje').value.trim();
   if(!n||!c){toast('Nombre y correo requeridos','error');return;}
-  if(!c.includes('@')){toast('Correo inv\u00e1lido','error');return;}
+  if(!c.includes('@')){toast('Correo inválido','error');return;}
   const b=window._beat||{};
   const msg='\uD83C\uDFB5 *Solicitud de Beat \u2014 Spectre Records*\n\nBeat: *'+(b.nombre||'\u2014')+'*\nPrecio: '+(b.precio||'\u2014')+'\n\nNombre: '+n+'\nCorreo: '+c+(m?'\nMensaje: '+m:'');
   window.open('https://wa.me/'+WA+'?text='+encodeURIComponent(msg),'_blank');
-  closeModal();toast('\u2713 Redirigiendo a WhatsApp...','success');
+  closeModal();toast('✓ Redirigiendo a WhatsApp...','success');
 }
 
 function toast(msg,type){
