@@ -389,7 +389,6 @@ let scWidget=null;
 let scContainer=null;
 let audioUnlocked=false;
 let playerVisible=false;
-let _changingTrack=false; // bloquea el listener de pause durante cambio de track
 
 const audioPlayer=document.getElementById('audioPlayer');
 
@@ -669,6 +668,18 @@ function getAudioLink(link){
 function rowClick(idx){
   unlockAudio();
   if(idx===currentIndex){toggleBarPlay();return;}
+
+  // iOS Safari: play() DEBE llamarse síncronamente dentro del gesto táctil.
+  // Lo llamamos aquí, antes de cualquier otra cosa, para que Safari lo acepte.
+  // Luego asignamos src — el browser retoma la reproducción cuando los datos lleguen.
+  if(currentPlayerType==='html5'||currentIndex<0){
+    // Llamada síncrona dentro del gesto
+    audioPlayer.pause();
+    audioPlayer.src='';
+    const p=audioPlayer.play();
+    if(p&&p.catch)p.catch(()=>{});
+  }
+
   playBeatAtIndex(idx);
 }
 
@@ -720,12 +731,15 @@ function playBeatAtIndex(idx){
 
 /* ── Motor HTML5 ── */
 function _startHTML5(url){
+  // Limpiar listener canplay anterior
   if(audioPlayer._canplayHandler){
     audioPlayer.removeEventListener('canplay',audioPlayer._canplayHandler);
     audioPlayer._canplayHandler=null;
   }
   audioPlayer.src=url;
-  _changingTrack=false; // ya asignamos src, el pause anterior ya pasó
+  // En iOS el play() ya fue llamado síncronamente en rowClick/toggleBarPlay.
+  // En Android/desktop llamamos play() aquí también — si ya fue llamado, el
+  // browser lo ignora o lo encadena correctamente.
   const p=audioPlayer.play();
   if(p&&p.catch){
     p.catch(()=>{
@@ -758,7 +772,6 @@ function _startSoundCloud(url){
 
 /* ── Stop engine ── */
 function _stopEngine(resetTime){
-  _changingTrack=true; // evita que el evento 'pause' resetee isPlaying
   if(currentPlayerType==='html5'){
     audioPlayer.pause();
     if(resetTime){try{audioPlayer.currentTime=0;}catch(e){}}
@@ -830,15 +843,12 @@ audioPlayer.addEventListener('error',()=>{
 });
 audioPlayer.addEventListener('play',()=>{
   if(currentPlayerType!=='html5')return;
-  _changingTrack=false;
   isPlaying=true;setPlayBtnState(true);
   const card=document.getElementById('card-idx-'+currentIndex);
   if(card)card.classList.add('playing');
 });
 audioPlayer.addEventListener('pause',()=>{
-  if(currentPlayerType!=='html5')return;
-  if(_changingTrack)return; // ignorar pause causado por cambio de track
-  if(!audioPlayer.src||audioPlayer.src===window.location.href)return;
+  if(currentPlayerType!=='html5'||!audioPlayer.src||audioPlayer.src===window.location.href)return;
   isPlaying=false;setPlayBtnState(false);
   const card=document.getElementById('card-idx-'+currentIndex);
   if(card)card.classList.remove('playing');
