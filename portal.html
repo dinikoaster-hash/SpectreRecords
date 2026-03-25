@@ -222,6 +222,19 @@
       transition:color .2s, border-color .2s;
     }
     .logout-btn:hover { color:var(--red); border-color:var(--red); }
+    .portal-nav-catalogo {
+      font-family:'DM Mono',monospace;
+      font-size:.65rem;
+      letter-spacing:.12em;
+      text-transform:uppercase;
+      color:var(--purple-light);
+      border:1px solid rgba(168,85,247,.35);
+      padding:.4rem .9rem;
+      text-decoration:none;
+      transition:background .2s,color .2s;
+      white-space:nowrap;
+    }
+    .portal-nav-catalogo:hover { background:var(--purple);color:#fff;border-color:var(--purple); }
 
     /* Main layout */
     .portal-main { padding:2.5rem; max-width:1200px; margin:0 auto; overflow-x:hidden; }
@@ -764,6 +777,7 @@
     </a>
     <div class="portal-nav-right">
       <div class="portal-artist-name">// <strong id="navArtistName">—</strong></div>
+      <a href="catalogo.html" class="portal-nav-catalogo" target="_blank">Catálogo →</a>
       <button class="logout-btn" onclick="doLogout()">Salir</button>
     </div>
   </nav>
@@ -1185,19 +1199,22 @@ function renderProyectos() {
     <table class="projects-table">
       <thead>
         <tr>
-          <th>Proyecto</th><th>Servicio</th><th>Inicio</th><th>Entrega</th><th>Estado</th><th>Solicitado</th><th>Liq.</th>
+          <th>Proyecto</th><th>Servicio</th><th>Inicio</th><th>Entrega</th><th>Estado</th><th>Solicitado</th><th>Total Final</th><th>Liq.</th>
         </tr>
       </thead>
       <tbody>
         ${proyList.map(p => {
           const liq = calcLiq(p);
+          const totalPagado = parseFloat(p['TotalPagado'])||0;
+          const solicitado  = parseFloat(p['Solicitado'])||0;
           return `<tr>
             <td><div class="project-name">${p['Nombre del proyecto']||'—'}</div><div class="project-service">${p['ID']||''}</div></td>
             <td><span style="font-family:'DM Mono',monospace;font-size:.7rem;color:var(--muted)">${p['Tipo de servicio']||'—'}</span></td>
             <td><span style="font-family:'DM Mono',monospace;font-size:.7rem;color:var(--muted)">${formatFecha(p['Fecha inicio'])}</span></td>
             <td><span style="font-family:'DM Mono',monospace;font-size:.7rem;color:var(--muted)">${formatFecha(p['Fecha entrega'])}</span></td>
             <td>${getStatusBadge(p['Estado proyecto'])}</td>
-            <td style="font-family:'Bebas Neue',sans-serif;font-size:1.1rem;color:var(--purple-light);text-align:center">${p['Solicitado']?'$'+parseFloat(p['Solicitado']).toLocaleString():'—'}</td>
+            <td style="font-family:'Bebas Neue',sans-serif;font-size:1.1rem;color:var(--purple-light);text-align:center">${solicitado>0?'$'+solicitado.toLocaleString()+' MXN':'—'}</td>
+            <td style="font-family:'Bebas Neue',sans-serif;font-size:1.1rem;color:var(--yellow);text-align:center">${totalPagado>0?'$'+totalPagado.toLocaleString()+' MXN':'—'}</td>
             <td style="text-align:center">${liq.html}</td>
           </tr>`;
         }).join('')}
@@ -1206,6 +1223,8 @@ function renderProyectos() {
     <div class="projects-mobile" style="display:none">
       ${proyList.map(p => {
         const liq = calcLiq(p);
+        const totalPagado = parseFloat(p['TotalPagado'])||0;
+        const solicitado  = parseFloat(p['Solicitado'])||0;
         return `<div class="project-mobile-card">
           <div class="project-mobile-top">
             <div>
@@ -1218,7 +1237,8 @@ function renderProyectos() {
             ${p['Tipo de servicio']?`<span>${p['Tipo de servicio']}</span>`:''}
             ${p['Fecha inicio']?`<span>Inicio: ${formatFecha(p['Fecha inicio'])}</span>`:''}
             ${p['Fecha entrega']?`<span>Entrega: ${formatFecha(p['Fecha entrega'])}</span>`:''}
-            ${p['Solicitado']?`<span style="color:var(--purple-light)">Total: $${parseFloat(p['Solicitado']).toLocaleString()}</span>`:''}
+            ${solicitado>0?`<span style="color:var(--purple-light)">Solicitado: $${solicitado.toLocaleString()} MXN</span>`:''}
+            ${totalPagado>0?`<span style="color:var(--yellow);font-weight:600">Total final: $${totalPagado.toLocaleString()} MXN</span>`:''}
             ${liq.mobile}
           </div>
         </div>`;
