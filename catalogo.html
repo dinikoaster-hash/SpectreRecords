@@ -305,7 +305,7 @@ nav{position:sticky;top:0;z-index:100;display:flex;align-items:center;justify-co
   }
   .tr-idx{grid-row:1/3;align-self:center;}
   .tr-info{grid-column:2;grid-row:1;align-items:center;gap:.55rem;}
-  .tr-bpm,.tr-escala{display:inline-flex !important;align-items:center;gap:.2rem;}
+  .tr-bpm,.tr-escala{display:none !important;}
   .tr-specs-mobile{grid-column:2;grid-row:2;display:flex;gap:.5rem;align-items:center;}
   .tr-estado{display:none;}
   .tr-actions{grid-column:3;grid-row:1/3;align-self:center;flex-direction:column;align-items:flex-end;gap:.3rem;}
@@ -692,12 +692,12 @@ function renderBeats(list){
     let precioParaModal='';
     if(promo){
       precioDisplay='<div class="tr-price-wrap">'
-        +'<span class="tr-price-original">$'+promo.original.toLocaleString()+'</span>'
-        +'<span class="tr-price is-final">$'+promo.final.toLocaleString()+'</span>'
+        +'<span class="tr-price-original">$'+promo.original.toLocaleString()+' MXN</span>'
+        +'<span class="tr-price is-final">$'+promo.final.toLocaleString()+' MXN</span>'
         +'</div>';
-      precioParaModal='$'+promo.final.toLocaleString();
+      precioParaModal='$'+promo.final.toLocaleString()+' MXN';
     }else{
-      const p=b.Precio?'$'+parseFloat(b.Precio).toLocaleString():'Consultar';
+      const p=b.Precio?'$'+parseFloat(b.Precio).toLocaleString()+' MXN':'Consultar';
       precioDisplay='<div class="tr-price-wrap"><span class="tr-price">'+p+'</span></div>';
       precioParaModal=p;
     }
