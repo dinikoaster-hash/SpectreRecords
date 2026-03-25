@@ -1038,9 +1038,15 @@ function openModal(id){
   if(id==='modalPago'){populateArtistSelects();populateProyectoSelects();}
   if(id==='modalArtista'||id==='modalProyecto'){populateArtistSelects();}
   if(id==='modalArtista'){
-    // Reset imagen artista preview
-    const maPrev=document.getElementById('maImagenPreview');
-    const maFile=document.getElementById('maImagenFile');
+    // Reset completo: titulo, rowNum, campos y preview
+    document.getElementById('maRowNum').value='';
+    document.getElementById('modalArtistaTitle').textContent='NUEVO ARTISTA';
+    ['maNombre','maAka','maTel','maCorreo','maCodigo','maImagen'].forEach(function(fid){
+      var el=document.getElementById(fid);if(el)el.value='';
+    });
+    var maTipo=document.getElementById('maTipo');if(maTipo)maTipo.value='Est\xE1ndar';
+    var maPrev=document.getElementById('maImagenPreview');
+    var maFile=document.getElementById('maImagenFile');
     if(maPrev)maPrev.style.display='none';
     if(maFile)maFile.value='';
   }
@@ -1053,6 +1059,7 @@ function closeModal(id){document.getElementById(id).classList.remove('show');}
 
 function editArtista(rowNum){
   const a=allArtistas.find(x=>x._rowNumber===rowNum);if(!a)return;
+  openModal('modalArtista'); // primero resetea, luego sobreescribimos
   document.getElementById('modalArtistaTitle').textContent='EDITAR ARTISTA';
   document.getElementById('maRowNum').value=rowNum;
   document.getElementById('maNombre').value=a['Nombre']||'';
@@ -1062,7 +1069,15 @@ function editArtista(rowNum){
   document.getElementById('maCodigo').value=a['CodigoAcceso']||'';
   document.getElementById('maTipo').value=a['Tipo']||'Est\xE1ndar';
   document.getElementById('maImagen').value=a['Imagen']||'';
-  openModal('modalArtista');
+  // Mostrar preview de imagen si existe
+  if(a['Imagen']){
+    const imgUrl=getImgUrl(a['Imagen']);
+    if(imgUrl){
+      document.getElementById('maImgThumb').src=imgUrl;
+      document.getElementById('maImgName').textContent='Imagen actual';
+      document.getElementById('maImagenPreview').style.display='block';
+    }
+  }
 }
 
 function nextId(list,field,prefix){
@@ -1097,8 +1112,7 @@ async function guardarArtista(){
     const uploaded=await uploadToDrive(imgFile,'Artistas_Images');
     if(uploaded)imagenUrl=uploaded;
   }
-  // Orden exacto de columnas en Sheets: ArtistaID|Nombre|AKA|Correo|Telefono|CodigoAcceso|Tipo|Imagen
-  const values=[newId,nombre,document.getElementById('maAka').value.trim(),correo,tel,codigo,tipo,imagenUrl];
+  const values=[newId,nombre,document.getElementById('maAka').value.trim(),tel,correo,codigo,tipo,imagenUrl];
   let ok=false;
   if(rowNum){ok=await updateRow(SH.artistas,rowNum,values);}
   else{ok=await appendRow(SH.artistas,values);}
