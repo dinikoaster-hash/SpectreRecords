@@ -23,16 +23,24 @@
     nav{position:fixed;top:0;left:0;right:0;z-index:200;padding:1rem 2.5rem;display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid transparent;transition:border-color .3s,background .3s;}
     nav.scrolled{background:rgba(8,8,8,.95);backdrop-filter:blur(12px);border-color:var(--border);}
     .nav-logo img{height:36px;width:auto;display:block;filter:brightness(1.1);}
-    .nav-links{display:flex;gap:2.5rem;list-style:none;}
+    /* Center nav-links absolutely */
+    .nav-links{position:absolute;left:50%;transform:translateX(-50%);display:flex;gap:2.5rem;list-style:none;}
     .nav-links a{font-family:'DM Mono',monospace;font-size:.75rem;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);text-decoration:none;transition:color .2s;}
     .nav-links a:hover{color:var(--purple-light);}
-    .nav-cta{font-family:'DM Mono',monospace;font-size:.75rem;letter-spacing:.1em;text-transform:uppercase;color:var(--purple-light);border:1px solid var(--purple-dim);padding:.6rem 1.4rem;text-decoration:none;transition:background .2s,color .2s;}
+    /* Group the two CTAs together on the right */
+    .nav-ctas{display:flex;align-items:center;gap:.5rem;}
+    .nav-cta{font-family:'DM Mono',monospace;font-size:.75rem;letter-spacing:.1em;text-transform:uppercase;color:var(--purple-light);border:1px solid var(--purple-dim);padding:.6rem 1.4rem;text-decoration:none;transition:background .2s,color .2s;white-space:nowrap;}
     .nav-cta:hover{background:var(--purple);color:#fff;border-color:var(--purple);}
+    .nav-cta.secondary{color:var(--muted);border-color:var(--border);font-size:.7rem;padding:.55rem 1rem;}
+    .nav-cta.secondary:hover{color:var(--text);border-color:var(--purple-dim);background:none;}
     .nav-hamburger{display:none;flex-direction:column;gap:5px;background:none;border:none;cursor:pointer;padding:.4rem;position:relative;z-index:210;}
     .nav-hamburger span{display:block;width:22px;height:1.5px;background:var(--text);transition:transform .3s,opacity .3s;}
     .nav-hamburger.open span:nth-child(1){transform:translateY(6.5px) rotate(45deg);}
     .nav-hamburger.open span:nth-child(2){opacity:0;}
     .nav-hamburger.open span:nth-child(3){transform:translateY(-6.5px) rotate(-45deg);}
+    /* Mobile: CTAs visible outside hamburger */
+    .nav-mobile-top-ctas{display:none;align-items:center;gap:.35rem;}
+    .nav-mobile-top-ctas a{font-family:'DM Mono',monospace;font-size:.6rem;letter-spacing:.08em;text-transform:uppercase;color:var(--purple-light);border:1px solid var(--purple-dim);padding:.45rem .7rem;text-decoration:none;white-space:nowrap;}
     .nav-mobile{display:none;position:fixed;top:0;left:0;right:0;bottom:0;z-index:180;background:rgba(8,8,8,.98);backdrop-filter:blur(16px);flex-direction:column;align-items:center;justify-content:center;gap:2rem;}
     .nav-mobile.open{display:flex;}
     .nav-mobile a{font-family:'Bebas Neue',sans-serif;font-size:2.5rem;letter-spacing:.1em;color:var(--muted);text-decoration:none;transition:color .2s;}
@@ -170,8 +178,9 @@
 
     @media(max-width:768px){
       nav{padding:1.2rem 1.5rem;}
-      .nav-links,.nav-cta{display:none;}
+      .nav-links,.nav-ctas{display:none;}
       .nav-hamburger{display:flex;}
+      .nav-mobile-top-ctas{display:flex;}
       .hero{padding:0 1.5rem;}
       .hero-waveform{display:none;}
       #servicios,#contacto,#paquetes,#casos{padding:5rem 1.5rem;}
@@ -200,7 +209,16 @@
     <li><a href="#nosotros">Estudio</a></li>
     <li><a href="#contacto">Contacto</a></li>
   </ul>
-  <a href="catalogo.html" class="nav-cta" style="margin-right:.5rem;">Catálogo →</a><a href="portal.html" class="nav-cta">Portal Artista →</a>
+  <!-- Desktop: ambos CTAs juntos a la derecha -->
+  <div class="nav-ctas">
+    <a href="catalogo.html" class="nav-cta secondary">Catálogo →</a>
+    <a href="portal.html" class="nav-cta">Portal Artista →</a>
+  </div>
+  <!-- Mobile: CTAs visibles fuera del hamburger -->
+  <div class="nav-mobile-top-ctas">
+    <a href="catalogo.html">Catálogo</a>
+    <a href="portal.html">Portal →</a>
+  </div>
   <button class="nav-hamburger" id="hamburger" onclick="toggleMenu()" aria-label="Menu">
     <span></span><span></span><span></span>
   </button>
@@ -211,8 +229,6 @@
   <a href="#casos" onclick="toggleMenu()">Casos</a>
   <a href="#nosotros" onclick="toggleMenu()">Estudio</a>
   <a href="#contacto" onclick="toggleMenu()">Contacto</a>
-  <a href="catalogo.html" class="nav-mobile-cta" style="color:var(--muted);border-color:rgba(168,85,247,.3);">Catálogo →</a>
-  <a href="portal.html" class="nav-mobile-cta">Portal Artista →</a>
 </div>
 
 <!-- HERO -->
@@ -254,10 +270,10 @@
   <p class="section-label reveal">// 01 — Servicios</p>
   <h2 class="section-title reveal">LO QUE<br><span style="color:var(--purple-light)">HACEMOS</span></h2>
   <div class="services-grid">
-    <div class="service-card reveal"><div class="service-num">01</div><span class="service-icon">🎙️</span><div class="service-name">Grabación</div><p class="service-desc">Capturamos cada detalle de tu voz con equipo profesional y dirección vocal real. No solo grabamos — te guiamos.</p></div>
-    <div class="service-card reveal"><div class="service-num">02</div><span class="service-icon">🎚️</span><div class="service-name">Mezcla</div><p class="service-desc">Balanceamos frecuencias, dinámica y espacialidad para que cada elemento de tu track encuentre su lugar exacto.</p></div>
-    <div class="service-card reveal"><div class="service-num">03</div><span class="service-icon">💿</span><div class="service-name">Masterización</div><p class="service-desc">El toque final que lleva tu música al nivel sonoro de las plataformas comerciales. Lista para competir.</p></div>
-    <div class="service-card reveal"><div class="service-num">04</div><span class="service-icon">🎹</span><div class="service-name">Producción de Beats</div><p class="service-desc">Beats originales a tu medida — trap, urbano, experimental. Tu identidad sonora, construida contigo.</p></div>
+    <a href="#paquetes" style="text-decoration:none;color:inherit;" class="service-card reveal"><div class="service-num">01</div><span class="service-icon">🎙️</span><div class="service-name">Grabación</div><p class="service-desc">Capturamos cada detalle de tu voz con equipo profesional y dirección vocal real. No solo grabamos — te guiamos.</p></a>
+    <a href="#paquetes" style="text-decoration:none;color:inherit;" class="service-card reveal"><div class="service-num">02</div><span class="service-icon">🎚️</span><div class="service-name">Mezcla</div><p class="service-desc">Balanceamos frecuencias, dinámica y espacialidad para que cada elemento de tu track encuentre su lugar exacto.</p></a>
+    <a href="#paquetes" style="text-decoration:none;color:inherit;" class="service-card reveal"><div class="service-num">03</div><span class="service-icon">💿</span><div class="service-name">Masterización</div><p class="service-desc">El toque final que lleva tu música al nivel sonoro de las plataformas comerciales. Lista para competir.</p></a>
+    <a href="catalogo.html" style="text-decoration:none;color:inherit;" class="service-card reveal"><div class="service-num">04</div><span class="service-icon">🎹</span><div class="service-name">Producción de Beats</div><p class="service-desc">Beats originales a tu medida — trap, urbano, experimental. Tu identidad sonora, construida contigo.</p></a>
   </div>
 </section>
 
