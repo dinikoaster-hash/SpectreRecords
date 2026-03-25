@@ -1097,7 +1097,8 @@ async function guardarArtista(){
     const uploaded=await uploadToDrive(imgFile,'Artistas_Images');
     if(uploaded)imagenUrl=uploaded;
   }
-  const values=[newId,nombre,document.getElementById('maAka').value.trim(),tel,correo,codigo,tipo,imagenUrl];
+  // Orden exacto de columnas en Sheets: ArtistaID|Nombre|AKA|Correo|Telefono|CodigoAcceso|Tipo|Imagen
+  const values=[newId,nombre,document.getElementById('maAka').value.trim(),correo,tel,codigo,tipo,imagenUrl];
   let ok=false;
   if(rowNum){ok=await updateRow(SH.artistas,rowNum,values);}
   else{ok=await appendRow(SH.artistas,values);}
