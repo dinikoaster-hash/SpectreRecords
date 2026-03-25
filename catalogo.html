@@ -445,39 +445,47 @@ nav{position:sticky;top:0;z-index:200;display:flex;align-items:center;justify-co
   body.player-open .main{padding-bottom:160px;}
   .col-headers{display:none;}
 
-  /* Mobile card: 3 cols — idx | info+specs | actions */
+  /* Mobile card: 4 cols — idx | info | specs-vertical | actions */
   .beat-card{
-    grid-template-columns:28px 1fr auto;
-    grid-template-rows:auto auto;
-    gap:.3rem .55rem;
+    grid-template-columns:28px 1fr auto auto;
+    grid-template-rows:1fr;
+    gap:.3rem .45rem;
     padding:.75rem 1rem;
-    align-items:start;
+    align-items:center;
   }
-  .tr-idx{grid-row:1/3;align-self:center;height:auto;}
+  .tr-idx{grid-column:1;grid-row:1;align-self:center;height:auto;}
   .tr-info{grid-column:2;grid-row:1;align-items:flex-start;gap:.6rem;}
 
-  /* On mobile: cover is taller, show BPM/escala below it */
+  /* On mobile: cover only (no specs below it) */
   .tr-thumb{
     width:52px;height:52px;
     flex-shrink:0;
   }
-  /* BPM+escala appear below the cover image on mobile */
   .tr-info{flex-direction:row;align-items:flex-start;}
   .tr-thumb-col{display:flex;flex-direction:column;align-items:center;gap:.3rem;flex-shrink:0;}
-  .tr-thumb-specs{
-    font-family:DM Mono,monospace;font-size:.44rem;
-    color:var(--muted);text-align:center;line-height:1.4;
-    white-space:nowrap;
-  }
+  /* Hide the specs text below thumb on mobile (moved to vertical column) */
+  .tr-thumb-specs{display:none;}
 
   /* Hide desktop-only columns */
   .tr-bpm,.tr-escala,.tr-estado{display:none !important;}
 
-  /* Mobile specs row (estado pill) — keep just the pill */
-  .tr-specs-mobile{grid-column:2;grid-row:2;display:flex;gap:.4rem;align-items:center;flex-wrap:wrap;}
+  /* Vertical specs column: estado → BPM → Escala */
+  .tr-specs-mobile{
+    grid-column:3;grid-row:1;
+    display:flex!important;flex-direction:column;
+    align-items:center;justify-content:center;
+    gap:.28rem;
+  }
+  .tr-specs-mobile .estado-pill{font-size:.4rem;padding:.1rem .35rem;}
+  .tr-specs-mobile .spec-bpm,
+  .tr-specs-mobile .spec-escala{
+    font-family:DM Mono,monospace;font-size:.42rem;
+    color:var(--muted);letter-spacing:.04em;
+    text-align:center;white-space:nowrap;
+  }
 
   .tr-actions{
-    grid-column:3;grid-row:1/3;
+    grid-column:4;grid-row:1;
     align-self:center;flex-direction:column;
     align-items:flex-end;gap:.3rem;
   }
@@ -1009,12 +1017,9 @@ function renderBeats(list){
       '<div class="tr-info">'+
         // Desktop thumb (hidden on mobile via CSS restructure)
         '<div class="tr-thumb tr-thumb-desktop">'+coverHtml+'</div>'+
-        // Mobile thumb column with BPM/escala beneath (shown by mobile CSS)
+        // Mobile thumb column (no specs here — moved to vertical specs column)
         '<div class="tr-thumb-col" style="display:none">'+
           '<div class="tr-thumb">'+coverHtml+'</div>'+
-          '<div class="tr-thumb-specs">'+
-            (b.BPM?b.BPM+' BPM<br>':'')+(b.Escala?b.Escala.toUpperCase():'')
-          +'</div>'+
         '</div>'+
         '<div class="tr-text">'+
           '<div class="tr-name">'+(b.Nombre||'&#x2014;')+'</div>'+
@@ -1028,9 +1033,11 @@ function renderBeats(list){
       '<div class="tr-bpm">'+(b.BPM||'&#x2014;')+'</div>'+
       '<div class="tr-escala">'+(b.Escala||'&#x2014;')+'</div>'+
       '<div class="tr-estado"><span class="estado-pill '+pillCls+'">'+est+'</span></div>'+
-      // Mobile specs row — just the estado pill (BPM/escala now under cover)
+      // Mobile specs vertical column — estado pill + BPM + Escala
       '<div class="tr-specs-mobile" style="display:none">'+
         '<span class="estado-pill '+pillCls+'">'+est+'</span>'+
+        (b.BPM?'<span class="spec-bpm">'+b.BPM+' BPM</span>':'')+
+        (b.Escala?'<span class="spec-escala">'+b.Escala.toUpperCase()+'</span>':'')+
       '</div>'+
       '<div class="tr-actions" onclick="event.stopPropagation()">'+
         precioDisplay+
