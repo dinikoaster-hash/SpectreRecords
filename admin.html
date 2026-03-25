@@ -442,6 +442,24 @@ body::before{content:'';position:fixed;inset:0;background-image:url("data:image/
             <button class="btn btn-gold" onclick="openModal('modalBeat')">+ Nuevo beat</button>
           </div>
         </div>
+        <!-- Contadores de catálogo -->
+        <div class="fin-summary" id="catalogoStats" style="margin-bottom:1.5rem;">
+          <div class="fin-card"><div class="fin-label">Total beats</div><div class="fin-val sv-purple" id="catTotal">0</div></div>
+          <div class="fin-card"><div class="fin-label">Libres</div><div class="fin-val sv-green" id="catLibres">0</div></div>
+          <div class="fin-card"><div class="fin-label">Apartados</div><div class="fin-val" style="color:var(--yellow)" id="catApartados">0</div></div>
+          <div class="fin-card"><div class="fin-label">Vendidos</div><div class="fin-val sv-red" id="catVendidos">0</div></div>
+          <div class="fin-card"><div class="fin-label">Valor cat. libre</div><div class="fin-val sv-gold" id="catValorLibre">$0</div></div>
+          <div class="fin-card"><div class="fin-label">En espera (apartados)</div><div class="fin-val" style="color:var(--yellow)" id="catValorApartado">$0</div></div>
+          <div class="fin-card"><div class="fin-label">Total vendido</div><div class="fin-val sv-green" id="catValorVendido">$0</div></div>
+          <div class="fin-card"><div class="fin-label">Promedio por beat</div><div class="fin-val sv-gold" id="catPromedio">$0</div></div>
+        </div>
+        <!-- Tabs por estado -->
+        <div style="display:flex;gap:0;border:1px solid var(--border);margin-bottom:1.5rem;width:fit-content;flex-wrap:wrap;">
+          <button id="catTabTodos" onclick="setCatView('todos')" style="font-family:DM Mono,monospace;font-size:.68rem;letter-spacing:.12em;text-transform:uppercase;padding:.7rem 1.4rem;border:none;cursor:none;transition:background .2s,color .2s;background:var(--purple);color:#fff;">Todos</button>
+          <button id="catTabLibre" onclick="setCatView('libre')" style="font-family:DM Mono,monospace;font-size:.68rem;letter-spacing:.12em;text-transform:uppercase;padding:.7rem 1.4rem;border:none;cursor:none;transition:background .2s,color .2s;background:var(--surface2);color:var(--muted);">&#x25CF; Libres</button>
+          <button id="catTabApartado" onclick="setCatView('apartado')" style="font-family:DM Mono,monospace;font-size:.68rem;letter-spacing:.12em;text-transform:uppercase;padding:.7rem 1.4rem;border:none;cursor:none;transition:background .2s,color .2s;background:var(--surface2);color:var(--muted);">&#x25CB; Apartados</button>
+          <button id="catTabVendido" onclick="setCatView('vendido')" style="font-family:DM Mono,monospace;font-size:.68rem;letter-spacing:.12em;text-transform:uppercase;padding:.7rem 1.4rem;border:none;cursor:none;transition:background .2s,color .2s;background:var(--surface2);color:var(--muted);">&#x2715; Vendidos</button>
+        </div>
         <div class="filter-bar">
           <input class="filter-input" id="searchBeats" placeholder="// Buscar beat..." oninput="renderCatalogo()"/>
           <select class="filter-select" id="filterEstiloBeat" onchange="renderCatalogo()">
@@ -449,7 +467,7 @@ body::before{content:'';position:fixed;inset:0;background-image:url("data:image/
             <option>Rap</option><option>Trap</option><option>Drill</option>
             <option>House</option><option>Reggaeton</option><option>Plugg</option>
           </select>
-          <select class="filter-select" id="filterEstadoBeat" onchange="renderCatalogo()">
+          <select class="filter-select" id="filterEstadoBeat" onchange="renderCatalogo()" style="display:none;">
             <option value="">Todos</option>
             <option value="Libre">Libre</option>
             <option value="Apartado">Apartado</option>
@@ -528,7 +546,15 @@ body::before{content:'';position:fixed;inset:0;background-image:url("data:image/
             <option>Est&#xE1;ndar</option><option>Miembro</option><option>Pro</option>
           </select>
         </div>
-        <div class="form-group full"><label class="form-label">Link imagen (Drive: lh3.googleusercontent.com/d/ID)</label><input class="form-input" id="maImagen" placeholder="https://lh3.googleusercontent.com/d/..."/></div>
+        <div class="form-group full">
+          <label class="form-label">Imagen (sube desde tu dispositivo → carpeta "Artistas_Images")</label>
+          <input class="form-file" id="maImagenFile" type="file" accept="image/*"/>
+          <div id="maImagenPreview" style="margin-top:.5rem;display:none;">
+            <img id="maImgThumb" style="height:60px;width:60px;object-fit:cover;border-radius:50%;border:1px solid var(--border2);" alt="preview"/>
+            <span id="maImgName" style="font-family:DM Mono,monospace;font-size:.6rem;color:var(--muted);margin-left:.5rem;vertical-align:middle;"></span>
+          </div>
+        </div>
+        <div class="form-group full"><label class="form-label">O pega link de imagen (Drive / URL directa)</label><input class="form-input" id="maImagen" placeholder="https://lh3.googleusercontent.com/d/..."/></div>
       </div>
     </div>
     <div class="modal-footer">
@@ -564,6 +590,7 @@ body::before{content:'';position:fixed;inset:0;background-image:url("data:image/
         <div class="form-group full"><label class="form-label">Bonos</label><input class="form-input" id="mpBonos"/></div>
         <div class="form-group full"><label class="form-label">Notas</label><input class="form-input" id="mpNotas"/></div>
         <div class="form-group"><label class="form-label">Monto solicitado (MXN)</label><input class="form-input" id="mpSolicitado" type="number" placeholder="2500"/></div>
+        <div class="form-group"><label class="form-label">Total pagado final (MXN) <span style="font-size:.55rem;color:var(--muted2)">// Lo que realmente terminó pagando</span></label><input class="form-input" id="mpTotalPagado" type="number" placeholder="Dejar vacío si igual al solicitado"/></div>
         <div class="form-group full"><label class="form-label">Subir archivo a Drive (reemplaza el actual)</label><input class="form-file" id="mpArchivo" type="file" accept="*/*"/></div>
         <div class="form-group full"><label class="form-label">Link archivos entregados (manual o desde Drive)</label><input class="form-input" id="mpArchivos" placeholder="https://drive.google.com/..."/></div>
       </div>
@@ -723,6 +750,7 @@ let oauthToken  = null;
 let allArtistas = [], allProyectos = [], allFinanzas = [], allCursos = [], allBeats = [];
 let finView = 'ingresos';
 let prjView = 'activos';
+let catView = 'todos';
 
 // CURSOR
 const cur=document.getElementById('cursor'),ring=document.getElementById('cursorRing');
@@ -1009,8 +1037,14 @@ function openModal(id){
   document.getElementById(id).classList.add('show');
   if(id==='modalPago'){populateArtistSelects();populateProyectoSelects();}
   if(id==='modalArtista'||id==='modalProyecto'){populateArtistSelects();}
+  if(id==='modalArtista'){
+    // Reset imagen artista preview
+    const maPrev=document.getElementById('maImagenPreview');
+    const maFile=document.getElementById('maImagenFile');
+    if(maPrev)maPrev.style.display='none';
+    if(maFile)maFile.value='';
+  }
   if(id==='modalBeat'){
-    // reset imagen preview
     document.getElementById('beatImagenPreview').style.display='none';
     document.getElementById('beatImagen').value='';
   }
@@ -1049,11 +1083,30 @@ async function guardarArtista(){
   if(!nombre){toast('Nombre requerido','error');return;}
   const existingArtista=rowNum?allArtistas.find(a=>a._rowNumber===rowNum):null;
   const newId=existingArtista?existingArtista['ArtistaID']||'':nextId(allArtistas,'ArtistaID','Art');
-  const values=[newId,nombre,document.getElementById('maAka').value.trim(),document.getElementById('maTel').value.trim(),document.getElementById('maCorreo').value.trim(),document.getElementById('maCodigo').value.trim(),document.getElementById('maTipo').value,document.getElementById('maImagen').value.trim()];
+  // Columnas Sheets: ArtistaID | Nombre | AKA | Telefono | Correo | CodigoAcceso | Tipo | Imagen
+  // Leer en orden EXACTO: tel primero, correo después (fix bug invertido)
+  const tel    = document.getElementById('maTel').value.trim();
+  const correo = document.getElementById('maCorreo').value.trim();
+  const codigo = document.getElementById('maCodigo').value.trim();
+  const tipo   = document.getElementById('maTipo').value;
+  // Imagen: primero archivo, luego link manual
+  const imgFile=document.getElementById('maImagenFile').files[0];
+  let imagenUrl=document.getElementById('maImagen').value.trim();
+  if(imgFile){
+    toast('// Subiendo imagen a Drive...');
+    const uploaded=await uploadToDrive(imgFile,'Artistas_Images');
+    if(uploaded)imagenUrl=uploaded;
+  }
+  const values=[newId,nombre,document.getElementById('maAka').value.trim(),tel,correo,codigo,tipo,imagenUrl];
   let ok=false;
   if(rowNum){ok=await updateRow(SH.artistas,rowNum,values);}
   else{ok=await appendRow(SH.artistas,values);}
-  if(ok){toast('\u2713 Artista guardado','success');closeModal('modalArtista');await loadAdmin();}
+  if(ok){toast('\u2713 Artista guardado','success');closeModal('modalArtista');
+    // Reset imagen preview
+    document.getElementById('maImagenFile').value='';
+    document.getElementById('maImagenPreview').style.display='none';
+    await loadAdmin();
+  }
   else{toast('Error al guardar','error');}
 }
 
@@ -1096,12 +1149,13 @@ function renderProyectos(){
       <td>${getBadge(p['Estado proyecto'])}</td>
       <td style="font-family:Bebas Neue,sans-serif;font-size:1rem;color:var(--purple-light)">${solicitado>0?'$'+solicitado.toLocaleString():'\u2014'}</td>
       <td style="font-family:Bebas Neue,sans-serif;font-size:1rem;color:var(--green)">${cobradoProy>0?'$'+cobradoProy.toLocaleString():'\u2014'}</td>
+      <td style="font-family:Bebas Neue,sans-serif;font-size:1rem;color:var(--gold)">${p['TotalPagado']&&parseFloat(p['TotalPagado'])>0?'$'+parseFloat(p['TotalPagado']).toLocaleString():'\u2014'}</td>
       <td style="text-align:center">${liqHtml}</td>
       <td>${archHtml}</td>
       <td><div class="td-actions"><button class="btn-xs btn-xs-edit" onclick="editProyecto(${rn})">Editar</button><button class="btn-xs btn-xs-del" onclick="confirmDelete('proyecto',${rn},this.dataset.n)" data-n="${nombre.replace(/"/g,'&quot;')}">Borrar</button></div></td>
     </tr>`;
   }).join('');
-  document.getElementById('proyectosContainer').innerHTML=`<table class="data-table"><thead><tr><th>Proyecto</th><th>Artista</th><th>Servicio</th><th>Inicio</th><th>Estado</th><th>Solicitado</th><th>Cobrado</th><th>Liq.</th><th>Archivos</th><th>Acciones</th></tr></thead><tbody>${rows}</tbody></table>`;
+  document.getElementById('proyectosContainer').innerHTML=`<table class="data-table"><thead><tr><th>Proyecto</th><th>Artista</th><th>Servicio</th><th>Inicio</th><th>Estado</th><th>Solicitado</th><th>Cobrado</th><th>Total Final</th><th>Liq.</th><th>Archivos</th><th>Acciones</th></tr></thead><tbody>${rows}</tbody></table>`;
 }
 
 function editProyecto(rowNum){
@@ -1116,6 +1170,7 @@ function editProyecto(rowNum){
   document.getElementById('mpBonos').value=p['Bonos incluidos']||p['Bonos']||'';
   document.getElementById('mpNotas').value=p['Notas del proyecto']||p['Notas']||'';
   document.getElementById('mpSolicitado').value=p['Solicitado']||'';
+  document.getElementById('mpTotalPagado').value=p['TotalPagado']||'';
   document.getElementById('mpArchivos').value=p['Archivos entregados']||'';
   document.getElementById('mpArchivo').value='';
   openModal('modalProyecto');
@@ -1130,7 +1185,7 @@ async function actualizarProyecto(){
   const file=document.getElementById('mpArchivo').files[0];
   if(file){const link=await uploadToDrive(file);if(link)archLink=link;}
   const fmtDate2=d=>{if(!d)return'';const[y,m,dd]=d.split('-');return dd&&m&&y?dd+'/'+m+'/'+y:d;};
-  const values=[p['ID']||'',document.getElementById('mpNombre').value.trim(),document.getElementById('mpCliente').value,document.getElementById('mpServicio').value.trim(),p['Fecha sesi\xF3n']||p['Fecha sesion']||'',fmtDate2(document.getElementById('mpFechaI').value),fmtDate2(document.getElementById('mpFechaE').value),document.getElementById('mpBonos').value.trim(),document.getElementById('mpEstado').value,archLink,document.getElementById('mpNotas').value.trim(),document.getElementById('mpSolicitado').value||''];
+  const values=[p['ID']||'',document.getElementById('mpNombre').value.trim(),document.getElementById('mpCliente').value,document.getElementById('mpServicio').value.trim(),p['Fecha sesi\xF3n']||p['Fecha sesion']||'',fmtDate2(document.getElementById('mpFechaI').value),fmtDate2(document.getElementById('mpFechaE').value),document.getElementById('mpBonos').value.trim(),document.getElementById('mpEstado').value,archLink,document.getElementById('mpNotas').value.trim(),document.getElementById('mpSolicitado').value||'',document.getElementById('mpTotalPagado').value||''];
   const ok=await updateRow(SH.proyectos,rowNum,values);
   if(ok){toast('\u2713 Proyecto actualizado','success');closeModal('modalProyecto');await loadAdmin();}
   else{toast('Error al actualizar','error');}
@@ -1374,9 +1429,192 @@ async function guardarCurso(){
 }
 
 // ==============================================
-// CAT\xC1LOGO DE BEATS — NUEVAS FUNCIONES
-// Columnas Sheets: ID|Nombre|Estilo|Archivo|Precio|BPM|Escala|Estado|Tipo|Imagen|Descuento
+// CATALOGO — setCatView + renderCatalogo actualizado
 // ==============================================
+function setCatView(view){
+  catView=view;
+  const tabs={todos:'catTabTodos',libre:'catTabLibre',apartado:'catTabApartado',vendido:'catTabVendido'};
+  const colors={todos:'var(--purple)',libre:'rgba(52,211,153,.8)',apartado:'rgba(251,191,36,.8)',vendido:'rgba(248,113,113,.8)'};
+  Object.entries(tabs).forEach(([k,btnId])=>{
+    const btn=document.getElementById(btnId);
+    if(!btn)return;
+    if(k===view){btn.style.background=colors[k];btn.style.color=k==='todos'?'#fff':'#0a0a0a';}
+    else{btn.style.background='var(--surface2)';btn.style.color='var(--muted)';}
+  });
+  renderCatalogo();
+}
+
+function updateCatStats(){
+  const libres=allBeats.filter(b=>(b['Estado']||'Libre')==='Libre');
+  const apartados=allBeats.filter(b=>b['Estado']==='Apartado');
+  const vendidos=allBeats.filter(b=>b['Estado']==='Vendido');
+  const priceFinal=b=>{
+    const p=parseFloat(b['Precio'])||0;const d=parseFloat(b['Descuento'])||0;
+    if(p&&d>0&&d<=100)return Math.round(p*(1-d/100));
+    return p;
+  };
+  const valorLibre=libres.reduce((s,b)=>s+priceFinal(b),0);
+  const valorApart=apartados.reduce((s,b)=>s+priceFinal(b),0);
+  const valorVend=vendidos.reduce((s,b)=>s+priceFinal(b),0);
+  const allConPrecio=allBeats.filter(b=>parseFloat(b['Precio'])>0);
+  const promedio=allConPrecio.length?Math.round(allConPrecio.reduce((s,b)=>s+priceFinal(b),0)/allConPrecio.length):0;
+  const fmtMXN=v=>v?'$'+v.toLocaleString('es-MX'):'$0';
+  document.getElementById('catTotal').textContent=allBeats.length||'0';
+  document.getElementById('catLibres').textContent=libres.length||'0';
+  document.getElementById('catApartados').textContent=apartados.length||'0';
+  document.getElementById('catVendidos').textContent=vendidos.length||'0';
+  document.getElementById('catValorLibre').textContent=fmtMXN(valorLibre);
+  document.getElementById('catValorApartado').textContent=fmtMXN(valorApart);
+  document.getElementById('catValorVendido').textContent=fmtMXN(valorVend);
+  document.getElementById('catPromedio').textContent=fmtMXN(promedio);
+}
+
+function renderCatalogo(){
+  updateCatStats();
+  const q=(document.getElementById('searchBeats')?.value||'').toLowerCase();
+  const estilo=document.getElementById('filterEstiloBeat')?.value||'';
+  const container=document.getElementById('catalogoContainer');
+  const mobileContainer=document.getElementById('catalogoMobile');
+
+  // Filtrar por tab + búsqueda + estilo — orden inverso (más nuevos arriba)
+  let list=[...allBeats].reverse().filter(b=>{
+    const m=!q||(b['Nombre']||'').toLowerCase().includes(q)||(b['Estilo']||'').toLowerCase().includes(q);
+    const es=!estilo||(b['Estilo']||'').toLowerCase()===estilo.toLowerCase();
+    let et=true;
+    if(catView==='libre')et=(b['Estado']||'Libre')==='Libre';
+    else if(catView==='apartado')et=b['Estado']==='Apartado';
+    else if(catView==='vendido')et=b['Estado']==='Vendido';
+    return m&&es&&et;
+  });
+
+  if(!list.length){
+    if(container)container.innerHTML='<div class="empty-state">// No hay beats que coincidan</div>';
+    if(mobileContainer)mobileContainer.innerHTML='';
+    return;
+  }
+
+  // Agrupar por estado para mostrar divisores estilo Finanzas
+  const grupos=[
+    {label:'// Apartados — en espera de pago',color:'var(--yellow)',bgColor:'rgba(251,191,36,.05)',beats:list.filter(b=>b['Estado']==='Apartado'),show:catView==='todos'||catView==='apartado'},
+    {label:'// Libres — disponibles',color:'var(--green)',bgColor:'rgba(52,211,153,.04)',beats:list.filter(b=>(b['Estado']||'Libre')==='Libre'),show:catView==='todos'||catView==='libre'},
+    {label:'// Vendidos',color:'var(--red)',bgColor:'rgba(248,113,113,.04)',beats:list.filter(b=>b['Estado']==='Vendido'),show:catView==='todos'||catView==='vendido'},
+  ].filter(g=>g.show&&g.beats.length>0);
+
+  // Si estamos en vista filtrada, no agrupar
+  const useGroups=catView==='todos';
+
+  // DESKTOP TABLE
+  if(container){
+    let rows='';
+    if(useGroups){
+      grupos.forEach(g=>{
+        const totalVal=g.beats.reduce((s,b)=>{const p=parseFloat(b['Precio'])||0;const d=parseFloat(b['Descuento'])||0;return s+(d>0&&d<=100?Math.round(p*(1-d/100)):p);},0);
+        rows+=`<tr><td colspan="11" style="background:${g.bgColor};padding:.65rem 1rem;font-family:DM Mono,monospace;font-size:.58rem;letter-spacing:.15em;text-transform:uppercase;color:${g.color};border-bottom:1px solid ${g.color.replace(')',', .2)')};">${g.label}&nbsp;&nbsp;<span style="color:${g.color};opacity:.7">${g.beats.length} beat${g.beats.length!==1?'s':''} · $${totalVal.toLocaleString()} MXN</span></td></tr>`;
+        rows+=g.beats.map(b=>renderBeatRow(b)).join('');
+      });
+    }else{
+      rows=list.map(b=>renderBeatRow(b)).join('');
+    }
+    container.innerHTML=`<table class="data-table"><thead><tr>
+      <th>Cover</th><th>ID</th><th>Nombre</th><th>Estilo</th><th>BPM</th><th>Escala</th><th>Precio</th><th>Tipo</th><th>Estado</th><th>Preview SC</th><th>Acciones</th>
+    </tr></thead><tbody>${rows}</tbody></table>`;
+  }
+
+  // MOBILE CARDS
+  if(mobileContainer){
+    let mobileHtml='';
+    if(useGroups){
+      grupos.forEach(g=>{
+        mobileHtml+=`<div style="background:${g.bgColor};padding:.55rem 1rem;font-family:DM Mono,monospace;font-size:.58rem;letter-spacing:.15em;text-transform:uppercase;color:${g.color};border-bottom:1px solid ${g.color.replace(')',', .2)')};">${g.label} (${g.beats.length})</div>`;
+        mobileHtml+=g.beats.map(b=>renderBeatMobile(b)).join('');
+      });
+    }else{
+      mobileHtml=list.map(b=>renderBeatMobile(b)).join('');
+    }
+    mobileContainer.innerHTML=mobileHtml;
+  }
+
+  updateEstilosList();
+}
+
+function renderBeatRow(b){
+  const imgUrl=getImgUrl(b['Imagen']||'');
+  const scEmbed=getSCEmbedUrl(b['Archivo']||'');
+  const {original,final,pct}=precioConDescuento(b['Precio'],b['Descuento']);
+  let precioHtml='<span style="color:var(--muted2)">\u2014</span>';
+  if(original){
+    if(pct>0){
+      precioHtml=`<div style="font-family:Bebas Neue,sans-serif;font-size:1.1rem;color:var(--green)">$${final.toLocaleString()} <span style="font-size:.7rem">MXN</span></div><div style="font-family:DM Mono,monospace;font-size:.6rem;color:var(--muted);text-decoration:line-through">$${original.toLocaleString()}</div><div style="font-family:DM Mono,monospace;font-size:.55rem;color:var(--gold)">-${pct}%</div>`;
+    } else {
+      precioHtml=`<span style="font-family:Bebas Neue,sans-serif;font-size:1.1rem;color:var(--gold)">$${original.toLocaleString()} <span style="font-size:.7rem">MXN</span></span>`;
+    }
+  }
+  const coverHtml=imgUrl
+    ?`<img src="${imgUrl}" style="width:36px;height:36px;object-fit:cover;border:1px solid var(--border2);" onerror="this.style.display='none'">`
+    :'<div style="width:36px;height:36px;background:var(--surface2);border:1px solid var(--border2);display:flex;align-items:center;justify-content:center;font-size:.6rem;color:var(--muted2);">\u266B</div>';
+  const scHtml=scEmbed
+    ?`<button class="btn-xs btn-xs-edit" onclick="toggleSCPreview(this,'${scEmbed.replace(/'/g,"\\'")}',${b._rowNumber})">\u25B6 Play</button>`
+    :'<span style="color:var(--muted2);font-size:.65rem">\u2014</span>';
+  const ne=(b['Nombre']||'').replace(/'/g,"\\'");
+  return `<tr>
+    <td>${coverHtml}</td>
+    <td style="font-family:DM Mono,monospace;font-size:.62rem;color:var(--muted2)">${b['ID']||'\u2014'}</td>
+    <td style="font-weight:600">${b['Nombre']||'\u2014'}</td>
+    <td style="font-family:DM Mono,monospace;font-size:.68rem;color:var(--purple-light)">${b['Estilo']||'\u2014'}</td>
+    <td style="font-family:DM Mono,monospace;font-size:.68rem;color:var(--muted)">${b['BPM']||'\u2014'}</td>
+    <td style="font-family:DM Mono,monospace;font-size:.68rem;color:var(--muted)">${b['Escala']||'\u2014'}</td>
+    <td>${precioHtml}</td>
+    <td style="font-family:DM Mono,monospace;font-size:.62rem;color:var(--muted)">${b['Tipo']||'\u2014'}</td>
+    <td>${estadoBeatBadge(b['Estado'])}</td>
+    <td>${scHtml}</td>
+    <td><div class="td-actions">
+      <button class="btn-xs btn-xs-edit" onclick="editBeat(${b._rowNumber})">Editar</button>
+      <button class="btn-xs btn-xs-del" onclick="confirmDelete('beat',${b._rowNumber},'${ne}')">Borrar</button>
+    </div></td>
+  </tr>
+  <tr id="sc-row-${b._rowNumber}" style="display:none">
+    <td colspan="11" style="padding:.5rem 1rem;background:var(--surface2);">
+      <iframe id="sc-iframe-${b._rowNumber}" src="" style="width:100%;height:100px;border:none;" allow="autoplay"></iframe>
+    </td>
+  </tr>`;
+}
+
+function renderBeatMobile(b){
+  const imgUrl=getImgUrl(b['Imagen']||'');
+  const scEmbed=getSCEmbedUrl(b['Archivo']||'');
+  const {original,final,pct}=precioConDescuento(b['Precio'],b['Descuento']);
+  let precioHtml='';
+  if(original){
+    if(pct>0){
+      precioHtml=`<span class="bc-price">$${final.toLocaleString()} MXN</span><span class="bc-price-promo">$${original.toLocaleString()}</span><span style="font-family:DM Mono,monospace;font-size:.55rem;color:var(--gold);margin-left:.3rem;">-${pct}%</span>`;
+    } else {
+      precioHtml=`<span class="bc-price">$${original.toLocaleString()} MXN</span>`;
+    }
+  }
+  const coverHtml=imgUrl
+    ?`<img class="bc-cover" src="${imgUrl}" alt="${b['Nombre']||''}" onerror="this.style.display='none'">`
+    :`<div class="bc-cover" style="display:flex;align-items:center;justify-content:center;font-size:1.2rem;color:var(--muted2);">\u266B</div>`;
+  const ne=(b['Nombre']||'').replace(/'/g,"\\'");
+  return `<div class="beat-card-m">
+    ${coverHtml}
+    <div class="bc-body">
+      <div class="bc-title">${b['Nombre']||'\u2014'}</div>
+      <div class="bc-meta">
+        ${b['Estilo']?`<span style="color:var(--purple-light)">${b['Estilo']}</span>`:''}
+        ${b['BPM']?`<span>${b['BPM']} BPM</span>`:''}
+        ${b['Escala']?`<span>${b['Escala']}</span>`:''}
+        ${estadoBeatBadge(b['Estado'])}
+      </div>
+      <div style="margin-top:.3rem;">${precioHtml}</div>
+      ${scEmbed?`<div class="bc-sc-row" id="sc-m-wrap-${b._rowNumber}" style="display:none"><iframe id="sc-m-iframe-${b._rowNumber}" src="" style="width:100%;height:70px;border:none;" allow="autoplay"></iframe></div>`:''}
+      <div class="bc-actions">
+        ${scEmbed?`<button class="btn-xs btn-xs-edit" onclick="toggleSCMobile(this,${b._rowNumber},'${scEmbed.replace(/'/g,"\\'")}')">&#9654; Play</button>`:''}
+        <button class="btn-xs btn-xs-edit" onclick="editBeat(${b._rowNumber})">Editar</button>
+        <button class="btn-xs btn-xs-del" onclick="confirmDelete('beat',${b._rowNumber},'${ne}')">Borrar</button>
+      </div>
+    </div>
+  </div>`;
+}
 
 function getSCEmbedUrl(link){
   if(!link||!link.includes('soundcloud.com'))return null;
@@ -1415,116 +1653,6 @@ function estadoBeatBadge(e){
   if(e==='Apartado')return'<span class="badge badge-pending">Apartado</span>';
   if(e==='Vendido')return'<span class="badge badge-unpaid">Vendido</span>';
   return'<span class="badge badge-pending">'+e+'</span>';
-}
-
-function renderCatalogo(){
-  const q=(document.getElementById('searchBeats')?.value||'').toLowerCase();
-  const estilo=document.getElementById('filterEstiloBeat')?.value||'';
-  const estado=document.getElementById('filterEstadoBeat')?.value||'';
-  const container=document.getElementById('catalogoContainer');
-  const mobileContainer=document.getElementById('catalogoMobile');
-
-  const list=allBeats.filter(b=>{
-    const m=!q||(b['Nombre']||'').toLowerCase().includes(q)||(b['Estilo']||'').toLowerCase().includes(q);
-    const es=!estilo||(b['Estilo']||'').toLowerCase()===estilo.toLowerCase();
-    const et=!estado||(b['Estado']||'')===estado;
-    return m&&es&&et;
-  });
-
-  if(!list.length){
-    if(container)container.innerHTML='<div class="empty-state">// No hay beats en el cat\xE1logo a\xFAn</div>';
-    if(mobileContainer)mobileContainer.innerHTML='';
-    return;
-  }
-
-  // DESKTOP TABLE
-  if(container){
-    container.innerHTML=`<table class="data-table"><thead><tr>
-      <th>Cover</th><th>ID</th><th>Nombre</th><th>Estilo</th><th>BPM</th><th>Escala</th><th>Precio</th><th>Tipo</th><th>Estado</th><th>Preview SC</th><th>Acciones</th>
-    </tr></thead><tbody>${list.map(b=>{
-      const imgUrl=getImgUrl(b['Imagen']||'');
-      const scEmbed=getSCEmbedUrl(b['Archivo']||'');
-      const {original,final,pct}=precioConDescuento(b['Precio'],b['Descuento']);
-      let precioHtml='<span style="color:var(--muted2)">\u2014</span>';
-      if(original){
-        if(pct>0){
-          precioHtml=`<div style="font-family:Bebas Neue,sans-serif;font-size:1.1rem;color:var(--green)">$${final.toLocaleString()}</div><div style="font-family:DM Mono,monospace;font-size:.6rem;color:var(--muted);text-decoration:line-through">$${original.toLocaleString()}</div><div style="font-family:DM Mono,monospace;font-size:.55rem;color:var(--gold)">-${pct}%</div>`;
-        } else {
-          precioHtml=`<span style="font-family:Bebas Neue,sans-serif;font-size:1.1rem;color:var(--gold)">$${original.toLocaleString()}</span>`;
-        }
-      }
-      const coverHtml=imgUrl
-        ?`<img src="${imgUrl}" style="width:36px;height:36px;object-fit:cover;border:1px solid var(--border2);" onerror="this.style.display='none'">`
-        :'<div style="width:36px;height:36px;background:var(--surface2);border:1px solid var(--border2);display:flex;align-items:center;justify-content:center;font-size:.6rem;color:var(--muted2);">\u266B</div>';
-      const scHtml=scEmbed
-        ?`<button class="btn-xs btn-xs-edit" onclick="toggleSCPreview(this,'${scEmbed.replace(/'/g,"\\'")}',${b._rowNumber})">\u25B6 Play</button>`
-        :'<span style="color:var(--muted2);font-size:.65rem">\u2014</span>';
-      const ne=(b['Nombre']||'').replace(/'/g,"\\'");
-      return `<tr>
-        <td>${coverHtml}</td>
-        <td style="font-family:DM Mono,monospace;font-size:.62rem;color:var(--muted2)">${b['ID']||'\u2014'}</td>
-        <td style="font-weight:600">${b['Nombre']||'\u2014'}</td>
-        <td style="font-family:DM Mono,monospace;font-size:.68rem;color:var(--purple-light)">${b['Estilo']||'\u2014'}</td>
-        <td style="font-family:DM Mono,monospace;font-size:.68rem;color:var(--muted)">${b['BPM']||'\u2014'}</td>
-        <td style="font-family:DM Mono,monospace;font-size:.68rem;color:var(--muted)">${b['Escala']||'\u2014'}</td>
-        <td>${precioHtml}</td>
-        <td style="font-family:DM Mono,monospace;font-size:.62rem;color:var(--muted)">${b['Tipo']||'\u2014'}</td>
-        <td>${estadoBeatBadge(b['Estado'])}</td>
-        <td>${scHtml}</td>
-        <td><div class="td-actions">
-          <button class="btn-xs btn-xs-edit" onclick="editBeat(${b._rowNumber})">Editar</button>
-          <button class="btn-xs btn-xs-del" onclick="confirmDelete('beat',${b._rowNumber},'${ne}')">Borrar</button>
-        </div></td>
-      </tr>
-      <tr id="sc-row-${b._rowNumber}" style="display:none">
-        <td colspan="11" style="padding:.5rem 1rem;background:var(--surface2);">
-          <iframe id="sc-iframe-${b._rowNumber}" src="" style="width:100%;height:100px;border:none;" allow="autoplay"></iframe>
-        </td>
-      </tr>`;
-    }).join('')}</tbody></table>`;
-  }
-
-  // MOBILE CARDS
-  if(mobileContainer){
-    mobileContainer.innerHTML=list.map(b=>{
-      const imgUrl=getImgUrl(b['Imagen']||'');
-      const scEmbed=getSCEmbedUrl(b['Archivo']||'');
-      const {original,final,pct}=precioConDescuento(b['Precio'],b['Descuento']);
-      let precioHtml='';
-      if(original){
-        if(pct>0){
-          precioHtml=`<span class="bc-price">$${final.toLocaleString()}</span><span class="bc-price-promo">$${original.toLocaleString()}</span><span style="font-family:DM Mono,monospace;font-size:.55rem;color:var(--gold);margin-left:.3rem;">-${pct}%</span>`;
-        } else {
-          precioHtml=`<span class="bc-price">$${original.toLocaleString()}</span>`;
-        }
-      }
-      const coverHtml=imgUrl
-        ?`<img class="bc-cover" src="${imgUrl}" alt="${b['Nombre']||''}" onerror="this.style.display='none'">`
-        :`<div class="bc-cover" style="display:flex;align-items:center;justify-content:center;font-size:1.2rem;color:var(--muted2);">\u266B</div>`;
-      const ne=(b['Nombre']||'').replace(/'/g,"\\'");
-      return `<div class="beat-card-m">
-        ${coverHtml}
-        <div class="bc-body">
-          <div class="bc-title">${b['Nombre']||'\u2014'}</div>
-          <div class="bc-meta">
-            ${b['Estilo']?`<span style="color:var(--purple-light)">${b['Estilo']}</span>`:''}
-            ${b['BPM']?`<span>${b['BPM']} BPM</span>`:''}
-            ${b['Escala']?`<span>${b['Escala']}</span>`:''}
-            ${estadoBeatBadge(b['Estado'])}
-          </div>
-          <div style="margin-top:.3rem;">${precioHtml}</div>
-          ${scEmbed?`<div class="bc-sc-row" id="sc-m-wrap-${b._rowNumber}" style="display:none"><iframe id="sc-m-iframe-${b._rowNumber}" src="" style="width:100%;height:70px;border:none;" allow="autoplay"></iframe></div>`:''}
-          <div class="bc-actions">
-            ${scEmbed?`<button class="btn-xs btn-xs-edit" onclick="toggleSCMobile(this,${b._rowNumber},'${scEmbed.replace(/'/g,"\\'")}')">&#9654; Play</button>`:''}
-            <button class="btn-xs btn-xs-edit" onclick="editBeat(${b._rowNumber})">Editar</button>
-            <button class="btn-xs btn-xs-del" onclick="confirmDelete('beat',${b._rowNumber},'${ne}')">Borrar</button>
-          </div>
-        </div>
-      </div>`;
-    }).join('');
-  }
-
-  updateEstilosList();
 }
 
 function toggleSCPreview(btn,embedUrl,rowNum){
@@ -1587,6 +1715,7 @@ function editBeat(rowNum){
 
 // Preview local de imagen seleccionada
 document.addEventListener('DOMContentLoaded',()=>{
+  // Beat imagen preview
   const imgInput=document.getElementById('beatImagen');
   if(imgInput){
     imgInput.addEventListener('change',()=>{
@@ -1597,7 +1726,23 @@ document.addEventListener('DOMContentLoaded',()=>{
         document.getElementById('beatImgThumb').src=e.target.result;
         document.getElementById('beatImgName').textContent=file.name;
         document.getElementById('beatImagenPreview').style.display='block';
-        document.getElementById('beatImagenLink').value=''; // limpiar link si sube archivo
+        document.getElementById('beatImagenLink').value='';
+      };
+      reader.readAsDataURL(file);
+    });
+  }
+  // Artista imagen preview
+  const maImgInput=document.getElementById('maImagenFile');
+  if(maImgInput){
+    maImgInput.addEventListener('change',()=>{
+      const file=maImgInput.files[0];
+      if(!file)return;
+      const reader=new FileReader();
+      reader.onload=e=>{
+        document.getElementById('maImgThumb').src=e.target.result;
+        document.getElementById('maImgName').textContent=file.name;
+        document.getElementById('maImagenPreview').style.display='block';
+        document.getElementById('maImagen').value='';
       };
       reader.readAsDataURL(file);
     });
