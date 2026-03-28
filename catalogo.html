@@ -914,6 +914,7 @@ function applyFilters(){
     const l=!soloLibres||(b.Estado==='Libre'||!b.Estado);
     return m&&e&&l;
   });
+  list.sort((a,b)=>(a.Nombre||'').localeCompare(b.Nombre||'','es',{sensitivity:'base'}));
   document.getElementById('resInfo').innerHTML='<b>'+list.length+'</b> beat'+(list.length!==1?'s':'')+' encontrado'+(list.length!==1?'s':'');
   renderBeats(list);
 }
