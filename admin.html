@@ -300,10 +300,14 @@ body::before{content:'';position:fixed;inset:0;background-image:url("data:image/
         <button class="nav-item" onclick="showPage('cursos',this)">
           <span class="nav-icon">&#x25B6;</span><span>Cursos</span>
         </button>
-        <button class="nav-item" onclick="showPage('catalogo',this)">
+        <button class="nav-item" onclick="showPage('catalogo',this)" id="navCatalogo">
           <span class="nav-icon">&#x266B;</span><span>Cat&#xE1;logo</span>
         </button>
-        <button class="nav-item" onclick="showPage('nuevo',this)">
+        <button class="nav-item" onclick="showPage('tareas',this)" id="navTareas">
+          <span class="nav-icon">&#x2713;</span><span>Tareas</span>
+          <span class="nav-badge purple" id="badgeTareas" style="display:none">0</span>
+        </button>
+        <button class="nav-item" onclick="showPage('nuevo',this)" id="navNuevo">
           <span class="nav-icon">+</span><span>Nuevo proyecto</span>
         </button>
       </nav>
@@ -480,6 +484,30 @@ body::before{content:'';position:fixed;inset:0;background-image:url("data:image/
         <div class="beat-cards-mobile" id="catalogoMobile"></div>
       </div>
 
+      <!-- TAREAS -->
+      <div class="page" id="page-tareas">
+        <div class="page-header">
+          <div><div class="page-eyebrow">// Gestión interna</div><div class="page-title">TAREAS</div></div>
+          <div style="display:flex;gap:.6rem;" id="tareasHeaderBtns">
+            <button class="btn btn-ghost" onclick="loadAdmin()" style="font-size:.65rem;padding:.6rem 1.2rem;">&#x27F3; Actualizar</button>
+            <button class="btn btn-gold" onclick="openModal('modalTarea')" id="btnNuevaTarea">+ Nueva tarea</button>
+          </div>
+        </div>
+        <div class="filter-bar">
+          <select class="filter-select" id="filterTareaEstado" onchange="renderTareas()">
+            <option value="">Todos los estados</option>
+            <option value="Pendiente">Pendientes</option>
+            <option value="Hecho">Hechas</option>
+          </select>
+          <select class="filter-select" id="filterTareaAsignado" onchange="renderTareas()">
+            <option value="">Todos</option>
+            <option value="Heaven">Heaven</option>
+            <option value="Darol">Darol</option>
+          </select>
+        </div>
+        <div id="tareasContainer"><div class="loading-state"><div class="spinner"></div>Cargando tareas...</div></div>
+      </div>
+
       <!-- NUEVO PROYECTO -->
       <div class="page" id="page-nuevo">
         <div class="page-header">
@@ -510,6 +538,13 @@ body::before{content:'';position:fixed;inset:0;background-image:url("data:image/
             <div class="form-group"><label class="form-label">Fecha de inicio</label><input class="form-input" id="npFechaI" type="date"/></div>
             <div class="form-group"><label class="form-label">Fecha de entrega</label><input class="form-input" id="npFechaE" type="date"/></div>
             <div class="form-group"><label class="form-label">Monto total (MXN)</label><input class="form-input" id="npMonto" type="number" placeholder="2500"/></div>
+            <div class="form-group"><label class="form-label">Asignado a</label>
+              <select class="form-input" id="npAsignado">
+                <option value="">Sin asignar</option>
+                <option value="Heaven">Heaven</option>
+                <option value="Darol">Darol</option>
+              </select>
+            </div>
             <div class="form-group full"><label class="form-label">Bonos incluidos</label><input class="form-input" id="npBonos" placeholder="Cover Art, Reel, Gorra..."/></div>
             <div class="form-group full"><label class="form-label">Notas</label><input class="form-input" id="npNotas" placeholder="Observaciones..."/></div>
             <div class="form-group full"><label class="form-label">Archivo a entregar (sube a Drive)</label><input class="form-file" id="npArchivo" type="file" accept="*/*"/></div>
@@ -590,7 +625,13 @@ body::before{content:'';position:fixed;inset:0;background-image:url("data:image/
         <div class="form-group full"><label class="form-label">Bonos</label><input class="form-input" id="mpBonos"/></div>
         <div class="form-group full"><label class="form-label">Notas</label><input class="form-input" id="mpNotas"/></div>
         <div class="form-group"><label class="form-label">Monto solicitado (MXN)</label><input class="form-input" id="mpSolicitado" type="number" placeholder="2500"/></div>
-        <div class="form-group"><label class="form-label">Total pagado final (MXN) <span style="font-size:.55rem;color:var(--muted2)">// Lo que realmente terminó pagando</span></label><input class="form-input" id="mpTotalPagado" type="number" placeholder="Dejar vacío si igual al solicitado"/></div>
+        <div class="form-group"><label class="form-label">Asignado a</label>
+          <select class="form-input" id="mpAsignado">
+            <option value="">Sin asignar</option>
+            <option value="Heaven">Heaven</option>
+            <option value="Darol">Darol</option>
+          </select>
+        </div>
         <div class="form-group full"><label class="form-label">Subir archivo a Drive (reemplaza el actual)</label><input class="form-file" id="mpArchivo" type="file" accept="*/*"/></div>
         <div class="form-group full"><label class="form-label">Link archivos entregados (manual o desde Drive)</label><input class="form-input" id="mpArchivos" placeholder="https://drive.google.com/..."/></div>
       </div>
@@ -614,7 +655,7 @@ body::before{content:'';position:fixed;inset:0;background-image:url("data:image/
       <div class="form-grid">
         <div class="form-group full"><label class="form-label">Concepto</label><input class="form-input" id="fpConcepto" placeholder="Anticipo, Saldo, Gasto estudio..."/></div>
         <div class="form-group"><label class="form-label">Tipo</label>
-          <select class="form-input" id="fpTipo">
+          <select class="form-input" id="fpTipo" onchange="togglePersonalField()">
             <option value="Ingreso">Ingreso</option>
             <option value="Gasto">Gasto</option>
           </select>
@@ -625,6 +666,13 @@ body::before{content:'';position:fixed;inset:0;background-image:url("data:image/
         <div class="form-group"><label class="form-label">Fecha</label><input class="form-input" id="fpFecha" type="date"/></div>
         <div class="form-group"><label class="form-label">Estado</label>
           <select class="form-input" id="fpEstado"><option value="Pagado">Pagado</option><option value="Pendiente">Pendiente</option></select>
+        </div>
+        <div class="form-group" id="fpPersonalGroup" style="display:none"><label class="form-label">Para (Personal)</label>
+          <select class="form-input" id="fpPersonal">
+            <option value="">Sin asignar</option>
+            <option value="Heaven">Heaven</option>
+            <option value="Darol">Darol</option>
+          </select>
         </div>
       </div>
     </div>
@@ -722,6 +770,39 @@ body::before{content:'';position:fixed;inset:0;background-image:url("data:image/
   </div>
 </div>
 
+<!-- MODAL: TAREA -->
+<div class="modal-overlay" id="modalTarea">
+  <div class="modal" style="max-width:500px;">
+    <div class="modal-header">
+      <div class="modal-title" id="modalTareaTitle">NUEVA TAREA</div>
+      <button class="modal-close" onclick="closeModal('modalTarea')">&#x2715; Cerrar</button>
+    </div>
+    <div class="modal-body">
+      <input type="hidden" id="tareaRowNum"/>
+      <div class="form-grid">
+        <div class="form-group full"><label class="form-label">T&#xED;tulo</label><input class="form-input" id="tareaTitulo" placeholder="Nombre de la tarea"/></div>
+        <div class="form-group full"><label class="form-label">Descripci&#xF3;n</label><input class="form-input" id="tareaDesc" placeholder="Detalles de la tarea..."/></div>
+        <div class="form-group"><label class="form-label">Asignado a</label>
+          <select class="form-input" id="tareaAsignado">
+            <option value="Heaven">Heaven</option>
+            <option value="Darol">Darol</option>
+          </select>
+        </div>
+        <div class="form-group"><label class="form-label">Estado</label>
+          <select class="form-input" id="tareaEstado">
+            <option value="Pendiente">Pendiente</option>
+            <option value="Hecho">Hecho</option>
+          </select>
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-green" onclick="guardarTarea()">Guardar &#x2192;</button>
+      <button class="btn btn-ghost" onclick="closeModal('modalTarea')">Cancelar</button>
+    </div>
+  </div>
+</div>
+
 <!-- MODAL: CONFIRMAR DELETE -->
 <div class="modal-overlay" id="modalConfirm">
   <div class="modal" style="max-width:400px;">
@@ -743,11 +824,12 @@ const API_KEY         = 'AIzaSyC6K7d8zJc2TVrchsJQeIAfHEGJ5drA74c';
 const DRIVE_FOLDER_ID = '14FBLQdG5Ix3xWq1pf2fwaQfTJCj7BiR7';
 // Carpeta de imagenes de cover art en Drive (nombre: "Catalogo beats")
 const DRIVE_COVERS_FOLDER = 'Catalogo beats';
-const SH = { artistas:'Artistas', proyectos:'Proyectos', finanzas:'Finanzas', cursos:'Cursos', catalogo:'Catalogo' };
-const DEFAULT_PASS    = 'heaven2025';
+const SH = { artistas:'Artistas', proyectos:'Proyectos', finanzas:'Finanzas', cursos:'Cursos', catalogo:'Catalogo', tareas:'Tareas' };
+const DEFAULT_PASS    = 'heaven2026';
 
 let oauthToken  = null;
-let allArtistas = [], allProyectos = [], allFinanzas = [], allCursos = [], allBeats = [];
+let allArtistas = [], allProyectos = [], allFinanzas = [], allCursos = [], allBeats = [], allTareas = [];
+let userRole = 'heaven'; // 'heaven' | 'darol'
 let finView = 'ingresos';
 let prjView = 'activos';
 let catView = 'todos';
@@ -770,19 +852,23 @@ async function doAdminLogin(){
   const btn=document.getElementById('loginBtn');
   btn.textContent='Verificando...';btn.classList.add('loading');
   await new Promise(r=>setTimeout(r,600));
-  if(pass!==getCfg().adminPass){
+  const isDarol = pass === 'darol2026';
+  if(pass!==getCfg().adminPass && !isDarol){
     btn.textContent='Acceder \u2192';btn.classList.remove('loading');
     document.getElementById('loginError').style.display='block';
     setTimeout(()=>document.getElementById('loginError').style.display='none',3000);
     return;
   }
   btn.textContent='Acceder \u2192';btn.classList.remove('loading');
+  userRole = isDarol ? 'darol' : 'heaven';
   document.getElementById('loginScreen').style.display='none';
   document.getElementById('adminScreen').style.display='block';
   document.getElementById('hamburger').style.display='';
+  applyRoleUI();
   await loadAdmin();
 }
 function doLogout(){
+  userRole='heaven';
   document.getElementById('adminScreen').style.display='none';
   document.getElementById('loginScreen').style.display='flex';
   document.getElementById('adminPass').value='';
@@ -927,10 +1013,12 @@ async function loadAdmin(delay=0){
     if(saved){oauthToken=saved;updateOAuthUI(true);}
   }
   if(delay>0)await new Promise(r=>setTimeout(r,delay));
-  [allArtistas,allProyectos,allFinanzas,allCursos,allBeats]=await Promise.all([
-    fetchSheet(SH.artistas),fetchSheet(SH.proyectos),fetchSheet(SH.finanzas),fetchSheet(SH.cursos),fetchSheet(SH.catalogo)
+  [allArtistas,allProyectos,allFinanzas,allCursos,allBeats,allTareas]=await Promise.all([
+    fetchSheet(SH.artistas),fetchSheet(SH.proyectos),fetchSheet(SH.finanzas),fetchSheet(SH.cursos),fetchSheet(SH.catalogo),fetchSheet(SH.tareas)
   ]);
-  renderDashboard();renderArtistas();renderProyectos();renderFinanzas();renderCursosAdmin();renderCatalogo();
+  renderDashboard();renderArtistas();renderProyectos();renderFinanzas();renderCursosAdmin();renderCatalogo();renderTareas();
+  // Refresh badge
+  const pend=allTareas.filter(t=>t['Estado']==='Pendiente').length;const b=document.getElementById('badgeTareas');if(b){b.style.display=pend>0?'inline':'none';b.textContent=pend;}
   populateArtistSelects();populateProyectoSelects();updateBadges();
 }
 
@@ -1152,9 +1240,12 @@ function renderProyectos(){
     const arch=p['Archivos entregados']||'';
     const solicitado=parseFloat(p['Solicitado'])||0;
     const cobradoProy=allFinanzas.filter(f=>f['Proyecto']===p['ID']&&(f['Tipo']||'').toLowerCase()==='ingreso'&&/pagado/i.test(f['Estado']||'')).reduce((s,f)=>s+(parseFloat(f['Monto'])||0),0);
+    // Total pagado = suma de TODOS los ingresos relacionados al proyecto
+    const totalPagadoProy=allFinanzas.filter(f=>f['Proyecto']===p['ID']&&(f['Tipo']||'').toLowerCase()==='ingreso').reduce((s,f)=>s+(parseFloat(f['Monto'])||0),0);
     let liqHtml='<span style="color:var(--muted2)">\u2014</span>';
     if(solicitado>0){liqHtml=cobradoProy>=solicitado?'<span style="color:var(--green);font-size:1.4rem;font-weight:900">&#10003;</span>':`<span style="color:var(--red);font-size:.65rem">&#10007; $${(solicitado-cobradoProy).toLocaleString()}</span>`;}
     const archHtml=arch?`<a href="${arch}" target="_blank" style="font-size:.6rem;color:var(--green);text-decoration:none;">&#9654; Ver</a>`:'<span style="color:var(--muted2)">\u2014</span>';
+    const asignadoColor=p['Asignado']==='Darol'?'var(--yellow)':p['Asignado']==='Heaven'?'var(--purple-light)':'var(--muted2)';
     const rn=p._rowNumber;
     const nombre=p['Nombre del proyecto']||'\u2014';
     return `<tr><td><div style="font-weight:600;font-size:.85rem">${nombre}</div><div style="font-size:.6rem;color:var(--muted2)">${p['ID']||''}</div></td>
@@ -1164,13 +1255,14 @@ function renderProyectos(){
       <td>${getBadge(p['Estado proyecto'])}</td>
       <td style="font-family:Bebas Neue,sans-serif;font-size:1rem;color:var(--purple-light)">${solicitado>0?'$'+solicitado.toLocaleString():'\u2014'}</td>
       <td style="font-family:Bebas Neue,sans-serif;font-size:1rem;color:var(--green)">${cobradoProy>0?'$'+cobradoProy.toLocaleString():'\u2014'}</td>
-      <td style="font-family:Bebas Neue,sans-serif;font-size:1rem;color:var(--gold)">${p['TotalPagado']&&parseFloat(p['TotalPagado'])>0?'$'+parseFloat(p['TotalPagado']).toLocaleString():'\u2014'}</td>
+      <td style="font-family:Bebas Neue,sans-serif;font-size:1rem;color:var(--gold)">${totalPagadoProy>0?'$'+totalPagadoProy.toLocaleString():'\u2014'}</td>
       <td style="text-align:center">${liqHtml}</td>
+      <td style="font-family:DM Mono,monospace;font-size:.68rem;color:${asignadoColor}">${p['Asignado']||'\u2014'}</td>
       <td>${archHtml}</td>
       <td><div class="td-actions"><button class="btn-xs btn-xs-edit" onclick="editProyecto(${rn})">Editar</button><button class="btn-xs btn-xs-del" onclick="confirmDelete('proyecto',${rn},this.dataset.n)" data-n="${nombre.replace(/"/g,'&quot;')}">Borrar</button></div></td>
     </tr>`;
   }).join('');
-  document.getElementById('proyectosContainer').innerHTML=`<table class="data-table"><thead><tr><th>Proyecto</th><th>Artista</th><th>Servicio</th><th>Inicio</th><th>Estado</th><th>Solicitado</th><th>Cobrado</th><th>Total Final</th><th>Liq.</th><th>Archivos</th><th>Acciones</th></tr></thead><tbody>${rows}</tbody></table>`;
+  document.getElementById('proyectosContainer').innerHTML=`<table class="data-table"><thead><tr><th>Proyecto</th><th>Artista</th><th>Servicio</th><th>Inicio</th><th>Estado</th><th>Solicitado</th><th>Cobrado</th><th>Total Pagado</th><th>Liq.</th><th>Asignado</th><th>Archivos</th><th>Acciones</th></tr></thead><tbody>${rows}</tbody></table>`;
 }
 
 function editProyecto(rowNum){
@@ -1185,7 +1277,7 @@ function editProyecto(rowNum){
   document.getElementById('mpBonos').value=p['Bonos incluidos']||p['Bonos']||'';
   document.getElementById('mpNotas').value=p['Notas del proyecto']||p['Notas']||'';
   document.getElementById('mpSolicitado').value=p['Solicitado']||'';
-  document.getElementById('mpTotalPagado').value=p['TotalPagado']||'';
+  document.getElementById('mpAsignado').value=p['Asignado']||'';
   document.getElementById('mpArchivos').value=p['Archivos entregados']||'';
   document.getElementById('mpArchivo').value='';
   openModal('modalProyecto');
@@ -1200,7 +1292,7 @@ async function actualizarProyecto(){
   const file=document.getElementById('mpArchivo').files[0];
   if(file){const link=await uploadToDrive(file);if(link)archLink=link;}
   const fmtDate2=d=>{if(!d)return'';const[y,m,dd]=d.split('-');return dd&&m&&y?dd+'/'+m+'/'+y:d;};
-  const values=[p['ID']||'',document.getElementById('mpNombre').value.trim(),document.getElementById('mpCliente').value,document.getElementById('mpServicio').value.trim(),p['Fecha sesi\xF3n']||p['Fecha sesion']||'',fmtDate2(document.getElementById('mpFechaI').value),fmtDate2(document.getElementById('mpFechaE').value),document.getElementById('mpBonos').value.trim(),document.getElementById('mpEstado').value,archLink,document.getElementById('mpNotas').value.trim(),document.getElementById('mpSolicitado').value||'',document.getElementById('mpTotalPagado').value||''];
+  const values=[p['ID']||'',document.getElementById('mpNombre').value.trim(),document.getElementById('mpCliente').value,document.getElementById('mpServicio').value.trim(),p['Fecha sesi\xF3n']||p['Fecha sesion']||'',fmtDate2(document.getElementById('mpFechaI').value),fmtDate2(document.getElementById('mpFechaE').value),document.getElementById('mpBonos').value.trim(),document.getElementById('mpEstado').value,archLink,document.getElementById('mpNotas').value.trim(),document.getElementById('mpSolicitado').value||'',document.getElementById('mpAsignado').value||''];
   const ok=await updateRow(SH.proyectos,rowNum,values);
   if(ok){toast('\u2713 Proyecto actualizado','success');closeModal('modalProyecto');await loadAdmin();}
   else{toast('Error al actualizar','error');}
@@ -1250,7 +1342,8 @@ function renderFinRow(f){
   const montoPrefix=isGasto?'-':'+';
   const tipoBadge=isGasto?'<span class="badge" style="background:rgba(248,113,113,.12);color:var(--red);border:1px solid rgba(248,113,113,.25);font-size:.55rem;">Gasto</span>':'<span class="badge" style="background:rgba(52,211,153,.1);color:var(--green);border:1px solid rgba(52,211,153,.25);font-size:.55rem;">Ingreso</span>';
   const concepto=f['Concepto']||'';const rowId=f._rowNumber;const concEsc=concepto.replace(/'/g,"\\'");
-  return '<tr>'+'<td style="font-weight:600">'+concepto+'</td>'+'<td>'+tipoBadge+'</td>'+'<td style="font-family:\'DM Mono\',monospace;font-size:.7rem;color:var(--purple-light)">'+(na||'\u2014')+'</td>'+'<td style="font-family:\'DM Mono\',monospace;font-size:.68rem;color:var(--muted)">'+(proyNombre||'\u2014')+'</td>'+'<td style="font-family:\'DM Mono\',monospace;font-size:.68rem;color:var(--muted)">'+(f['Fecha']||'\u2014')+'</td>'+'<td style="font-family:\'Bebas Neue\',sans-serif;font-size:1.1rem;color:'+montoColor+'">'+montoPrefix+fmt(montoNum)+'</td>'+'<td><div class="td-actions"><button class="btn-xs btn-xs-edit" onclick="editPago('+rowId+')">Editar</button><button class="btn-xs btn-xs-del" onclick="confirmDelete(\'pago\','+rowId+',\''+concEsc+'\')">Borrar</button></div></td>'+'</tr>';
+  const personalColor=f['Personal']==='Darol'?'var(--yellow)':f['Personal']==='Heaven'?'var(--purple-light)':'var(--muted2)';
+  return '<tr>'+'<td style="font-weight:600">'+concepto+'</td>'+'<td>'+tipoBadge+'</td>'+'<td style="font-family:\'DM Mono\',monospace;font-size:.7rem;color:var(--purple-light)">'+(na||'\u2014')+'</td>'+'<td style="font-family:\'DM Mono\',monospace;font-size:.68rem;color:var(--muted)">'+(proyNombre||'\u2014')+'</td>'+'<td style="font-family:\'DM Mono\',monospace;font-size:.68rem;color:var(--muted)">'+(f['Fecha']||'\u2014')+'</td>'+'<td style="font-family:\'Bebas Neue\',sans-serif;font-size:1.1rem;color:'+montoColor+'">'+montoPrefix+fmt(montoNum)+'</td>'+'<td style="font-family:DM Mono,monospace;font-size:.68rem;color:'+personalColor+'">'+(f['Personal']||'\u2014')+'</td>'+'<td><div class="td-actions"><button class="btn-xs btn-xs-edit" onclick="editPago('+rowId+')">Editar</button><button class="btn-xs btn-xs-del" onclick="confirmDelete(\'pago\','+rowId+',\''+concEsc+'\')">Borrar</button></div></td>'+'</tr>';
 }
 
 function renderFinanzas(){
@@ -1269,7 +1362,8 @@ function renderFinanzas(){
     const a=getArtista(f['Cliente']);const na=a?(a['AKA']||a['Nombre']||''):f['Cliente']||'';
     const m=!q||(f['Concepto']||'').toLowerCase().includes(q)||na.toLowerCase().includes(q)||(f['ID']||'').toLowerCase().includes(q);
     const e=!est||(f['Estado']||'').toLowerCase().includes(est);
-    return m&&e;
+    const roleOk=userRole!=='darol'||(f['Personal']||'').toLowerCase()==='darol';
+    return m&&e&&roleOk;
   });
   const viewList=finView==='gastos'?base.filter(f=>(f['Tipo']||'').toLowerCase()==='gasto'):base.filter(f=>(f['Tipo']||'').toLowerCase()!=='gasto');
   if(!viewList.length){document.getElementById('finanzasContainer').innerHTML='<div class="empty-state">// No hay '+(finView==='gastos'?'gastos':'ingresos')+' registrados</div>';return;}
@@ -1279,14 +1373,14 @@ function renderFinanzas(){
     const pendientes=viewList.filter(f=>/pendiente/i.test(f['Estado']||'')).sort(sortDesc);
     const pagados=viewList.filter(f=>/pagado/i.test(f['Estado']||'')).sort(sortDesc);
     const totalPend=pendientes.reduce((s,f)=>s+(parseFloat(f['Monto'])||0),0);
-    if(pendientes.length){html+='<tr><td colspan="7" style="background:rgba(248,113,113,.05);padding:.65rem 1rem;font-family:DM Mono,monospace;font-size:.58rem;letter-spacing:.15em;text-transform:uppercase;color:var(--red);border-bottom:1px solid rgba(248,113,113,.2);">// Pendientes \u2014 $'+totalPend.toLocaleString()+' por cobrar</td></tr>';html+=pendientes.map(f=>renderFinRow(f)).join('');}
-    if(pagados.length){const grupos={};pagados.forEach(f=>{const d=parseFecha(f['Fecha']||'');const k=d?mesLabel(d):'Sin fecha';if(!grupos[k])grupos[k]=[];grupos[k].push(f);});Object.entries(grupos).forEach(function(entry){const mes=entry[0],rows=entry[1];const tot=rows.reduce((s,f)=>s+(parseFloat(f['Monto'])||0),0);html+='<tr><td colspan="7" style="background:var(--surface2);padding:.65rem 1rem;font-family:DM Mono,monospace;font-size:.58rem;letter-spacing:.15em;text-transform:uppercase;color:var(--gold);border-bottom:1px solid var(--border);">// '+mes+' &nbsp;<span style="color:var(--green)">+$'+tot.toLocaleString()+'</span></td></tr>';html+=rows.map(f=>renderFinRow(f)).join('');});}
+    if(pendientes.length){html+='<tr><td colspan="8" style="background:rgba(248,113,113,.05);padding:.65rem 1rem;font-family:DM Mono,monospace;font-size:.58rem;letter-spacing:.15em;text-transform:uppercase;color:var(--red);border-bottom:1px solid rgba(248,113,113,.2);">// Pendientes \u2014 $'+totalPend.toLocaleString()+' por cobrar</td></tr>';html+=pendientes.map(f=>renderFinRow(f)).join('');}
+    if(pagados.length){const grupos={};pagados.forEach(f=>{const d=parseFecha(f['Fecha']||'');const k=d?mesLabel(d):'Sin fecha';if(!grupos[k])grupos[k]=[];grupos[k].push(f);});Object.entries(grupos).forEach(function(entry){const mes=entry[0],rows=entry[1];const tot=rows.reduce((s,f)=>s+(parseFloat(f['Monto'])||0),0);html+='<tr><td colspan="8" style="background:var(--surface2);padding:.65rem 1rem;font-family:DM Mono,monospace;font-size:.58rem;letter-spacing:.15em;text-transform:uppercase;color:var(--gold);border-bottom:1px solid var(--border);">// '+mes+' &nbsp;<span style="color:var(--green)">+$'+tot.toLocaleString()+'</span></td></tr>';html+=rows.map(f=>renderFinRow(f)).join('');});}
   } else {
     const gastosPend=viewList.filter(f=>/pendiente/i.test(f['Estado']||'')).sort(sortDesc);
     const gastosPagados=viewList.filter(f=>/pagado/i.test(f['Estado']||'')).sort(sortDesc);
     const totalGPend=gastosPend.reduce((s,f)=>s+(parseFloat(f['Monto'])||0),0);
-    if(gastosPend.length){html+='<tr><td colspan="7" style="background:rgba(248,113,113,.05);padding:.65rem 1rem;font-family:DM Mono,monospace;font-size:.58rem;letter-spacing:.15em;text-transform:uppercase;color:var(--red);border-bottom:1px solid rgba(248,113,113,.2);">// Gastos pendientes \u2014 '+fmt(totalGPend)+' por saldar (no restan a\xFAn)</td></tr>';html+=gastosPend.map(f=>renderFinRow(f)).join('');}
-    if(gastosPagados.length){const grupos={};gastosPagados.forEach(f=>{const d=parseFecha(f['Fecha']||'');const k=d?mesLabel(d):'Sin fecha';if(!grupos[k])grupos[k]=[];grupos[k].push(f);});Object.entries(grupos).forEach(function(entry){const mes=entry[0],rows=entry[1];const tot=rows.reduce((s,f)=>s+(parseFloat(f['Monto'])||0),0);html+='<tr><td colspan="7" style="background:var(--surface2);padding:.65rem 1rem;font-family:DM Mono,monospace;font-size:.58rem;letter-spacing:.15em;text-transform:uppercase;color:var(--red);border-bottom:1px solid var(--border);">// '+mes+' &nbsp;<span style="color:var(--red)">\u2212'+fmt(tot)+'</span></td></tr>';html+=rows.map(f=>renderFinRow(f)).join('');});}
+    if(gastosPend.length){html+='<tr><td colspan="8" style="background:rgba(248,113,113,.05);padding:.65rem 1rem;font-family:DM Mono,monospace;font-size:.58rem;letter-spacing:.15em;text-transform:uppercase;color:var(--red);border-bottom:1px solid rgba(248,113,113,.2);">// Gastos pendientes \u2014 '+fmt(totalGPend)+' por saldar (no restan a\xFAn)</td></tr>';html+=gastosPend.map(f=>renderFinRow(f)).join('');}
+    if(gastosPagados.length){const grupos={};gastosPagados.forEach(f=>{const d=parseFecha(f['Fecha']||'');const k=d?mesLabel(d):'Sin fecha';if(!grupos[k])grupos[k]=[];grupos[k].push(f);});Object.entries(grupos).forEach(function(entry){const mes=entry[0],rows=entry[1];const tot=rows.reduce((s,f)=>s+(parseFloat(f['Monto'])||0),0);html+='<tr><td colspan="8" style="background:var(--surface2);padding:.65rem 1rem;font-family:DM Mono,monospace;font-size:.58rem;letter-spacing:.15em;text-transform:uppercase;color:var(--red);border-bottom:1px solid var(--border);">// '+mes+' &nbsp;<span style="color:var(--red)">\u2212'+fmt(tot)+'</span></td></tr>';html+=rows.map(f=>renderFinRow(f)).join('');});}
   }
   document.getElementById('finanzasContainer').innerHTML='<table class="data-table"><thead><tr><th>Concepto</th><th>Tipo</th><th>Artista</th><th>Proyecto</th><th>Fecha</th><th>Monto</th><th>Acciones</th></tr></thead><tbody>'+html+'</tbody></table>';
 }
@@ -1302,7 +1396,7 @@ function editPago(rowNum){
   const toInput=s=>{if(!s||s==='\u2014')return'';const m=s.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);if(m)return m[3]+'-'+m[2].padStart(2,'0')+'-'+m[1].padStart(2,'0');const m2=s.match(/^(\d{1,2})\s+de\s+(\w+)\s+de\s+(\d{4})$/i);if(m2){const mes={enero:'01',febrero:'02',marzo:'03',abril:'04',mayo:'05',junio:'06',julio:'07',agosto:'08',septiembre:'09',octubre:'10',noviembre:'11',diciembre:'12'};return m2[3]+'-'+(mes[m2[2].toLowerCase()]||'01')+'-'+m2[1].padStart(2,'0');}return'';};
   document.getElementById('fpFecha').value=toInput(f['Fecha']||'');
   openModal('modalPago');
-  setTimeout(()=>{document.getElementById('fpArtista').value=f['Cliente']||'';document.getElementById('fpProyecto').value=f['Proyecto']||'';},50);
+  setTimeout(()=>{document.getElementById('fpArtista').value=f['Cliente']||'';document.getElementById('fpProyecto').value=f['Proyecto']||'';document.getElementById('fpPersonal').value=f['Personal']||'';togglePersonalField();},50);
 }
 
 async function guardarPago(){
@@ -1320,13 +1414,14 @@ async function guardarPago(){
   const existingF=rowNum?allFinanzas.find(x=>x._rowNumber===rowNum):null;
   const newId=existingF?existingF['ID']||'':nextId(allFinanzas,'ID','HEAVEN');
   const proyecto=document.getElementById('fpProyecto').value||'';
-  const values=[newId,concepto,tipo,monto,fecha,proyecto,artista,estado];
+  const personal=tipo==='Gasto'?(document.getElementById('fpPersonal')?.value||''):''
+  const values=[newId,concepto,tipo,monto,fecha,proyecto,artista,estado,personal];
   let ok=false;
   if(rowNum){ok=await updateRow(SH.finanzas,rowNum,values);}
   else{ok=await appendRow(SH.finanzas,values);}
   if(ok){
     toast('\u2713 Pago guardado en Sheets','success');closeModal('modalPago');
-    document.getElementById('fpRowNum').value='';document.getElementById('fpConcepto').value='';document.getElementById('fpMonto').value='';document.getElementById('fpFecha').value='';document.getElementById('fpTipo').value='Ingreso';document.getElementById('fpEstado').value='Pagado';document.getElementById('modalPagoTitle').textContent='NUEVO PAGO';
+    document.getElementById('fpRowNum').value='';document.getElementById('fpConcepto').value='';document.getElementById('fpMonto').value='';document.getElementById('fpFecha').value='';document.getElementById('fpTipo').value='Ingreso';document.getElementById('fpEstado').value='Pagado';document.getElementById('fpPersonal').value='';document.getElementById('fpPersonalGroup').style.display='none';document.getElementById('modalPagoTitle').textContent='NUEVO PAGO';
     await loadAdmin(1200);
   }else{toast('// Error al guardar \u2014 activa OAuth primero','error');}
 }
@@ -1358,7 +1453,8 @@ async function guardarProyecto(){
   const fi=fmtDate(fechaI);const fe=fmtDate(fechaE);
   let archLink='';if(file){archLink=await uploadToDrive(file)||'';}
   const id=nextId(allProyectos,'ID','Proyec');
-  const ok=await appendRow(SH.proyectos,[id,nombre,artista,servicio,'',fi,fe,bonos,estado,archLink,notas,monto||'']);
+  const asignadoNP=document.getElementById('npAsignado')?.value||'';
+  const ok=await appendRow(SH.proyectos,[id,nombre,artista,servicio,'',fi,fe,bonos,estado,archLink,notas,monto||'',asignadoNP]);
   if(!ok){toast('Error al guardar proyecto','error');return;}
   toast('\u2713 Proyecto guardado en Sheets','success');
   const res=document.getElementById('npResult');res.style.display='block';res.textContent=`\u2713 ${nombre} guardado \u2014 ID: ${id}${archLink?' | Archivo: '+archLink:''}`;
@@ -1374,7 +1470,7 @@ function limpiarNP(){
 function confirmDelete(tipo,rowNum,nombre){
   document.getElementById('confirmMsg').textContent=`\xBFEliminar "${nombre}"? Esta acci\xF3n no se puede deshacer.`;
   document.getElementById('confirmOkBtn').onclick=async()=>{
-    const sheet=tipo==='artista'?SH.artistas:tipo==='proyecto'?SH.proyectos:tipo==='curso'?SH.cursos:tipo==='beat'?SH.catalogo:SH.finanzas;
+    const sheet=tipo==='artista'?SH.artistas:tipo==='proyecto'?SH.proyectos:tipo==='curso'?SH.cursos:tipo==='beat'?SH.catalogo:tipo==='tarea'?SH.tareas:SH.finanzas;
     const ok=await deleteRow(sheet,rowNum);
     if(ok){toast('\u2713 Eliminado','success');closeModal('modalConfirm');await loadAdmin();}
     else{toast('Error al eliminar \u2014 aseg\xFArate de tener OAuth activo','error');closeModal('modalConfirm');}
@@ -1805,6 +1901,226 @@ async function guardarBeat(){
 }
 
 // NAVIGATION
+// ════════════════════════════════════════════
+// TOGGLE PERSONAL FIELD (solo para Gastos)
+// ════════════════════════════════════════════
+function togglePersonalField(){
+  const tipo=document.getElementById('fpTipo')?.value||'';
+  const grp=document.getElementById('fpPersonalGroup');
+  if(grp) grp.style.display=tipo==='Gasto'?'flex':'none';
+}
+
+// ════════════════════════════════════════════
+// ROLE UI — ocultar/mostrar según usuario
+// ════════════════════════════════════════════
+function applyRoleUI(){
+  const isDarol=userRole==='darol';
+  // Sidebar items visibles para Darol: solo Catálogo, sus pagos, sus proyectos, tareas
+  const hideForDarol=['navTareas','navNuevo'];
+  // Darol puede ver: catalogo, finanzas (solo sus pagos), proyectos (solo asignados), tareas
+  // Heaven ve todo
+  document.querySelectorAll('.nav-item').forEach(btn=>{
+    const page=btn.getAttribute('onclick')?.match(/'([^']+)'/)?.[1];
+    if(!page) return;
+    if(isDarol){
+      // Darol solo ve: catalogo, finanzas, proyectos, tareas
+      const allowed=['catalogo','finanzas','proyectos','tareas'];
+      btn.style.display=allowed.includes(page)?'':'none';
+    } else {
+      btn.style.display='';
+    }
+  });
+  // Para Darol: ocultar botones de crear/editar en finanzas y proyectos generales
+  // Set default page
+  if(isDarol){
+    const catBtn=document.getElementById('navCatalogo');
+    setTimeout(()=>showPage('catalogo', catBtn),100);
+  } else {
+    const dashBtn=document.querySelector('.nav-item');
+    setTimeout(()=>showPage('dashboard', dashBtn),100);
+  }
+}
+
+// ════════════════════════════════════════════
+// TAREAS
+// ════════════════════════════════════════════
+function renderTareas(){
+  const container=document.getElementById('tareasContainer');
+  if(!container) return;
+  const filterEst=document.getElementById('filterTareaEstado')?.value||'';
+  const filterAsig=document.getElementById('filterTareaAsignado')?.value||'';
+
+  let list=allTareas.filter(t=>{
+    const e=!filterEst||(t['Estado']||'')=== filterEst;
+    const a=!filterAsig||(t['Asignado']||'')=== filterAsig;
+    return e&&a;
+  });
+
+  // Pendientes arriba
+  list=list.sort((a,b)=>{
+    const oa=a['Estado']==='Pendiente'?0:1;
+    const ob=b['Estado']==='Pendiente'?0:1;
+    return oa-ob;
+  });
+
+  // Badge en sidebar
+  const pend=allTareas.filter(t=>t['Estado']==='Pendiente').length;
+  const badge=document.getElementById('badgeTareas');
+  if(badge){badge.style.display=pend>0?'inline':'none';badge.textContent=pend;}
+
+  if(!list.length){
+    container.innerHTML='<div class="empty-state">// No hay tareas registradas aún</div>';
+    return;
+  }
+
+  const isDarol=userRole==='darol';
+  container.innerHTML=`<table class="data-table"><thead><tr>
+    <th>Título</th><th>Descripción</th><th>Asignado</th><th>Estado</th>${isDarol?'':'<th>Acciones</th>'}
+  </tr></thead><tbody>${list.map(t=>{
+    const est=t['Estado']||'Pendiente';
+    const estBadge=est==='Hecho'
+      ?'<span class="badge badge-done">Hecho</span>'
+      :'<span class="badge badge-pending">Pendiente</span>';
+    const asigColor=t['Asignado']==='Darol'?'var(--yellow)':t['Asignado']==='Heaven'?'var(--purple-light)':'var(--muted)';
+    const rn=t._rowNumber;
+    const titulo=(t['Titulo']||'').replace(/'/g,"\'");
+    return `<tr>
+      <td style="font-weight:600">${t['Titulo']||'—'}</td>
+      <td style="font-family:DM Mono,monospace;font-size:.72rem;color:var(--muted)">${t['Descripcion']||'—'}</td>
+      <td style="font-family:DM Mono,monospace;font-size:.68rem;color:${asigColor}">${t['Asignado']||'—'}</td>
+      <td>${estBadge}</td>
+      ${isDarol?'':`<td><div class="td-actions">
+        <button class="btn-xs btn-xs-edit" onclick="editTarea(${rn})">Editar</button>
+        <button class="btn-xs btn-xs-del" onclick="confirmDelete('tarea',${rn},'${titulo}')">Borrar</button>
+      </div></td>`}
+    </tr>`;
+  }).join('')}</tbody></table>`;
+
+  // Para Darol: ocultar botón nueva tarea
+  const btnNueva=document.getElementById('btnNuevaTarea');
+  const tareasHeader=document.getElementById('tareasHeaderBtns');
+  if(isDarol){if(btnNueva)btnNueva.style.display='none';}
+  else{if(btnNueva)btnNueva.style.display='';}
+}
+
+function editTarea(rowNum){
+  const t=allTareas.find(x=>x._rowNumber===rowNum);
+  if(!t) return;
+  document.getElementById('modalTareaTitle').textContent='EDITAR TAREA';
+  document.getElementById('tareaRowNum').value=rowNum;
+  document.getElementById('tareaTitulo').value=t['Titulo']||'';
+  document.getElementById('tareaDesc').value=t['Descripcion']||'';
+  document.getElementById('tareaAsignado').value=t['Asignado']||'Heaven';
+  document.getElementById('tareaEstado').value=t['Estado']||'Pendiente';
+  openModal('modalTarea');
+}
+
+async function guardarTarea(){
+  const rowNum=parseInt(document.getElementById('tareaRowNum').value)||0;
+  const titulo=document.getElementById('tareaTitulo').value.trim();
+  if(!titulo){toast('Título requerido','error');return;}
+  const desc=document.getElementById('tareaDesc').value.trim();
+  const asignado=document.getElementById('tareaAsignado').value;
+  const estado=document.getElementById('tareaEstado').value;
+  const existingT=rowNum?allTareas.find(t=>t._rowNumber===rowNum):null;
+  const id=existingT?existingT['ID']||'':nextId(allTareas,'ID','Tarea');
+  // Columns: ID | Titulo | Descripcion | Asignado | Estado
+  const values=[id,titulo,desc,asignado,estado];
+  let ok=false;
+  if(rowNum){ok=await updateRow(SH.tareas,rowNum,values);}
+  else{ok=await appendRow(SH.tareas,values);}
+  if(ok){
+    toast('✓ Tarea guardada','success');
+    closeModal('modalTarea');
+    document.getElementById('tareaRowNum').value='';
+    document.getElementById('modalTareaTitle').textContent='NUEVA TAREA';
+    ['tareaTitulo','tareaDesc'].forEach(id=>{document.getElementById(id).value='';});
+    await loadAdmin(800);
+  } else {toast('Error al guardar — activa OAuth primero','error');}
+}
+
+// ════════════════════════════════════════════
+// PROYECTOS DAROL — vista limitada
+// ════════════════════════════════════════════
+function renderProyectosDarol(){
+  const list=allProyectos.filter(p=>(p['Asignado']||'').toLowerCase()==='darol');
+  const container=document.getElementById('proyectosContainer');
+  if(!list.length){
+    container.innerHTML='<div class="empty-state">// No tienes proyectos asignados aún</div>';
+    return;
+  }
+  // Hide toggle buttons
+  ['toggleActivos','toggleFinalizados','toggleCancelados'].forEach(id=>{
+    const el=document.getElementById(id);if(el)el.style.display='none';
+  });
+  const rows=list.map(p=>{
+    const a=getArtista(p['Cliente']);
+    const na=a?a['AKA']||a['Nombre']:p['Cliente']||'—';
+    const rn=p._rowNumber;
+    const nombre=p['Nombre del proyecto']||'—';
+    return `<tr>
+      <td><div style="font-weight:600;font-size:.85rem">${nombre}</div><div style="font-size:.6rem;color:var(--muted2)">${p['ID']||''}</div></td>
+      <td style="font-size:.72rem;color:var(--purple-light)">${na}</td>
+      <td style="font-size:.68rem;color:var(--muted)">${p['Tipo de servicio']||'—'}</td>
+      <td style="font-size:.68rem;color:var(--muted)">${p['Fecha inicio']||'—'}</td>
+      <td>${getBadge(p['Estado proyecto'])}</td>
+      <td><div class="td-actions">
+        <button class="btn-xs btn-xs-edit" onclick="editProyectoDarol(${rn})">Editar</button>
+      </div></td>
+    </tr>`;
+  }).join('');
+  container.innerHTML=`<table class="data-table"><thead><tr>
+    <th>Proyecto</th><th>Artista</th><th>Servicio</th><th>Inicio</th><th>Estado</th><th>Acciones</th>
+  </tr></thead><tbody>${rows}</tbody></table>`;
+}
+
+function editProyectoDarol(rowNum){
+  // Darol solo puede editar título y estado
+  const p=allProyectos.find(x=>x._rowNumber===rowNum);
+  if(!p) return;
+  document.getElementById('mpRowNum').value=rowNum;
+  document.getElementById('mpNombre').value=p['Nombre del proyecto']||'';
+  document.getElementById('mpEstado').value=p['Estado proyecto']||'01 | En proceso';
+  // Hide all fields except nombre and estado
+  document.querySelectorAll('#modalProyecto .form-group').forEach(g=>{
+    const inp=g.querySelector('input,select');
+    if(!inp) return;
+    const id=inp.id;
+    const allowed=['mpNombre','mpEstado'];
+    g.style.display=allowed.includes(id)?'':'none';
+  });
+  document.getElementById('modalProyecto').querySelector('.modal-title').textContent='EDITAR PROYECTO';
+  // Change button to only update nombre + estado
+  document.getElementById('modalProyecto').querySelector('.btn-green').onclick=actualizarProyectoDarol;
+  openModal('modalProyecto');
+}
+
+async function actualizarProyectoDarol(){
+  const rowNum=parseInt(document.getElementById('mpRowNum').value);
+  const p=allProyectos.find(x=>x._rowNumber===rowNum);
+  if(!p){toast('Proyecto no encontrado','error');return;}
+  // Build values preserving all existing data, only changing nombre and estado
+  const fmtDate2=d=>{if(!d)return'';const[y,m,dd]=d.split('-');return dd&&m&&y?dd+'/'+m+'/'+y:d;};
+  const values=[
+    p['ID']||'',
+    document.getElementById('mpNombre').value.trim(),
+    p['Cliente']||'',
+    p['Tipo de servicio']||'',
+    p['Fecha sesión']||p['Fecha sesion']||'',
+    p['Fecha inicio']||'',
+    p['Fecha entrega']||'',
+    p['Bonos incluidos']||p['Bonos']||'',
+    document.getElementById('mpEstado').value,
+    p['Archivos entregados']||'',
+    p['Notas del proyecto']||p['Notas']||'',
+    p['Solicitado']||'',
+    p['Asignado']||'',
+  ];
+  const ok=await updateRow(SH.proyectos,rowNum,values);
+  if(ok){toast('✓ Proyecto actualizado','success');closeModal('modalProyecto');await loadAdmin();}
+  else{toast('Error al actualizar','error');}
+}
+
 function showPage(name,el){
   document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
   document.querySelectorAll('.nav-item').forEach(b=>b.classList.remove('active'));
