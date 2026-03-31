@@ -397,7 +397,7 @@ body::before{content:'';position:fixed;inset:0;background-image:url("data:image/
             <button class="btn btn-gold" onclick="openModal('modalPago')">+ Nuevo pago</button>
           </div>
         </div>
-        <div class="fin-summary">
+        <div class="fin-summary" id="finSummaryBox">
           <div class="fin-card"><div class="fin-label">Ingresos cobrados</div><div class="fin-val" style="color:var(--green)" id="finCobrado">$0</div></div>
           <div class="fin-card"><div class="fin-label">Por cobrar</div><div class="fin-val" style="color:var(--yellow)" id="finPend">$0</div></div>
           <div class="fin-card"><div class="fin-label">Gastos pagados</div><div class="fin-val" style="color:var(--red)" id="finGastos">$0</div><div id="finGastosPend" style="display:none;font-family:DM Mono,monospace;font-size:.6rem;color:var(--muted);margin-top:.3rem;"></div></div>
@@ -1036,13 +1036,13 @@ function getArtista(id){
   return allArtistas.find(a=>a['ArtistaID']===id||a['AKA']===id||a['Nombre']===id||(a['ArtistaID']||'').toLowerCase()===(id||'').toLowerCase())||null;
 }
 function getBadge(e){
-  if(!e)return'<span class="badge badge-pending">Sin estado</span>';
-  if(/finalizado/i.test(e))return'<span class="badge badge-done">Finalizado</span>';
-  if(/proceso/i.test(e))return'<span class="badge badge-active">En proceso</span>';
-  if(/mezcla/i.test(e))return'<span class="badge badge-pending">En mezcla</span>';
-  if(/revision/i.test(e))return'<span class="badge badge-pending">Revisi\xF3n</span>';
-  if(/espera/i.test(e))return'<span class="badge" style="background:rgba(251,191,36,.1);color:var(--yellow);border:1px solid rgba(251,191,36,.3);">En espera</span>';
-  if(/cancelado/i.test(e))return'<span class="badge badge-unpaid">Cancelado</span>';
+  if(!e)return'<span class="badge" style="background:rgba(107,99,120,.15);color:var(--muted);border:1px solid rgba(107,99,120,.2);">Sin estado</span>';
+  if(/finalizado/i.test(e))return'<span class="badge" style="background:rgba(52,211,153,.12);color:var(--green);border:1px solid rgba(52,211,153,.25);">✓ Finalizado</span>';
+  if(/proceso/i.test(e))return'<span class="badge" style="background:rgba(168,85,247,.12);color:var(--purple-light);border:1px solid rgba(168,85,247,.25);">▶ En proceso</span>';
+  if(/mezcla/i.test(e))return'<span class="badge" style="background:rgba(99,102,241,.12);color:#818cf8;border:1px solid rgba(99,102,241,.25);">⊕ En mezcla</span>';
+  if(/revision/i.test(e))return'<span class="badge" style="background:rgba(251,191,36,.12);color:var(--yellow);border:1px solid rgba(251,191,36,.25);">⟳ Revisión</span>';
+  if(/espera/i.test(e))return'<span class="badge" style="background:rgba(251,146,60,.1);color:#fb923c;border:1px solid rgba(251,146,60,.25);">◌ En espera</span>';
+  if(/cancelado/i.test(e))return'<span class="badge" style="background:rgba(248,113,113,.1);color:var(--red);border:1px solid rgba(248,113,113,.2);">✕ Cancelado</span>';
   return`<span class="badge badge-pending">${e.replace(/^\d+\s*\|\s*/,'')}</span>`;
 }
 function fmt(n){return n?'$'+parseFloat(n).toLocaleString('es-MX'):'$0';}
@@ -1255,14 +1255,13 @@ function renderProyectos(){
       <td>${getBadge(p['Estado proyecto'])}</td>
       <td style="font-family:Bebas Neue,sans-serif;font-size:1rem;color:var(--purple-light)">${solicitado>0?'$'+solicitado.toLocaleString():'\u2014'}</td>
       <td style="font-family:Bebas Neue,sans-serif;font-size:1rem;color:var(--green)">${cobradoProy>0?'$'+cobradoProy.toLocaleString():'\u2014'}</td>
-      <td style="font-family:Bebas Neue,sans-serif;font-size:1rem;color:var(--gold)">${totalPagadoProy>0?'$'+totalPagadoProy.toLocaleString():'\u2014'}</td>
       <td style="text-align:center">${liqHtml}</td>
       <td style="font-family:DM Mono,monospace;font-size:.68rem;color:${asignadoColor}">${p['Asignado']||'\u2014'}</td>
       <td>${archHtml}</td>
       <td><div class="td-actions"><button class="btn-xs btn-xs-edit" onclick="editProyecto(${rn})">Editar</button><button class="btn-xs btn-xs-del" onclick="confirmDelete('proyecto',${rn},this.dataset.n)" data-n="${nombre.replace(/"/g,'&quot;')}">Borrar</button></div></td>
     </tr>`;
   }).join('');
-  document.getElementById('proyectosContainer').innerHTML=`<table class="data-table"><thead><tr><th>Proyecto</th><th>Artista</th><th>Servicio</th><th>Inicio</th><th>Estado</th><th>Solicitado</th><th>Cobrado</th><th>Total Pagado</th><th>Liq.</th><th>Asignado</th><th>Archivos</th><th>Acciones</th></tr></thead><tbody>${rows}</tbody></table>`;
+  document.getElementById('proyectosContainer').innerHTML=`<table class="data-table"><thead><tr><th>Proyecto</th><th>Artista</th><th>Servicio</th><th>Inicio</th><th>Estado</th><th>Solicitado</th><th>Cobrado</th><th>Liq.</th><th>Asignado</th><th>Archivos</th><th>Acciones</th></tr></thead><tbody>${rows}</tbody></table>`;
 }
 
 function editProyecto(rowNum){
@@ -1338,9 +1337,11 @@ function renderFinRow(f){
   const proy=allProyectos.find(p=>p['ID']===f['Proyecto']);const proyNombre=proy?proy['Nombre del proyecto']:'';
   const paid=/pagado/i.test(f['Estado']||'');const isGasto=(f['Tipo']||'').toLowerCase()==='gasto';
   const montoNum=parseFloat(f['Monto'])||0;
-  const montoColor=isGasto?'var(--red)':paid?'var(--green)':'var(--yellow)';
-  const montoPrefix=isGasto?'-':'+';
-  const tipoBadge=isGasto?'<span class="badge" style="background:rgba(248,113,113,.12);color:var(--red);border:1px solid rgba(248,113,113,.25);font-size:.55rem;">Gasto</span>':'<span class="badge" style="background:rgba(52,211,153,.1);color:var(--green);border:1px solid rgba(52,211,153,.25);font-size:.55rem;">Ingreso</span>';
+  // Para Darol: los gastos asignados a él se muestran como ingresos positivos (es lo que le pagan)
+  const isDarolView=userRole==='darol';
+  const montoColor=isDarolView?'var(--green)':(isGasto?'var(--red)':paid?'var(--green)':'var(--yellow)');
+  const montoPrefix=isDarolView?'+':(isGasto?'-':'+');
+  const tipoBadge=isDarolView?'<span class="badge" style="background:rgba(52,211,153,.1);color:var(--green);border:1px solid rgba(52,211,153,.25);font-size:.55rem;">Pago</span>':(isGasto?'<span class="badge" style="background:rgba(248,113,113,.12);color:var(--red);border:1px solid rgba(248,113,113,.25);font-size:.55rem;">Gasto</span>':'<span class="badge" style="background:rgba(52,211,153,.1);color:var(--green);border:1px solid rgba(52,211,153,.25);font-size:.55rem;">Ingreso</span>');
   const concepto=f['Concepto']||'';const rowId=f._rowNumber;const concEsc=concepto.replace(/'/g,"\\'");
   const personalColor=f['Personal']==='Darol'?'var(--yellow)':f['Personal']==='Heaven'?'var(--purple-light)':'var(--muted2)';
   return '<tr>'+'<td style="font-weight:600">'+concepto+'</td>'+'<td>'+tipoBadge+'</td>'+'<td style="font-family:\'DM Mono\',monospace;font-size:.7rem;color:var(--purple-light)">'+(na||'\u2014')+'</td>'+'<td style="font-family:\'DM Mono\',monospace;font-size:.68rem;color:var(--muted)">'+(proyNombre||'\u2014')+'</td>'+'<td style="font-family:\'DM Mono\',monospace;font-size:.68rem;color:var(--muted)">'+(f['Fecha']||'\u2014')+'</td>'+'<td style="font-family:\'Bebas Neue\',sans-serif;font-size:1.1rem;color:'+montoColor+'">'+montoPrefix+fmt(montoNum)+'</td>'+'<td style="font-family:DM Mono,monospace;font-size:.68rem;color:'+personalColor+'">'+(f['Personal']||'\u2014')+'</td>'+'<td><div class="td-actions"><button class="btn-xs btn-xs-edit" onclick="editPago('+rowId+')">Editar</button><button class="btn-xs btn-xs-del" onclick="confirmDelete(\'pago\','+rowId+',\''+concEsc+'\')">Borrar</button></div></td>'+'</tr>';
@@ -1352,10 +1353,17 @@ function renderFinanzas(){
   const allGastos=allFinanzas.filter(f=>(f['Tipo']||'').toLowerCase()==='gasto'&&/pagado/i.test(f['Estado']||'')).reduce((s,f)=>s+(parseFloat(f['Monto'])||0),0);
   const allGastosPend=allFinanzas.filter(f=>(f['Tipo']||'').toLowerCase()==='gasto'&&/pendiente/i.test(f['Estado']||'')).reduce((s,f)=>s+(parseFloat(f['Monto'])||0),0);
   const balance=allIngresosCobrados-allGastos;
-  document.getElementById('finCobrado').textContent=fmt(allIngresosCobrados);
-  document.getElementById('finPend').textContent=fmt(allPorCobrar);
-  const elG=document.getElementById('finGastos');if(elG){elG.textContent=fmt(allGastos);const pendG=document.getElementById('finGastosPend');if(pendG){pendG.textContent=allGastosPend>0?'+ '+fmt(allGastosPend)+' pendiente':'';pendG.style.display=allGastosPend>0?'block':'none';}}
-  const elT=document.getElementById('finTotal2');if(elT){elT.textContent=fmt(Math.abs(balance));elT.style.color=balance>=0?'var(--green)':'var(--red)';}
+  const finBox=document.getElementById('finSummaryBox');
+  if(userRole==='darol'){
+    // Darol no ve el total general del estudio
+    if(finBox) finBox.style.display='none';
+  } else {
+    if(finBox) finBox.style.display='';
+    document.getElementById('finCobrado').textContent=fmt(allIngresosCobrados);
+    document.getElementById('finPend').textContent=fmt(allPorCobrar);
+    const elG=document.getElementById('finGastos');if(elG){elG.textContent=fmt(allGastos);const pendG=document.getElementById('finGastosPend');if(pendG){pendG.textContent=allGastosPend>0?'+ '+fmt(allGastosPend)+' pendiente':'';pendG.style.display=allGastosPend>0?'block':'none';}}
+    const elT=document.getElementById('finTotal2');if(elT){elT.textContent=fmt(Math.abs(balance));elT.style.color=balance>=0?'var(--green)':'var(--red)';}
+  }
   const q=(document.getElementById('searchFinanzas').value||'').toLowerCase();
   const est=document.getElementById('filterPagoEstado').value;
   const base=allFinanzas.filter(f=>{
@@ -1415,7 +1423,8 @@ async function guardarPago(){
   const newId=existingF?existingF['ID']||'':nextId(allFinanzas,'ID','HEAVEN');
   const proyecto=document.getElementById('fpProyecto').value||'';
   const personal=tipo==='Gasto'?(document.getElementById('fpPersonal')?.value||''):''
-  const values=[newId,concepto,tipo,monto,fecha,proyecto,artista,estado,personal];
+  // Columns: ID|Concepto|Tipo|Monto|Fecha|Proyecto|Cliente|Estado|Proyección|Personal
+  const values=[newId,concepto,tipo,monto,fecha,proyecto,artista,estado,'',personal];
   let ok=false;
   if(rowNum){ok=await updateRow(SH.finanzas,rowNum,values);}
   else{ok=await appendRow(SH.finanzas,values);}
@@ -2043,16 +2052,26 @@ async function guardarTarea(){
 // PROYECTOS DAROL — vista limitada
 // ════════════════════════════════════════════
 function renderProyectosDarol(){
-  const list=allProyectos.filter(p=>(p['Asignado']||'').toLowerCase()==='darol');
+  // Filter by search too
+  const q=(document.getElementById('searchProyectos')?.value||'').toLowerCase();
+  const list=allProyectos.filter(p=>{
+    const asignado=(p['Asignado']||'').toLowerCase()==='darol';
+    const m=!q||(p['Nombre del proyecto']||'').toLowerCase().includes(q);
+    return asignado&&m;
+  });
   const container=document.getElementById('proyectosContainer');
+  // Hide toggle buttons — Darol sees all his projects
+  ['toggleActivos','toggleFinalizados','toggleCancelados'].forEach(id=>{
+    const el=document.getElementById(id);if(el)el.style.display='none';
+  });
+  // Hide + Nuevo button
+  const btnNuevo=document.querySelector('#page-proyectos .btn-gold');
+  if(btnNuevo) btnNuevo.style.display='none';
+
   if(!list.length){
     container.innerHTML='<div class="empty-state">// No tienes proyectos asignados aún</div>';
     return;
   }
-  // Hide toggle buttons
-  ['toggleActivos','toggleFinalizados','toggleCancelados'].forEach(id=>{
-    const el=document.getElementById(id);if(el)el.style.display='none';
-  });
   const rows=list.map(p=>{
     const a=getArtista(p['Cliente']);
     const na=a?a['AKA']||a['Nombre']:p['Cliente']||'—';
