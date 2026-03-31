@@ -1023,12 +1023,23 @@ async function loadAdmin(delay=0){
 }
 
 function updateBadges(){
-  const pend=allFinanzas.filter(f=>/pendiente/i.test(f['Estado']||'')).length;
-  const b=document.getElementById('badgePend');
-  if(b){b.style.display=pend>0?'inline':'none';b.textContent=pend;}
-  const activos=allProyectos.filter(p=>!/finalizado|cancelado/i.test(p['Estado proyecto']||'')).length;
-  const be=document.getElementById('badgeEspera');
-  if(be){be.style.display=activos>0?'inline':'none';be.textContent=activos;}
+  if(userRole==='darol'){
+    // Darol: badge finanzas = sus pendientes propios
+    const pend=allFinanzas.filter(f=>/pendiente/i.test(f['Estado']||'')&&(f['Personal']||'').toLowerCase()==='darol').length;
+    const b=document.getElementById('badgePend');
+    if(b){b.style.display=pend>0?'inline':'none';b.textContent=pend;}
+    // Darol: badge proyectos = sus proyectos activos
+    const activos=allProyectos.filter(p=>(p['Asignado']||'').toLowerCase()==='darol'&&!/finalizado|cancelado/i.test(p['Estado proyecto']||'')).length;
+    const be=document.getElementById('badgeEspera');
+    if(be){be.style.display=activos>0?'inline':'none';be.textContent=activos;}
+  } else {
+    const pend=allFinanzas.filter(f=>/pendiente/i.test(f['Estado']||'')).length;
+    const b=document.getElementById('badgePend');
+    if(b){b.style.display=pend>0?'inline':'none';b.textContent=pend;}
+    const activos=allProyectos.filter(p=>!/finalizado|cancelado/i.test(p['Estado proyecto']||'')).length;
+    const be=document.getElementById('badgeEspera');
+    if(be){be.style.display=activos>0?'inline':'none';be.textContent=activos;}
+  }
 }
 
 function getArtista(id){
@@ -1333,20 +1344,52 @@ function populateProyectoSelects(){
 }
 
 function renderFinRow(f){
-  const a=getArtista(f['Cliente']||'');const na=a?(a['AKA']||a['Nombre']||''):'';
-  const proy=allProyectos.find(p=>p['ID']===f['Proyecto']);const proyNombre=proy?proy['Nombre del proyecto']:'';
-  const paid=/pagado/i.test(f['Estado']||'');const isGasto=(f['Tipo']||'').toLowerCase()==='gasto';
+  const a=getArtista(f['Cliente']||'');
+  const na=a?(a['AKA']||a['Nombre']||''):'';
+  const proy=allProyectos.find(p=>p['ID']===f['Proyecto']);
+  const proyNombre=proy?proy['Nombre del proyecto']:'';
+  const paid=/pagado/i.test(f['Estado']||'');
+  const isGasto=(f['Tipo']||'').toLowerCase()==='gasto';
   const montoNum=parseFloat(f['Monto'])||0;
-  // Para Darol: los gastos asignados a él se muestran como ingresos positivos (es lo que le pagan)
   const isDarolView=userRole==='darol';
   const montoColor=isDarolView?'var(--green)':(isGasto?'var(--red)':paid?'var(--green)':'var(--yellow)');
   const montoPrefix=isDarolView?'+':(isGasto?'-':'+');
-  const tipoBadge=isDarolView?'<span class="badge" style="background:rgba(52,211,153,.1);color:var(--green);border:1px solid rgba(52,211,153,.25);font-size:.55rem;">Pago</span>':(isGasto?'<span class="badge" style="background:rgba(248,113,113,.12);color:var(--red);border:1px solid rgba(248,113,113,.25);font-size:.55rem;">Gasto</span>':'<span class="badge" style="background:rgba(52,211,153,.1);color:var(--green);border:1px solid rgba(52,211,153,.25);font-size:.55rem;">Ingreso</span>');
-  const concepto=f['Concepto']||'';const rowId=f._rowNumber;const concEsc=concepto.replace(/'/g,"\\'");
+  const tipoBadge=isDarolView
+    ?'<span class="badge" style="background:rgba(52,211,153,.1);color:var(--green);border:1px solid rgba(52,211,153,.25);font-size:.55rem;">Pago</span>'
+    :(isGasto
+      ?'<span class="badge" style="background:rgba(248,113,113,.12);color:var(--red);border:1px solid rgba(248,113,113,.25);font-size:.55rem;">Gasto</span>'
+      :'<span class="badge" style="background:rgba(52,211,153,.1);color:var(--green);border:1px solid rgba(52,211,153,.25);font-size:.55rem;">Ingreso</span>');
   const personalColor=f['Personal']==='Darol'?'var(--yellow)':f['Personal']==='Heaven'?'var(--purple-light)':'var(--muted2)';
-  return '<tr>'+'<td style="font-weight:600">'+concepto+'</td>'+'<td>'+tipoBadge+'</td>'+'<td style="font-family:\'DM Mono\',monospace;font-size:.7rem;color:var(--purple-light)">'+(na||'\u2014')+'</td>'+'<td style="font-family:\'DM Mono\',monospace;font-size:.68rem;color:var(--muted)">'+(proyNombre||'\u2014')+'</td>'+'<td style="font-family:\'DM Mono\',monospace;font-size:.68rem;color:var(--muted)">'+(f['Fecha']||'\u2014')+'</td>'+'<td style="font-family:\'Bebas Neue\',sans-serif;font-size:1.1rem;color:'+montoColor+'">'+montoPrefix+fmt(montoNum)+'</td>'+'<td style="font-family:DM Mono,monospace;font-size:.68rem;color:'+personalColor+'">'+(f['Personal']||'\u2014')+'</td>'+'<td><div class="td-actions"><button class="btn-xs btn-xs-edit" onclick="editPago('+rowId+')">Editar</button><button class="btn-xs btn-xs-del" onclick="confirmDelete(\'pago\','+rowId+',\''+concEsc+'\')">Borrar</button></div></td>'+'</tr>';
-}
+  const concepto=f['Concepto']||'';
+  const rowId=f._rowNumber;
+  const concEsc=concepto.replace(/'/g,"\\'");
 
+  if(isDarolView){
+    const estadoPill=/pagado/i.test(f['Estado']||'')
+      ?'<span class="badge badge-done">Pagado</span>'
+      :'<span class="badge badge-pending">Pendiente</span>';
+    return '<tr>'
+      +'<td style="font-weight:600">'+concepto+'</td>'
+      +'<td style="font-size:.68rem;color:var(--muted)">'+proyNombre+'</td>'
+      +'<td style="font-size:.68rem;color:var(--muted)">'+(f['Fecha']||'\u2014')+'</td>'
+      +'<td style="font-family:Bebas Neue,sans-serif;font-size:1.1rem;color:'+montoColor+'">'+montoPrefix+fmt(montoNum)+'</td>'
+      +'<td>'+estadoPill+'</td>'
+      +'</tr>';
+  }
+  return '<tr>'
+    +'<td style="font-weight:600">'+concepto+'</td>'
+    +'<td>'+tipoBadge+'</td>'
+    +'<td style="font-size:.7rem;color:var(--purple-light)">'+(na||'\u2014')+'</td>'
+    +'<td style="font-size:.68rem;color:var(--muted)">'+proyNombre+'</td>'
+    +'<td style="font-size:.68rem;color:var(--muted)">'+(f['Fecha']||'\u2014')+'</td>'
+    +'<td style="font-family:Bebas Neue,sans-serif;font-size:1.1rem;color:'+montoColor+'">'+montoPrefix+fmt(montoNum)+'</td>'
+    +'<td style="font-size:.68rem;color:'+personalColor+'">'+(f['Personal']||'\u2014')+'</td>'
+    +'<td><div class="td-actions">'
+    +'<button class="btn-xs btn-xs-edit" onclick="editPago('+rowId+')">Editar</button>'
+    +'<button class="btn-xs btn-xs-del" onclick="confirmDelete(\'pago\','+rowId+',\''+concEsc+'\')">Borrar</button>'
+    +'</div></td>'
+    +'</tr>';
+}
 function renderFinanzas(){
   const allIngresosCobrados=allFinanzas.filter(f=>(f['Tipo']||'').toLowerCase()==='ingreso'&&/pagado/i.test(f['Estado']||'')).reduce((s,f)=>s+(parseFloat(f['Monto'])||0),0);
   const allPorCobrar=allFinanzas.filter(f=>(f['Tipo']||'').toLowerCase()==='ingreso'&&/pendiente/i.test(f['Estado']||'')).reduce((s,f)=>s+(parseFloat(f['Monto'])||0),0);
@@ -1373,11 +1416,29 @@ function renderFinanzas(){
     const roleOk=userRole!=='darol'||(f['Personal']||'').toLowerCase()==='darol';
     return m&&e&&roleOk;
   });
-  const viewList=finView==='gastos'?base.filter(f=>(f['Tipo']||'').toLowerCase()==='gasto'):base.filter(f=>(f['Tipo']||'').toLowerCase()!=='gasto');
-  if(!viewList.length){document.getElementById('finanzasContainer').innerHTML='<div class="empty-state">// No hay '+(finView==='gastos'?'gastos':'ingresos')+' registrados</div>';return;}
+  // Darol siempre ve todo como "ingresos" (lo que le pagan son gastos del estudio)
+  let viewList;
+  if(userRole==='darol'){
+    viewList=base; // Ve todos sus registros Personal=Darol sin filtro de tipo
+    // Ocultar toggle Ingresos/Gastos para Darol
+    const togWrap=document.getElementById('toggleIngresos')?.parentElement;
+    if(togWrap){togWrap.style.display='none';}
+  } else {
+    const togWrap=document.getElementById('toggleIngresos')?.parentElement;
+    if(togWrap){togWrap.style.display='';}
+    viewList=finView==='gastos'?base.filter(f=>(f['Tipo']||'').toLowerCase()==='gasto'):base.filter(f=>(f['Tipo']||'').toLowerCase()!=='gasto');
+  }
+  if(!viewList.length){document.getElementById('finanzasContainer').innerHTML='<div class="empty-state">// No hay registros</div>';return;}
   const sortDesc=(a,b)=>{const da=parseFecha(a['Fecha']||''),db=parseFecha(b['Fecha']||'');if(!da&&!db)return 0;if(!da)return 1;if(!db)return-1;return db-da;};
   let html='';
-  if(finView==='ingresos'){
+  if(userRole==='darol'){
+    // Darol: pendientes arriba, luego pagados agrupados por mes
+    const pendientes=viewList.filter(f=>/pendiente/i.test(f['Estado']||'')).sort(sortDesc);
+    const pagados=viewList.filter(f=>/pagado/i.test(f['Estado']||'')).sort(sortDesc);
+    const totalPend=pendientes.reduce((s,f)=>s+(parseFloat(f['Monto'])||0),0);
+    if(pendientes.length){html+='<tr><td colspan="5" style="background:rgba(248,113,113,.05);padding:.65rem 1rem;font-family:DM Mono,monospace;font-size:.58rem;letter-spacing:.15em;text-transform:uppercase;color:var(--red);border-bottom:1px solid rgba(248,113,113,.2);">// Pendientes \u2014 $'+totalPend.toLocaleString()+' por cobrar</td></tr>';html+=pendientes.map(f=>renderFinRow(f)).join('');}
+    if(pagados.length){const grupos={};pagados.forEach(f=>{const d=parseFecha(f['Fecha']||'');const k=d?mesLabel(d):'Sin fecha';if(!grupos[k])grupos[k]=[];grupos[k].push(f);});Object.entries(grupos).forEach(function(entry){const mes=entry[0],rows=entry[1];const tot=rows.reduce((s,f)=>s+(parseFloat(f['Monto'])||0),0);html+='<tr><td colspan="5" style="background:var(--surface2);padding:.65rem 1rem;font-family:DM Mono,monospace;font-size:.58rem;letter-spacing:.15em;text-transform:uppercase;color:var(--gold);border-bottom:1px solid var(--border);">// '+mes+' &nbsp;<span style="color:var(--green)">+$'+tot.toLocaleString()+'</span></td></tr>';html+=rows.map(f=>renderFinRow(f)).join('');});}
+  } else if(finView==='ingresos'){
     const pendientes=viewList.filter(f=>/pendiente/i.test(f['Estado']||'')).sort(sortDesc);
     const pagados=viewList.filter(f=>/pagado/i.test(f['Estado']||'')).sort(sortDesc);
     const totalPend=pendientes.reduce((s,f)=>s+(parseFloat(f['Monto'])||0),0);
@@ -1390,7 +1451,19 @@ function renderFinanzas(){
     if(gastosPend.length){html+='<tr><td colspan="8" style="background:rgba(248,113,113,.05);padding:.65rem 1rem;font-family:DM Mono,monospace;font-size:.58rem;letter-spacing:.15em;text-transform:uppercase;color:var(--red);border-bottom:1px solid rgba(248,113,113,.2);">// Gastos pendientes \u2014 '+fmt(totalGPend)+' por saldar (no restan a\xFAn)</td></tr>';html+=gastosPend.map(f=>renderFinRow(f)).join('');}
     if(gastosPagados.length){const grupos={};gastosPagados.forEach(f=>{const d=parseFecha(f['Fecha']||'');const k=d?mesLabel(d):'Sin fecha';if(!grupos[k])grupos[k]=[];grupos[k].push(f);});Object.entries(grupos).forEach(function(entry){const mes=entry[0],rows=entry[1];const tot=rows.reduce((s,f)=>s+(parseFloat(f['Monto'])||0),0);html+='<tr><td colspan="8" style="background:var(--surface2);padding:.65rem 1rem;font-family:DM Mono,monospace;font-size:.58rem;letter-spacing:.15em;text-transform:uppercase;color:var(--red);border-bottom:1px solid var(--border);">// '+mes+' &nbsp;<span style="color:var(--red)">\u2212'+fmt(tot)+'</span></td></tr>';html+=rows.map(f=>renderFinRow(f)).join('');});}
   }
-  document.getElementById('finanzasContainer').innerHTML='<table class="data-table"><thead><tr><th>Concepto</th><th>Tipo</th><th>Artista</th><th>Proyecto</th><th>Fecha</th><th>Monto</th><th>Acciones</th></tr></thead><tbody>'+html+'</tbody></table>';
+  let summaryHtml='';
+  if(userRole==='darol'){
+    const darolPagado=viewList.filter(f=>/pagado/i.test(f['Estado']||'')).reduce((s,f)=>s+(parseFloat(f['Monto'])||0),0);
+    const darolPend=viewList.filter(f=>/pendiente/i.test(f['Estado']||'')).reduce((s,f)=>s+(parseFloat(f['Monto'])||0),0);
+    summaryHtml='<div style="display:flex;gap:1px;border:1px solid var(--border);border-top:none;">'
+      +'<div style="flex:1;background:var(--surface);padding:1rem 1.4rem;"><div style="font-family:DM Mono,monospace;font-size:.58rem;letter-spacing:.15em;text-transform:uppercase;color:var(--muted2);margin-bottom:.3rem;">Cobrado</div><div style="font-family:Bebas Neue,sans-serif;font-size:1.6rem;color:var(--green)">$'+darolPagado.toLocaleString()+'</div></div>'
+      +'<div style="flex:1;background:var(--surface);padding:1rem 1.4rem;"><div style="font-family:DM Mono,monospace;font-size:.58rem;letter-spacing:.15em;text-transform:uppercase;color:var(--muted2);margin-bottom:.3rem;">Por cobrar</div><div style="font-family:Bebas Neue,sans-serif;font-size:1.6rem;color:var(--yellow)">$'+darolPend.toLocaleString()+'</div></div>'
+      +'</div>';
+    // Darol view: simpler table (no Tipo col, no Artista col, show Estado)
+    document.getElementById('finanzasContainer').innerHTML='<table class="data-table"><thead><tr><th>Concepto</th><th>Proyecto</th><th>Fecha</th><th>Monto</th><th>Estado</th></tr></thead><tbody>'+html+'</tbody></table>'+summaryHtml;
+  } else {
+    document.getElementById('finanzasContainer').innerHTML='<table class="data-table"><thead><tr><th>Concepto</th><th>Tipo</th><th>Artista</th><th>Proyecto</th><th>Fecha</th><th>Monto</th><th>Personal</th><th>Acciones</th></tr></thead><tbody>'+html+'</tbody></table>';
+  }
 }
 
 function editPago(rowNum){
@@ -1549,7 +1622,7 @@ async function guardarCurso(){
 }
 
 // ==============================================
-// CATALOGO — setCatView + renderCatalogo actualizado
+// CATALOGO \u2014 setCatView + renderCatalogo actualizado
 // ==============================================
 function setCatView(view){
   catView=view;
@@ -1596,7 +1669,7 @@ function renderCatalogo(){
   const container=document.getElementById('catalogoContainer');
   const mobileContainer=document.getElementById('catalogoMobile');
 
-  // Filtrar por tab + búsqueda + estilo — orden inverso (más nuevos arriba)
+  // Filtrar por tab + búsqueda + estilo \u2014 orden inverso (más nuevos arriba)
   let list=[...allBeats].reverse().filter(b=>{
     const m=!q||(b['Nombre']||'').toLowerCase().includes(q)||(b['Estilo']||'').toLowerCase().includes(q);
     const es=!estilo||(b['Estilo']||'').toLowerCase()===estilo.toLowerCase();
@@ -1615,8 +1688,8 @@ function renderCatalogo(){
 
   // Agrupar por estado para mostrar divisores estilo Finanzas
   const grupos=[
-    {label:'// Apartados — en espera de pago',color:'var(--yellow)',bgColor:'rgba(251,191,36,.05)',beats:list.filter(b=>b['Estado']==='Apartado'),show:catView==='todos'||catView==='apartado'},
-    {label:'// Libres — disponibles',color:'var(--green)',bgColor:'rgba(52,211,153,.04)',beats:list.filter(b=>(b['Estado']||'Libre')==='Libre'),show:catView==='todos'||catView==='libre'},
+    {label:'// Apartados \u2014 en espera de pago',color:'var(--yellow)',bgColor:'rgba(251,191,36,.05)',beats:list.filter(b=>b['Estado']==='Apartado'),show:catView==='todos'||catView==='apartado'},
+    {label:'// Libres \u2014 disponibles',color:'var(--green)',bgColor:'rgba(52,211,153,.04)',beats:list.filter(b=>(b['Estado']||'Libre')==='Libre'),show:catView==='todos'||catView==='libre'},
     {label:'// Vendidos',color:'var(--red)',bgColor:'rgba(248,113,113,.04)',beats:list.filter(b=>b['Estado']==='Vendido'),show:catView==='todos'||catView==='vendido'},
   ].filter(g=>g.show&&g.beats.length>0);
 
@@ -1920,7 +1993,7 @@ function togglePersonalField(){
 }
 
 // ════════════════════════════════════════════
-// ROLE UI — ocultar/mostrar según usuario
+// ROLE UI \u2014 ocultar/mostrar según usuario
 // ════════════════════════════════════════════
 function applyRoleUI(){
   const isDarol=userRole==='darol';
@@ -1984,7 +2057,7 @@ function renderTareas(){
 
   const isDarol=userRole==='darol';
   container.innerHTML=`<table class="data-table"><thead><tr>
-    <th>Título</th><th>Descripción</th><th>Asignado</th><th>Estado</th>${isDarol?'':'<th>Acciones</th>'}
+    <th>Título</th><th>Descripción</th><th>Asignado</th><th>Estado</th><th>Acciones</th>
   </tr></thead><tbody>${list.map(t=>{
     const est=t['Estado']||'Pendiente';
     const estBadge=est==='Hecho'
@@ -1994,14 +2067,19 @@ function renderTareas(){
     const rn=t._rowNumber;
     const titulo=(t['Titulo']||'').replace(/'/g,"\'");
     return `<tr>
-      <td style="font-weight:600">${t['Titulo']||'—'}</td>
-      <td style="font-family:DM Mono,monospace;font-size:.72rem;color:var(--muted)">${t['Descripcion']||'—'}</td>
-      <td style="font-family:DM Mono,monospace;font-size:.68rem;color:${asigColor}">${t['Asignado']||'—'}</td>
+      <td style="font-weight:600">${t['Titulo']||'\u2014'}</td>
+      <td style="font-family:DM Mono,monospace;font-size:.72rem;color:var(--muted)">${t['Descripcion']||'\u2014'}</td>
+      <td style="font-family:DM Mono,monospace;font-size:.68rem;color:${asigColor}">${t['Asignado']||'\u2014'}</td>
       <td>${estBadge}</td>
-      ${isDarol?'':`<td><div class="td-actions">
-        <button class="btn-xs btn-xs-edit" onclick="editTarea(${rn})">Editar</button>
-        <button class="btn-xs btn-xs-del" onclick="confirmDelete('tarea',${rn},'${titulo}')">Borrar</button>
-      </div></td>`}
+      <td><div class="td-actions">
+        ${isDarol
+          ? (est==='Pendiente'
+            ? `<button class="btn-xs btn-xs-save" onclick="marcarTareaHecha(${rn})">✓ Hecho</button>`
+            : `<button class="btn-xs" style="background:rgba(251,191,36,.1);color:var(--yellow)" onclick="marcarTareaPendiente(${rn})">↩ Pendiente</button>`)
+          : `<button class="btn-xs btn-xs-edit" onclick="editTarea(${rn})">Editar</button>
+             <button class="btn-xs btn-xs-del" onclick="confirmDelete('tarea',${rn},'${titulo}')">Borrar</button>`
+        }
+      </div></td>
     </tr>`;
   }).join('')}</tbody></table>`;
 
@@ -2022,6 +2100,15 @@ function editTarea(rowNum){
   document.getElementById('tareaAsignado').value=t['Asignado']||'Heaven';
   document.getElementById('tareaEstado').value=t['Estado']||'Pendiente';
   openModal('modalTarea');
+}
+
+async function marcarTareaHecha(rowNum){
+  const t=allTareas.find(x=>x._rowNumber===rowNum);
+  if(!t){toast('Tarea no encontrada','error');return;}
+  const values=[t['ID']||'',t['Titulo']||'',t['Descripcion']||'',t['Asignado']||'','Hecho'];
+  const ok=await updateRow(SH.tareas,rowNum,values);
+  if(ok){toast('✓ Tarea marcada como hecha','success');await loadAdmin(800);}
+  else{toast('Error \u2014 activa OAuth primero','error');}
 }
 
 async function guardarTarea(){
@@ -2045,11 +2132,29 @@ async function guardarTarea(){
     document.getElementById('modalTareaTitle').textContent='NUEVA TAREA';
     ['tareaTitulo','tareaDesc'].forEach(id=>{document.getElementById(id).value='';});
     await loadAdmin(800);
-  } else {toast('Error al guardar — activa OAuth primero','error');}
+  } else {toast('Error al guardar \u2014 activa OAuth primero','error');}
+}
+
+async function marcarTareaHecha(rowNum){
+  const t=allTareas.find(x=>x._rowNumber===rowNum);
+  if(!t) return;
+  const values=[t['ID']||'',t['Titulo']||'',t['Descripcion']||'',t['Asignado']||'','Hecho'];
+  const ok=await updateRow(SH.tareas,rowNum,values);
+  if(ok){toast('✓ Tarea marcada como hecha','success');await loadAdmin(800);}
+  else{toast('Error \u2014 activa OAuth primero','error');}
+}
+
+async function marcarTareaPendiente(rowNum){
+  const t=allTareas.find(x=>x._rowNumber===rowNum);
+  if(!t) return;
+  const values=[t['ID']||'',t['Titulo']||'',t['Descripcion']||'',t['Asignado']||'','Pendiente'];
+  const ok=await updateRow(SH.tareas,rowNum,values);
+  if(ok){toast('↩ Tarea marcada como pendiente','success');await loadAdmin(800);}
+  else{toast('Error \u2014 activa OAuth primero','error');}
 }
 
 // ════════════════════════════════════════════
-// PROYECTOS DAROL — vista limitada
+// PROYECTOS DAROL \u2014 vista limitada
 // ════════════════════════════════════════════
 function renderProyectosDarol(){
   // Filter by search too
@@ -2060,7 +2165,7 @@ function renderProyectosDarol(){
     return asignado&&m;
   });
   const container=document.getElementById('proyectosContainer');
-  // Hide toggle buttons — Darol sees all his projects
+  // Hide toggle buttons \u2014 Darol sees all his projects
   ['toggleActivos','toggleFinalizados','toggleCancelados'].forEach(id=>{
     const el=document.getElementById(id);if(el)el.style.display='none';
   });
@@ -2074,14 +2179,14 @@ function renderProyectosDarol(){
   }
   const rows=list.map(p=>{
     const a=getArtista(p['Cliente']);
-    const na=a?a['AKA']||a['Nombre']:p['Cliente']||'—';
+    const na=a?a['AKA']||a['Nombre']:p['Cliente']||'\u2014';
     const rn=p._rowNumber;
-    const nombre=p['Nombre del proyecto']||'—';
+    const nombre=p['Nombre del proyecto']||'\u2014';
     return `<tr>
       <td><div style="font-weight:600;font-size:.85rem">${nombre}</div><div style="font-size:.6rem;color:var(--muted2)">${p['ID']||''}</div></td>
       <td style="font-size:.72rem;color:var(--purple-light)">${na}</td>
-      <td style="font-size:.68rem;color:var(--muted)">${p['Tipo de servicio']||'—'}</td>
-      <td style="font-size:.68rem;color:var(--muted)">${p['Fecha inicio']||'—'}</td>
+      <td style="font-size:.68rem;color:var(--muted)">${p['Tipo de servicio']||'\u2014'}</td>
+      <td style="font-size:.68rem;color:var(--muted)">${p['Fecha inicio']||'\u2014'}</td>
       <td>${getBadge(p['Estado proyecto'])}</td>
       <td><div class="td-actions">
         <button class="btn-xs btn-xs-edit" onclick="editProyectoDarol(${rn})">Editar</button>
@@ -2094,22 +2199,57 @@ function renderProyectosDarol(){
 }
 
 function editProyectoDarol(rowNum){
-  // Darol solo puede editar título y estado
   const p=allProyectos.find(x=>x._rowNumber===rowNum);
   if(!p) return;
   document.getElementById('mpRowNum').value=rowNum;
+  // Fill all fields
   document.getElementById('mpNombre').value=p['Nombre del proyecto']||'';
+  document.getElementById('mpServicio').value=p['Tipo de servicio']||'';
   document.getElementById('mpEstado').value=p['Estado proyecto']||'01 | En proceso';
-  // Hide all fields except nombre and estado
+  const toInputDate=s=>{if(!s)return'';const m=s.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);return m?m[3]+'-'+m[2].padStart(2,'0')+'-'+m[1].padStart(2,'0'):'';};
+  document.getElementById('mpFechaI').value=toInputDate(p['Fecha inicio']||'');
+  document.getElementById('mpFechaE').value=toInputDate(p['Fecha entrega']||'');
+  document.getElementById('mpBonos').value=p['Bonos incluidos']||p['Bonos']||'';
+  document.getElementById('mpNotas').value=p['Notas del proyecto']||p['Notas']||'';
+  document.getElementById('mpSolicitado').value=p['Solicitado']||'';
+  document.getElementById('mpArchivos').value=p['Archivos entregados']||'';
+
+  // Solo editable: Estado + Fecha entrega
+  // Solo lectura (visible pero disabled): Nombre, Artista, Servicio, Fecha inicio
+  // Ocultar: Bonos, Notas, Solicitado, Asignado, Archivo subir
+  const editableIds=['mpEstado','mpFechaE'];
+  const readonlyIds=['mpNombre','mpServicio','mpFechaI'];
+  const hiddenIds=['mpCliente','mpBonos','mpNotas','mpSolicitado','mpAsignado','mpArchivo','mpArchivos'];
+
   document.querySelectorAll('#modalProyecto .form-group').forEach(g=>{
     const inp=g.querySelector('input,select');
-    if(!inp) return;
+    if(!inp){g.style.display='none';return;}
     const id=inp.id;
-    const allowed=['mpNombre','mpEstado'];
-    g.style.display=allowed.includes(id)?'':'none';
+    if(hiddenIds.includes(id)){
+      g.style.display='none';
+      inp.disabled=false;
+    } else if(readonlyIds.includes(id)){
+      g.style.display='';
+      inp.disabled=true;
+      inp.style.opacity='.6';
+      inp.style.cursor='default';
+    } else if(editableIds.includes(id)){
+      g.style.display='';
+      inp.disabled=false;
+      inp.style.opacity='';
+      inp.style.cursor='';
+    } else {
+      g.style.display='none';
+    }
   });
-  document.getElementById('modalProyecto').querySelector('.modal-title').textContent='EDITAR PROYECTO';
-  // Change button to only update nombre + estado
+
+  // Set artista label manually (read only display)
+  setTimeout(()=>{
+    const sel=document.getElementById('mpCliente');
+    if(sel) sel.value=p['Cliente']||'';
+  },50);
+
+  document.getElementById('modalProyecto').querySelector('.modal-title').textContent='PROYECTO // DAROL';
   document.getElementById('modalProyecto').querySelector('.btn-green').onclick=actualizarProyectoDarol;
   openModal('modalProyecto');
 }
@@ -2118,16 +2258,16 @@ async function actualizarProyectoDarol(){
   const rowNum=parseInt(document.getElementById('mpRowNum').value);
   const p=allProyectos.find(x=>x._rowNumber===rowNum);
   if(!p){toast('Proyecto no encontrado','error');return;}
-  // Build values preserving all existing data, only changing nombre and estado
   const fmtDate2=d=>{if(!d)return'';const[y,m,dd]=d.split('-');return dd&&m&&y?dd+'/'+m+'/'+y:d;};
+  // Only update Estado (col I) and Fecha entrega (col G) \u2014 preserve everything else
   const values=[
     p['ID']||'',
-    document.getElementById('mpNombre').value.trim(),
+    p['Nombre del proyecto']||'',
     p['Cliente']||'',
     p['Tipo de servicio']||'',
     p['Fecha sesión']||p['Fecha sesion']||'',
     p['Fecha inicio']||'',
-    p['Fecha entrega']||'',
+    fmtDate2(document.getElementById('mpFechaE').value),
     p['Bonos incluidos']||p['Bonos']||'',
     document.getElementById('mpEstado').value,
     p['Archivos entregados']||'',
