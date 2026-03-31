@@ -383,7 +383,7 @@ body::before{content:'';position:fixed;inset:0;background-image:url("data:image/
           <button id="toggleCancelados" onclick="setPrjView('cancelados')" style="font-family:DM Mono,monospace;font-size:.68rem;letter-spacing:.12em;text-transform:uppercase;padding:.7rem 1.6rem;border:none;cursor:none;transition:background .2s,color .2s;background:var(--surface2);color:var(--muted);">&#x2717; Cancelados</button>
         </div>
         <div class="filter-bar">
-          <input class="filter-input" id="searchProyectos" placeholder="// Buscar proyecto o artista..." oninput="renderProyectos()"/>
+          <input class="filter-input" id="searchProyectos" placeholder="// Buscar proyecto o artista..." oninput="userRole==='darol'?renderProyectosDarol():renderProyectos()"/>
         </div>
         <div class="table-wrap" id="proyectosContainer"><div class="loading-state"><div class="spinner"></div>Cargando...</div></div>
       </div>
@@ -1016,7 +1016,9 @@ async function loadAdmin(delay=0){
   [allArtistas,allProyectos,allFinanzas,allCursos,allBeats,allTareas]=await Promise.all([
     fetchSheet(SH.artistas),fetchSheet(SH.proyectos),fetchSheet(SH.finanzas),fetchSheet(SH.cursos),fetchSheet(SH.catalogo),fetchSheet(SH.tareas)
   ]);
-  renderDashboard();renderArtistas();renderProyectos();renderFinanzas();renderCursosAdmin();renderCatalogo();renderTareas();
+  renderDashboard();renderArtistas();
+  if(userRole==='darol')renderProyectosDarol();else renderProyectos();
+  renderFinanzas();renderCursosAdmin();renderCatalogo();renderTareas();
   // Refresh badge
   const pend=allTareas.filter(t=>t['Estado']==='Pendiente').length;const b=document.getElementById('badgeTareas');if(b){b.style.display=pend>0?'inline':'none';b.textContent=pend;}
   populateArtistSelects();populateProyectoSelects();updateBadges();
@@ -2287,7 +2289,7 @@ function showPage(name,el){
   if(el)el.classList.add('active');
   closeSidebar();
   if(name==='finanzas')renderFinanzas();
-  if(name==='proyectos'){setPrjView(prjView);}
+  if(name==='proyectos'){if(userRole==='darol')renderProyectosDarol();else setPrjView(prjView);}
   if(name==='artistas')renderArtistas();
   if(name==='dashboard')renderDashboard();
   if(name==='cursos')renderCursosAdmin();
