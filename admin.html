@@ -922,27 +922,46 @@ async function fetchSheet(name){
   }catch(e){return[];}
 }
 
-// SHEETS API - WRITE (via Apps Script — no requiere OAuth)
-const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzSFXEi4xbkF1tfWZMWbU9GLSTr-ComQ3_JkUw3NTqpXDsfRl0AhnQcujGM3BNgpx2r/exec';
-async function _appsScriptPost(payload){
+// SHEETS API - WRITE
+async function appendRow(sheet,values){
+  if(!oauthToken){toast('Conecta Google primero','error');return false;}
   try{
-    const r=await fetch(APPS_SCRIPT_URL,{
-      method:'POST',
-      headers:{'Content-Type':'application/json'},
-      body:JSON.stringify(payload)
-    });
-    const d=await r.json();
-    return d.ok===true;
+    const r=await fetch(
+      `https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}/values/${encodeURIComponent(sheet)}:append?valueInputOption=USER_ENTERED&insertDataOption=INSERT_ROWS`,
+      {method:'POST',headers:{'Authorization':`Bearer ${oauthToken}`,'Content-Type':'application/json'},
+       body:JSON.stringify({values:[values]})}
+    );
+    return r.ok;
   }catch{return false;}
 }
-async function appendRow(sheet,values){
-  return _appsScriptPost({action:'append',sheet,values});
-}
 async function updateRow(sheet,rowNumber,values){
-  return _appsScriptPost({action:'update',sheet,row:rowNumber,values});
+  if(!oauthToken){toast('Conecta Google primero','error');return false;}
+  try{
+    const colEnd=String.fromCharCode(64+values.length);
+    const range=`${sheet}!A${rowNumber}:${colEnd}${rowNumber}`;
+    const r=await fetch(
+      `https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}/values/${encodeURIComponent(range)}?valueInputOption=USER_ENTERED`,
+      {method:'PUT',headers:{'Authorization':`Bearer ${oauthToken}`,'Content-Type':'application/json'},
+       body:JSON.stringify({values:[values]})}
+    );
+    return r.ok;
+  }catch{return false;}
 }
 async function deleteRow(sheet,rowNumber){
-  return _appsScriptPost({action:'delete',sheet,row:rowNumber});
+  if(!oauthToken){toast('Conecta Google primero','error');return false;}
+  try{
+    const meta=await fetch(`https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}?key=${API_KEY}`);
+    const metaData=await meta.json();
+    const sheetObj=metaData.sheets.find(s=>s.properties.title===sheet);
+    if(!sheetObj)return false;
+    const sheetGid=sheetObj.properties.sheetId;
+    const r=await fetch(
+      `https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}:batchUpdate`,
+      {method:'POST',headers:{'Authorization':`Bearer ${oauthToken}`,'Content-Type':'application/json'},
+       body:JSON.stringify({requests:[{deleteDimension:{range:{sheetId:sheetGid,dimension:'ROWS',startIndex:rowNumber-1,endIndex:rowNumber}}}]})}
+    );
+    return r.ok;
+  }catch{return false;}
 }
 
 // DRIVE API - UPLOAD con carpeta especifica
@@ -1511,6 +1530,7 @@ function populateArtistSelects(){
 }
 
 async function guardarProyecto(){
+  if(!oauthToken){toast('Conecta Google primero para guardar','error');return;}
   const nombre=document.getElementById('npNombre').value.trim();const artista=document.getElementById('npArtista').value;
   if(!nombre||!artista){toast('Nombre y artista requeridos','error');return;}
   const servicio=document.getElementById('npServicio').value;const estado=document.getElementById('npEstado').value;
@@ -1542,7 +1562,7 @@ function confirmDelete(tipo,rowNum,nombre){
     const sheet=tipo==='artista'?SH.artistas:tipo==='proyecto'?SH.proyectos:tipo==='curso'?SH.cursos:tipo==='beat'?SH.catalogo:tipo==='tarea'?SH.tareas:SH.finanzas;
     const ok=await deleteRow(sheet,rowNum);
     if(ok){toast('\u2713 Eliminado','success');closeModal('modalConfirm');await loadAdmin();}
-    else{toast('Error al eliminar','error');closeModal('modalConfirm');}
+    else{toast('Error al eliminar \u2014 aseg\xFArate de tener OAuth activo','error');closeModal('modalConfirm');}
   };
   openModal('modalConfirm');
 }
