@@ -1511,7 +1511,6 @@ function populateArtistSelects(){
 }
 
 async function guardarProyecto(){
-  if(!oauthToken){toast('Conecta Google primero para guardar','error');return;}
   const nombre=document.getElementById('npNombre').value.trim();const artista=document.getElementById('npArtista').value;
   if(!nombre||!artista){toast('Nombre y artista requeridos','error');return;}
   const servicio=document.getElementById('npServicio').value;const estado=document.getElementById('npEstado').value;
@@ -1543,7 +1542,7 @@ function confirmDelete(tipo,rowNum,nombre){
     const sheet=tipo==='artista'?SH.artistas:tipo==='proyecto'?SH.proyectos:tipo==='curso'?SH.cursos:tipo==='beat'?SH.catalogo:tipo==='tarea'?SH.tareas:SH.finanzas;
     const ok=await deleteRow(sheet,rowNum);
     if(ok){toast('\u2713 Eliminado','success');closeModal('modalConfirm');await loadAdmin();}
-    else{toast('Error al eliminar \u2014 aseg\xFArate de tener OAuth activo','error');closeModal('modalConfirm');}
+    else{toast('Error al eliminar','error');closeModal('modalConfirm');}
   };
   openModal('modalConfirm');
 }
