@@ -1001,8 +1001,13 @@ async function uploadToDrive(file, folderName){
     await fetch(`https://www.googleapis.com/drive/v3/files/${d.id}/permissions`,
       {method:'POST',headers:{'Authorization':`Bearer ${oauthToken}`,'Content-Type':'application/json'},
        body:JSON.stringify({role:'reader',type:'anyone'})});
-    // Return thumbnail URL for images, download URL for others
-    return `https://drive.google.com/thumbnail?id=${d.id}&sz=w200`;
+    // Images → thumbnail URL, everything else → download URL
+    const isImage = file.type && file.type.startsWith('image/');
+    if(isImage){
+      return `https://drive.google.com/thumbnail?id=${d.id}&sz=w200`;
+    } else {
+      return `https://drive.google.com/uc?export=download&id=${d.id}`;
+    }
   }catch{return null;}
 }
 
