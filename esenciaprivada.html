@@ -3,11 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Esencia Privada | Protocolo y Servicios Profesionales</title>
+    <title>Esencia Privada | Protocolo y Servicios</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600&family=Outfit:wght@400;700;900&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
-
     <style>
         body { font-family: 'Inter', sans-serif; background-color: #050508; color: #e2e8f0; }
         h1, h2, h3, h4 { font-family: 'Outfit', sans-serif; }
@@ -17,114 +16,74 @@
 </head>
 <body class="selection:bg-purple-500 selection:text-white pb-20">
 
-    <header class="relative min-h-[30vh] flex flex-col items-center justify-center p-6 text-center">
-        <div class="absolute inset-0 pointer-events-none">
-            <div class="absolute top-0 right-[-10%] w-[300px] h-[300px] bg-purple-900/10 rounded-full blur-[100px]"></div>
-        </div>
-        <h1 class="text-4xl md:text-7xl font-black mb-4 gradient-text uppercase tracking-tight">Esencia <br>Privada</h1>
-        <p class="text-md md:text-xl text-slate-400 max-w-lg">Protocolo, metodología y estándares de alta gama para tu música.</p>
+    <header class="min-h-[40vh] flex flex-col items-center justify-center p-6 text-center">
+        <h1 class="text-5xl md:text-8xl font-black mb-4 gradient-text uppercase tracking-tight">Esencia <br>Privada</h1>
+        <p class="text-slate-400 max-w-lg italic">"El rigor técnico al servicio de tu visión artística."</p>
     </header>
 
-    <main class="max-w-4xl mx-auto px-4 md:px-6 space-y-12">
+    <main class="max-w-5xl mx-auto px-4 md:px-6 space-y-12">
 
+        <!-- PRODUCCIÓN MUSICAL -->
         <section>
-            <h2 class="text-2xl md:text-3xl font-bold mb-6 text-white">Metodología de Sesión</h2>
-            <div class="glass-card p-6 md:p-8 rounded-3xl">
-                <p class="text-slate-300 mb-6 italic border-l-2 border-purple-500 pl-4">"Excelencia técnica en 3 horas intensivas."</p>
-                <div class="grid md:grid-cols-2 gap-6">
-                    <div>
-                        <h4 class="font-bold text-white mb-2 flex items-center"><i class="fa-solid fa-clock text-purple-500 mr-2"></i> Estructura</h4>
-                        <p class="text-sm text-slate-400 leading-relaxed">Sesión de <strong>3 horas máximas</strong>. Divididas en 2 horas de captura de voces (principales, armonías, ad-libs) y 1 hora de diseño sonoro y efectos ("Throws FX").</p>
-                    </div>
-                    <div>
-                        <h4 class="font-bold text-white mb-2 flex items-center"><i class="fa-solid fa-pen text-purple-500 mr-2"></i> Preparación</h4>
-                        <p class="text-sm text-slate-400 leading-relaxed">Es obligatorio llegar con la letra finalizada. Este es un entorno de grabación, no de escritura. Si el artista no está preparado, la sesión se cancela y se requiere un nuevo pago para reagendar.</p>
-                    </div>
+            <h2 class="text-2xl font-bold mb-6 text-white uppercase tracking-wider border-l-4 border-purple-500 pl-4">Pre-Producción: El Beat</h2>
+            <div class="glass-card p-8 rounded-3xl">
+                <p class="text-slate-300 mb-6">La base de tu canción se construye bajo estándares profesionales. El proceso es el siguiente:</p>
+                <div class="grid md:grid-cols-3 gap-6">
+                    <div class="p-4 border border-white/5 rounded-xl"><h4 class="font-bold text-purple-400 mb-2">1. Llamada de Referencias</h4><p class="text-sm text-slate-400">Realizamos una llamada para definir tu visión, estilo y referencias técnicas.</p></div>
+                    <div class="p-4 border border-white/5 rounded-xl"><h4 class="font-bold text-purple-400 mb-2">2. Timeline</h4><p class="text-sm text-slate-400">Debes enviar tus referencias con <strong>1 semana de anticipación</strong> a la fecha de la sesión.</p></div>
+                    <div class="p-4 border border-white/5 rounded-xl"><h4 class="font-bold text-purple-400 mb-2">3. Validación</h4><p class="text-sm text-slate-400">Te enviamos una versión de revisión para asegurar que vamos por la línea correcta.</p></div>
                 </div>
+                <p class="text-xs text-slate-500 mt-6 mt-4 italic">* El paquete incluye 2 rondas de cambios detallados. Cambios estructurales drásticos (cambio de género/estilo total) después de iniciar el proceso generan un cargo adicional.</p>
             </div>
         </section>
 
-        <section>
-            <h2 class="text-2xl md:text-3xl font-bold mb-6 text-white">Logística de Acceso</h2>
-            <div class="grid md:grid-cols-2 gap-6">
-                <div class="glass-card p-6 rounded-2xl">
-                    <h4 class="font-bold text-white mb-3 flex items-center"><i class="fa-solid fa-microphone mr-2 text-purple-500"></i> Artistas</h4>
-                    <p class="text-sm text-slate-400">El costo base cubre hasta <strong>2 artistas</strong> por sesión. Cada artista adicional tiene un costo extra de $500.00 MXN.</p>
-                </div>
-                <div class="glass-card p-6 rounded-2xl">
-                    <h4 class="font-bold text-white mb-3 flex items-center"><i class="fa-solid fa-users mr-2 text-cyan-500"></i> Acompañantes</h4>
-                    <p class="text-sm text-slate-400">Puedes invitar acompañantes (cantidad mínima sugerida). Es indispensable que guarden silencio absoluto durante el proceso de grabación.</p>
-                </div>
+        <!-- SESIÓN DE GRABACIÓN -->
+        <section class="grid md:grid-cols-2 gap-8">
+            <div class="glass-card p-8 rounded-3xl">
+                <h2 class="text-2xl font-bold mb-6 text-white uppercase">Sesión de Grabación</h2>
+                <ul class="space-y-4 text-slate-300">
+                    <li><i class="fa-solid fa-hourglass-half text-purple-500 mr-3"></i> <strong>Duración:</strong> 3 horas (2 hrs grabación / 1 hr Throws FX).</li>
+                    <li><i class="fa-solid fa-microphone text-purple-500 mr-3"></i> <strong>Equipamiento:</strong> Microfonía Bluebird SL, Interfaz Apollo Solo, Pro Tools.</li>
+                    <li><i class="fa-solid fa-ban text-red-500 mr-3"></i> <strong>Sin preparación:</strong> Si llegas sin letra lista, la sesión se cancela sin reembolso.</li>
+                </ul>
+            </div>
+            <div class="glass-card p-8 rounded-3xl border border-purple-500/30">
+                <h2 class="text-2xl font-bold mb-6 text-white uppercase">Inversión Base</h2>
+                <p class="text-4xl font-black text-white mb-4">$2,500 <span class="text-sm font-normal text-slate-400">MXN</span></p>
+                <ul class="space-y-2 text-sm text-slate-400">
+                    <li>✓ Incluye hasta 2 artistas.</li>
+                    <li>✓ Producción de Beat incluido.</li>
+                    <li>✓ Autotune profesional.</li>
+                    <li>✓ 2 Revisiones post-mezcla.</li>
+                </ul>
             </div>
         </section>
 
+        <!-- REGLAS Y PROTOCOLO -->
         <section>
-            <h2 class="text-2xl md:text-3xl font-bold mb-6 text-white">Inversión y Servicios</h2>
-            <div class="grid md:grid-cols-2 gap-6">
-                <div class="glass-card p-6 md:p-8 rounded-3xl border border-purple-500/30">
-                    <h3 class="text-xl font-bold text-white mb-4">Costo Base: $2,500.00 MXN</h3>
-                    <ul class="space-y-3 text-sm text-slate-300">
-                        <li><i class="fa-solid fa-check text-purple-500 mr-2"></i> 1 Canción por sesión.</li>
-                        <li><i class="fa-solid fa-check text-purple-500 mr-2"></i> Autotune incluido.</li>
-                        <li><i class="fa-solid fa-check text-purple-500 mr-2"></i> 2 Revisiones post-mezcla.</li>
-                    </ul>
-                </div>
-                <div class="glass-card p-6 md:p-8 rounded-3xl border border-cyan-500/30">
-                    <h3 class="text-xl font-bold text-white mb-4">Servicios Adicionales</h3>
-                    <ul class="space-y-3 text-sm text-slate-300">
-                        <li><strong>Afinación manual:</strong> +$700.00 MXN</li>
-                        <li><strong>Artista adicional:</strong> +$500.00 MXN</li>
-                        <li><strong>Hora extra de sesión:</strong> +$300.00 MXN</li>
-                    </ul>
-                </div>
+            <h2 class="text-2xl font-bold mb-6 text-white uppercase">Normas de Convivencia</h2>
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                <div class="glass-card p-4 rounded-xl text-center"><i class="fa-solid fa-smoking-ban text-2xl mb-2 text-red-500"></i><p class="text-xs">No fumar (Solo Vape)</p></div>
+                <div class="glass-card p-4 rounded-xl text-center"><i class="fa-solid fa-martini-glass-citrus text-2xl mb-2 text-yellow-500"></i><p class="text-xs">No embriagarse</p></div>
+                <div class="glass-card p-4 rounded-xl text-center"><i class="fa-solid fa-users text-2xl mb-2 text-cyan-500"></i><p class="text-xs">Acompañantes en silencio</p></div>
+                <div class="glass-card p-4 rounded-xl text-center"><i class="fa-solid fa-clock text-2xl mb-2 text-purple-500"></i><p class="text-xs">Puntualidad obligatoria</p></div>
             </div>
         </section>
 
-        <section>
-            <h2 class="text-2xl md:text-3xl font-bold mb-6 text-white">Protocolo y Normas</h2>
-            <div class="grid md:grid-cols-2 gap-6">
-                <div class="glass-card p-6 rounded-2xl">
-                    <h4 class="font-bold text-white mb-2">Entorno Libre de Humo</h4>
-                    <p class="text-sm text-slate-400">El estudio es un espacio libre de humo. Solo se permite el uso de vaporizadores. Para fumar tabaco, favor de hacerlo en el exterior.</p>
-                </div>
-                <div class="glass-card p-6 rounded-2xl">
-                    <h4 class="font-bold text-white mb-2">Consumo de Alcohol</h4>
-                    <p class="text-sm text-slate-400">Prohibido el consumo dentro del estudio para proteger el equipo técnico. Se permite en el exterior siempre que no se pierda la sobriedad, para evitar accidentes o daños al mobiliario.</p>
-                </div>
-                <div class="glass-card p-6 rounded-2xl">
-                    <h4 class="font-bold text-white mb-2">Puntualidad Crítica</h4>
-                    <p class="text-sm text-slate-400">El tiempo corre desde la hora agendada. Recomendamos llegar 10 minutos antes. La pérdida de tiempo por impuntualidad no es recuperable.</p>
-                </div>
-                <div class="glass-card p-6 rounded-2xl">
-                    <h4 class="font-bold text-white mb-2">Cancelaciones</h4>
-                    <p class="text-sm text-slate-400">No hay reembolsos. Reprogramaciones permitidas con 24 horas de antelación. Cancelaciones el mismo día resultan en la pérdida de la sesión.</p>
-                </div>
-            </div>
-        </section>
-
-        <section class="grid md:grid-cols-2 gap-6">
-            <div class="glass-card p-6 rounded-3xl">
-                <h3 class="text-lg font-bold text-white mb-4">Proceso Técnico</h3>
-                <p class="text-sm text-slate-400">
-                    Trabajamos bajo el estándar de <strong>Pro Tools</strong>. El monitoreo en tiempo real con efectos está disponible. Las revisiones se realizan de dos formas: una validación presencial al finalizar la grabación y dos revisiones post-mezcla vía WhatsApp. Cambios adicionales posteriores a estas revisiones tendrán un costo extra.
-                </p>
-            </div>
-            <div class="glass-card p-6 rounded-3xl">
-                <h3 class="text-lg font-bold text-white mb-4">Logística y Entrega</h3>
-                <p class="text-sm text-slate-400">
-                    Tiempo de entrega: <strong>2 semanas</strong> posteriores a la sesión. El track final se entrega a través de nuestra plataforma exclusiva con código de acceso personalizado.
-                </p>
-                <div class="mt-4 p-3 bg-white/5 rounded-lg border border-white/10 text-xs text-slate-400 italic">
-                    <i class="fa-solid fa-location-dot mr-2 text-cyan-500"></i> No contamos con estacionamiento, pero hay espacio en calle y acceso a porch para motocicletas.
-                </div>
+        <!-- TARIFAS EXTRAS -->
+        <section class="glass-card p-8 rounded-3xl bg-white/5">
+            <h2 class="text-xl font-bold mb-6 text-white uppercase">Servicios Adicionales</h2>
+            <div class="grid md:grid-cols-3 gap-6 text-sm">
+                <div class="flex justify-between border-b border-white/10 pb-2"><span>Artista Adicional</span> <strong>$500 MXN</strong></div>
+                <div class="flex justify-between border-b border-white/10 pb-2"><span>Afinación Manual</span> <strong>$700 MXN</strong></div>
+                <div class="flex justify-between border-b border-white/10 pb-2"><span>Hora Extra</span> <strong>$300 MXN</strong></div>
             </div>
         </section>
 
     </main>
 
-    <footer class="text-center text-slate-600 text-sm mt-20 px-6">
-        <p>© 2026 Spectre Records • El rigor técnico crea el arte.</p>
+    <footer class="text-center text-slate-600 text-xs mt-20">
+        <p>© 2026 Spectre Records • La excelencia es nuestra única norma.</p>
     </footer>
-
 </body>
 </html>
