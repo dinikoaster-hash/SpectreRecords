@@ -3,694 +3,1032 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Spectre Core - Presentación Oficial de Servicios</title>
-    <script src="https://cdn.tailwindcss.com"></script>
+    <title>Spectre Core — Membresía de Desarrollo Artístico</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Poppins:wght@600;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;1,9..40,300&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
 
     <style>
+        :root {
+            --bg:        #07070c;
+            --surface:   #0f0f17;
+            --border:    rgba(255,255,255,0.06);
+            --border-hi: rgba(255,255,255,0.12);
+            --purple:    #9d6fff;
+            --purple-lo: rgba(157,111,255,0.12);
+            --cyan:      #22d3ee;
+            --cyan-lo:   rgba(34,211,238,0.10);
+            --red:       #f87171;
+            --green:     #4ade80;
+            --text-1:    #f1f0ff;
+            --text-2:    #9896b0;
+            --text-3:    #5e5c75;
+        }
+
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+        html { font-size: 16px; }
+
         body {
-            font-family: 'Inter', sans-serif;
-            background-color: #050508;
+            font-family: 'DM Sans', sans-serif;
+            background: var(--bg);
+            color: var(--text-1);
             overflow: hidden;
             user-select: none;
+            height: 100dvh;
         }
-        h1, h2, h3, .font-display {
-            font-family: 'Poppins', sans-serif;
+
+        h1, h2, h3, h4, .display {
+            font-family: 'Syne', sans-serif;
+            letter-spacing: -0.02em;
         }
-        /* Fullscreen Slide System classes with mobile scrolling support */
-        .slide {
+
+        /* ── AMBIENT BACKGROUND ── */
+        .ambient {
+            position: fixed; inset: 0; pointer-events: none; z-index: 0; overflow: hidden;
+        }
+        .ambient::before {
+            content: '';
             position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            opacity: 0;
-            visibility: hidden;
-            transition: opacity 0.5s cubic-bezier(0.4, 0, 0.2, 1), transform 0.5s cubic-bezier(0.4, 0, 0.2, 1);
-            transform: scale(0.97) translateY(10px);
-            display: flex;
-            align-items: flex-start; /* Align to top to allow natural scrolling on mobile */
-            justify-content: center;
-            padding: 1.5rem;
-            z-index: 10;
-            overflow-y: auto; /* Enable vertical scroll inside the slide for mobile overflow */
-            -webkit-overflow-scrolling: touch;
+            top: -20%; right: -15%;
+            width: min(600px, 90vw); height: min(600px, 90vw);
+            background: radial-gradient(circle, rgba(157,111,255,0.07) 0%, transparent 70%);
         }
+        .ambient::after {
+            content: '';
+            position: absolute;
+            bottom: -20%; left: -15%;
+            width: min(700px, 100vw); height: min(700px, 100vw);
+            background: radial-gradient(circle, rgba(34,211,238,0.05) 0%, transparent 70%);
+        }
+
+        /* Subtle grid texture */
+        .grid-texture {
+            position: fixed; inset: 0; pointer-events: none; z-index: 0;
+            background-image:
+                linear-gradient(rgba(255,255,255,0.015) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(255,255,255,0.015) 1px, transparent 1px);
+            background-size: 48px 48px;
+        }
+
+        /* ── PROGRESS BAR ── */
+        #progress-bar-track {
+            position: fixed; top: 0; left: 0; right: 0; height: 2px;
+            background: rgba(255,255,255,0.04); z-index: 100;
+        }
+        #progress-bar {
+            height: 100%;
+            background: linear-gradient(90deg, var(--purple), var(--cyan));
+            width: 0%;
+            transition: width 0.4s cubic-bezier(0.4,0,0.2,1);
+        }
+
+        /* ── SLIDE SYSTEM ── */
+        #deck {
+            position: relative; width: 100%; height: 100dvh; z-index: 10;
+        }
+
+        .slide {
+            position: absolute; inset: 0;
+            display: flex; align-items: flex-start; justify-content: center;
+            padding: 1.25rem 1.25rem 5.5rem;
+            opacity: 0; visibility: hidden;
+            transform: translateY(12px) scale(0.985);
+            transition: opacity 0.45s ease, transform 0.45s ease;
+            overflow-y: auto;
+            -webkit-overflow-scrolling: touch;
+            scrollbar-width: thin;
+            scrollbar-color: rgba(157,111,255,0.25) transparent;
+        }
+        .slide::-webkit-scrollbar { width: 3px; }
+        .slide::-webkit-scrollbar-thumb { background: rgba(157,111,255,0.3); border-radius: 99px; }
+
         @media (min-width: 1024px) {
             .slide {
-                align-items: center; /* Center vertically on desktop screens */
-                padding: 2rem;
-                overflow-y: hidden; /* Hide overflow on desktop */
+                align-items: center;
+                padding: 2rem 2rem 4.5rem;
+                overflow-y: hidden;
             }
         }
+
         .slide.active {
-            opacity: 1;
-            visibility: visible;
-            transform: scale(1) translateY(0);
-            z-index: 20;
+            opacity: 1; visibility: visible;
+            transform: translateY(0) scale(1);
         }
-        /* Custom Glowing effects */
-        .glow-purple {
-            box-shadow: 0 0 40px rgba(168, 85, 247, 0.15);
+
+        .slide-inner {
+            width: 100%;
+            max-width: 960px;
+            padding-top: 1.5rem;
         }
-        .glow-cyan {
-            box-shadow: 0 0 40px rgba(6, 182, 212, 0.15);
+
+        @media (min-width: 1024px) {
+            .slide-inner { padding-top: 0; }
         }
-        .gradient-text-purple {
-            background: linear-gradient(135deg, #ffffff 40%, #a855f7 100%);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
+
+        /* ── UTILITIES ── */
+        .tag {
+            display: inline-flex; align-items: center; gap: 0.4rem;
+            font-size: 0.65rem; font-weight: 600; letter-spacing: 0.14em;
+            text-transform: uppercase;
+            padding: 0.3rem 0.75rem;
+            border-radius: 99px;
+            border: 1px solid;
         }
-        .gradient-text-cyan {
-            background: linear-gradient(135deg, #ffffff 40%, #06b6d4 100%);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
+        .tag-purple { color: var(--purple); border-color: rgba(157,111,255,0.25); background: rgba(157,111,255,0.06); }
+        .tag-cyan   { color: var(--cyan);   border-color: rgba(34,211,238,0.25);  background: rgba(34,211,238,0.06);  }
+        .tag-red    { color: var(--red);    border-color: rgba(248,113,113,0.25); background: rgba(248,113,113,0.06); }
+
+        .section-label {
+            font-size: 0.65rem; font-weight: 600; letter-spacing: 0.15em;
+            text-transform: uppercase;
         }
-        /* Custom scrollbar style for mobile internal scrolls */
-        .slide::-webkit-scrollbar {
-            width: 4px;
+        .sl-purple { color: var(--purple); }
+        .sl-cyan   { color: var(--cyan);   }
+        .sl-red    { color: var(--red);    }
+
+        .slide-heading {
+            font-family: 'Syne', sans-serif;
+            font-size: clamp(1.5rem, 4vw, 2.5rem);
+            font-weight: 800;
+            line-height: 1.1;
+            color: var(--text-1);
+            margin-top: 0.3rem;
         }
-        .slide::-webkit-scrollbar-thumb {
-            background: rgba(168, 85, 247, 0.3);
-            border-radius: 10px;
+
+        .slide-body {
+            font-size: clamp(0.8rem, 1.5vw, 0.95rem);
+            color: var(--text-2);
+            line-height: 1.7;
+            max-width: 62ch;
         }
+
+        .card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 14px;
+            padding: 1.1rem 1.25rem;
+            transition: border-color 0.2s;
+        }
+        .card:hover { border-color: var(--border-hi); }
+        .card-purple { border-color: rgba(157,111,255,0.18); background: linear-gradient(145deg, rgba(157,111,255,0.06), var(--surface)); }
+        .card-cyan   { border-color: rgba(34,211,238,0.15);  background: linear-gradient(145deg, rgba(34,211,238,0.05),  var(--surface)); }
+
+        .icon-badge {
+            width: 2.25rem; height: 2.25rem; border-radius: 10px;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 0.85rem; flex-shrink: 0;
+        }
+        .icon-badge-purple { background: rgba(157,111,255,0.12); color: var(--purple); }
+        .icon-badge-cyan   { background: rgba(34,211,238,0.10);  color: var(--cyan);   }
+
+        .divider-grad {
+            width: 3.5rem; height: 2px;
+            background: linear-gradient(90deg, var(--purple), var(--cyan));
+            border-radius: 99px;
+        }
+
+        .check-item {
+            display: flex; gap: 0.75rem; align-items: flex-start;
+        }
+        .check-item i { margin-top: 0.2rem; flex-shrink: 0; }
+
+        /* Step cards for slide 6 */
+        .step-card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-top-width: 3px;
+            border-radius: 12px;
+            padding: 1.1rem 1.2rem;
+        }
+        .step-card.s-purple { border-top-color: var(--purple); }
+        .step-card.s-cyan   { border-top-color: var(--cyan); }
+
+        /* Glow effects on images */
+        .img-glow-purple { box-shadow: 0 0 50px rgba(157,111,255,0.12); }
+        .img-glow-cyan   { box-shadow: 0 0 50px rgba(34,211,238,0.10); }
+
+        /* ── CTA BUTTON ── */
+        .btn-wa {
+            display: inline-flex; align-items: center; gap: 0.6rem;
+            padding: 0.9rem 1.75rem;
+            background: #22c55e;
+            color: #fff;
+            font-family: 'Syne', sans-serif;
+            font-size: 0.9rem; font-weight: 700;
+            border-radius: 12px; border: none; cursor: pointer;
+            text-decoration: none;
+            transition: background 0.2s, transform 0.15s;
+            box-shadow: 0 8px 30px rgba(34,197,94,0.2);
+        }
+        .btn-wa:hover  { background: #16a34a; }
+        .btn-wa:active { transform: scale(0.97); }
+
+        /* ── PRICE CARD ── */
+        .price-card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 20px;
+            padding: 2rem;
+            text-align: center;
+            max-width: 340px;
+            width: 100%;
+        }
+        .price-amount {
+            font-family: 'Syne', sans-serif;
+            font-size: clamp(2.5rem, 7vw, 4rem);
+            font-weight: 800;
+            color: var(--cyan);
+            line-height: 1;
+        }
+
+        /* ── NAVIGATION ── */
+        #nav {
+            position: fixed; bottom: 1rem; left: 50%; transform: translateX(-50%);
+            display: flex; align-items: center; gap: 1rem;
+            background: rgba(7,7,12,0.85);
+            backdrop-filter: blur(16px);
+            border: 1px solid var(--border);
+            border-radius: 99px;
+            padding: 0.6rem 1.25rem;
+            z-index: 90;
+            max-width: calc(100vw - 2rem);
+        }
+        .nav-btn {
+            background: none; border: none; cursor: pointer;
+            color: var(--text-3); width: 2rem; height: 2rem;
+            display: flex; align-items: center; justify-content: center;
+            border-radius: 50%; transition: color 0.2s, background 0.2s;
+            font-size: 0.75rem;
+        }
+        .nav-btn:hover { color: var(--text-1); background: rgba(255,255,255,0.06); }
+        #counter {
+            font-family: 'Syne', sans-serif;
+            font-size: 0.7rem; font-weight: 700; letter-spacing: 0.1em;
+            color: var(--text-3); min-width: 3.5rem; text-align: center;
+        }
+
+        /* ── DOT NAV (desktop) ── */
+        #dots {
+            position: fixed; right: 1.25rem; top: 50%; transform: translateY(-50%);
+            display: none;
+            flex-direction: column; gap: 0.5rem; z-index: 90;
+            background: rgba(7,7,12,0.7); backdrop-filter: blur(12px);
+            border: 1px solid var(--border); border-radius: 99px; padding: 0.6rem 0.45rem;
+        }
+        @media (min-width: 1024px) { #dots { display: flex; } }
+        .dot {
+            width: 0.5rem; height: 0.5rem; border-radius: 50%;
+            background: var(--border-hi); border: none; cursor: pointer;
+            transition: background 0.2s, transform 0.2s;
+        }
+        .dot.active { background: var(--purple); transform: scale(1.25); }
+
+        /* ── GRID HELPERS ── */
+        .two-col {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 1.5rem;
+        }
+        @media (min-width: 1024px) {
+            .two-col { grid-template-columns: 1fr 1fr; align-items: center; }
+            .two-col.img-left > :first-child { order: -1; }
+        }
+
+        .three-col {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 0.85rem;
+        }
+        @media (min-width: 640px)  { .three-col { grid-template-columns: 1fr 1fr; } }
+        @media (min-width: 1024px) { .three-col { grid-template-columns: 1fr 1fr 1fr; } }
+
+        .four-col {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 0.85rem;
+        }
+        @media (min-width: 640px)  { .four-col { grid-template-columns: 1fr 1fr; } }
+        @media (min-width: 1024px) { .four-col { grid-template-columns: repeat(4, 1fr); } }
+
+        .studio-img {
+            width: 100%; height: 280px;
+            object-fit: cover; border-radius: 16px;
+            border: 1px solid var(--border);
+            display: block;
+        }
+        @media (min-width: 1024px) { .studio-img { height: 380px; } }
+
+        /* Image columns: hidden on mobile, shown on desktop via CSS only */
+        .img-col {
+            display: none;
+        }
+        @media (min-width: 1024px) {
+            .img-col { display: block; }
+        }
+
+        /* Cover-slide specifics */
+        #slide-1 .slide-inner {
+            display: flex; flex-direction: column; align-items: center;
+            text-align: center; gap: 1.25rem; max-width: 700px;
+        }
+        .hero-title {
+            font-family: 'Syne', sans-serif;
+            font-size: clamp(3rem, 12vw, 7rem);
+            font-weight: 800;
+            line-height: 0.95;
+            background: linear-gradient(150deg, #fff 40%, var(--purple) 100%);
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        .hero-sub {
+            font-size: clamp(1rem, 2.5vw, 1.25rem);
+            color: var(--text-2); font-weight: 300; max-width: 38ch;
+            line-height: 1.5;
+        }
+        .hero-quote {
+            font-family: 'Syne', sans-serif;
+            font-size: clamp(0.7rem, 1.5vw, 0.85rem);
+            letter-spacing: 0.25em; text-transform: uppercase; color: var(--cyan);
+            font-weight: 700;
+        }
+        .hero-hint {
+            font-size: 0.7rem; color: var(--text-3); letter-spacing: 0.05em;
+        }
+
+        /* Timeline connector (slide 6) */
+        .timeline-connector {
+            display: none;
+        }
+        @media (min-width: 1024px) {
+            .timeline-connector {
+                display: block;
+                position: absolute; top: 2.2rem; left: calc(25% - 1px);
+                width: 50%; height: 1px;
+                background: linear-gradient(90deg, var(--purple), var(--cyan));
+                opacity: 0.2;
+            }
+        }
+
+        /* CTA (last) slide */
+        #slide-13 .slide-inner {
+            display: flex; flex-direction: column; align-items: center;
+            text-align: center; gap: 1.5rem; max-width: 560px;
+        }
+
+        /* Policy box */
+        .policy-box {
+            background: rgba(248,113,113,0.05);
+            border: 1px solid rgba(248,113,113,0.2);
+            border-radius: 12px;
+            padding: 1rem 1.25rem;
+            font-size: 0.82rem;
+            color: #fca5a5;
+            line-height: 1.6;
+        }
+
+        /* Highlight box */
+        .highlight-box {
+            background: rgba(157,111,255,0.06);
+            border: 1px solid rgba(157,111,255,0.2);
+            border-radius: 12px;
+            padding: 0.85rem 1.1rem;
+            font-size: 0.82rem;
+            color: #c4b5fd;
+            line-height: 1.6;
+        }
+
+        /* Royalty split visual */
+        .royalty-bar {
+            height: 8px; border-radius: 99px; overflow: hidden;
+            background: rgba(255,255,255,0.06);
+            display: flex;
+        }
+        .royalty-bar .fill-yours { background: var(--cyan); flex: 9; }
+        .royalty-bar .fill-them  { background: rgba(157,111,255,0.5); flex: 1; }
+
+        /* Final summary badge */
+        .sum-badge {
+            display: flex; align-items: center; justify-content: center;
+            width: 1.75rem; height: 1.75rem; border-radius: 50%;
+            font-family: 'Syne', sans-serif; font-size: 0.7rem; font-weight: 700;
+            flex-shrink: 0;
+        }
+        .sum-badge.p { background: rgba(157,111,255,0.15); color: var(--purple); }
+        .sum-badge.c { background: rgba(34,211,238,0.12);  color: var(--cyan);   }
     </style>
 </head>
-<body class="text-slate-100 min-h-screen relative">
+<body>
 
-    <div class="absolute inset-0 z-0 pointer-events-none overflow-hidden">
-        <div class="absolute top-[-10%] right-[-10%] w-[300px] md:w-[500px] h-[300px] md:h-[500px] rounded-full bg-purple-900/10 blur-[100px] md:blur-[120px]"></div>
-        <div class="absolute bottom-[-10%] left-[-10%] w-[400px] md:w-[600px] h-[400px] md:h-[600px] rounded-full bg-cyan-950/10 blur-[120px] md:blur-[150px]"></div>
-    </div>
+<div class="ambient"></div>
+<div class="grid-texture"></div>
 
-    <main id="presentation-container" class="w-full h-screen relative select-none z-10">
+<!-- PROGRESS BAR -->
+<div id="progress-bar-track"><div id="progress-bar"></div></div>
 
-        <section class="slide active" id="slide-1">
-            <div class="max-w-4xl text-center flex flex-col items-center gap-4 md:gap-6 pt-12 md:pt-0 pb-28 md:pb-4">
-                <div class="flex items-center gap-3 px-4 py-1.5 bg-zinc-900/60 border border-purple-500/20 rounded-full text-[10px] md:text-xs font-semibold tracking-[0.2em] text-purple-400 uppercase">
-                    HEAVEN MUSIC x SPECTRE STUDIO
-                </div>
-                <h1 class="text-4xl md:text-8xl font-extrabold tracking-tight py-2 gradient-text-purple">
-                    SPECTRE CORE
-                </h1>
-                <p class="text-lg md:text-2xl text-slate-400 font-light max-w-2xl px-4">
-                    Programa de Desarrollo Artístico Continuo y Mentoría Integral.
-                </p>
-                <div class="w-20 md:w-24 h-1 bg-gradient-to-r from-purple-500 to-cyan-500 rounded-full my-2 md:my-4"></div>
-                <p class="text-xs md:text-md tracking-[0.3em] font-semibold text-cyan-400 uppercase">
-                    "No solo grabas. Creces."
-                </p>
-                <p class="text-[10px] md:text-xs text-slate-500 mt-6 font-light">
-                    Mérida, Yucatán • Presiona [→], arrastra o desliza para avanzar
-                </p>
+<!-- DECK -->
+<main id="deck">
+
+    <!-- ══════════════════════════════════════════
+         SLIDE 1 — PORTADA
+    ═══════════════════════════════════════════ -->
+    <section class="slide active" id="slide-1">
+        <div class="slide-inner">
+            <div class="tag tag-purple" style="margin-bottom:0.25rem">
+                <i class="fa-solid fa-bolt" style="font-size:0.55rem"></i>
+                Heaven Music x Spectre Studio
             </div>
-        </section>
+            <h1 class="hero-title">SPECTRE<br>CORE</h1>
+            <div class="divider-grad"></div>
+            <p class="hero-sub">
+                Programa de Desarrollo Artístico Continuo y Mentoría Integral para artistas independientes en Mérida, Yucatán.
+            </p>
+            <p class="hero-quote">"No solo grabas. Creces."</p>
+            <p class="hero-hint">Presiona <kbd style="padding:0.1rem 0.4rem; border:1px solid rgba(255,255,255,0.1); border-radius:4px; font-size:0.65rem">→</kbd> o desliza para avanzar</p>
+        </div>
+    </section>
 
-        <section class="slide" id="slide-2">
-            <div class="max-w-6xl w-full grid grid-cols-1 lg:grid-cols-12 gap-6 md:gap-10 items-center pt-8 md:pt-0 pb-28 md:pb-4">
-                <div class="lg:col-span-7 flex flex-col gap-4 md:gap-6">
-                    <div class="border-l-4 border-purple-500 pl-4">
-                        <span class="text-[10px] md:text-xs tracking-wider uppercase text-purple-400 font-semibold">La Alianza Perfecta</span>
-                        <h2 class="text-2xl md:text-4xl font-bold text-white mt-1">El Ecosistema Detrás del Sonido</h2>
+    <!-- ══════════════════════════════════════════
+         SLIDE 2 — EL ECOSISTEMA
+    ═══════════════════════════════════════════ -->
+    <section class="slide" id="slide-2">
+        <div class="slide-inner">
+            <div class="two-col">
+                <!-- TEXT -->
+                <div style="display:flex; flex-direction:column; gap:1.1rem;">
+                    <div>
+                        <p class="section-label sl-purple">La Alianza</p>
+                        <h2 class="slide-heading">El Ecosistema Detrás del Sonido</h2>
                     </div>
-                    <p class="text-slate-400 text-xs md:text-base leading-relaxed">
-                        Para llevar un proyecto al nivel comercial, necesitas soporte técnico de primer nivel y dirección artística experimentada. Aquí sumamos ambos mundos:
+                    <p class="slide-body">
+                        Para llevar tu proyecto al nivel comercial necesitas dos cosas: soporte técnico de primer nivel y dirección artística real. Spectre Core une ambos en un solo lugar.
                     </p>
-                    <div class="flex flex-col gap-3 md:gap-4 mt-2">
-                        <div class="flex gap-4 p-4 bg-zinc-900/40 rounded-xl border border-white/5">
-                            <div class="text-xl md:text-2xl text-purple-400 shrink-0"><i class="fa-solid fa-cloud-bolt"></i></div>
+                    <div style="display:flex; flex-direction:column; gap:0.75rem;">
+                        <div class="card" style="display:flex; gap:1rem; align-items:flex-start;">
+                            <div class="icon-badge icon-badge-purple"><i class="fa-solid fa-cloud-bolt"></i></div>
                             <div>
-                                <h3 class="font-semibold text-white text-sm md:text-base">Heaven Music (El Productor)</h3>
-                                <p class="text-[11px] md:text-xs text-slate-400 mt-1">Mi firma creativa. Me encargo personalmente de tu dirección artística, la producción de tus instrumentales personalizadas y el pulido final de tu sonido (mezcla/máster comercial).</p>
+                                <h3 style="font-size:0.9rem; font-weight:700; margin-bottom:0.3rem;">Heaven Music — Dirección Artística</h3>
+                                <p style="font-size:0.8rem; color:var(--text-2); line-height:1.6;">Me encargo personalmente de tu identidad sonora, la producción de tu instrumental a medida y el acabado final (mezcla y máster comercial).</p>
                             </div>
                         </div>
-                        <div class="flex gap-4 p-4 bg-zinc-900/40 rounded-xl border border-white/5">
-                            <div class="text-xl md:text-2xl text-cyan-400 shrink-0"><i class="fa-solid fa-sliders"></i></div>
+                        <div class="card" style="display:flex; gap:1rem; align-items:flex-start;">
+                            <div class="icon-badge icon-badge-cyan"><i class="fa-solid fa-sliders"></i></div>
                             <div>
-                                <h3 class="font-semibold text-white text-sm md:text-base">Spectre (El Estudio)</h3>
-                                <p class="text-[11px] md:text-xs text-slate-400 mt-1">Nuestro espacio físico en Mérida. Una espacio profesional optimizado acústicamente, equipado con tecnología premium para capturar tu voz con absoluta nitidez y confort.</p>
+                                <h3 style="font-size:0.9rem; font-weight:700; margin-bottom:0.3rem;">Spectre — El Estudio Físico</h3>
+                                <p style="font-size:0.8rem; color:var(--text-2); line-height:1.6;">Nuestro espacio en Mérida: acústicamente optimizado, equipado con tecnología premium para capturar tu voz con nitidez y en total comodidad.</p>
                             </div>
                         </div>
                     </div>
                 </div>
-                <div class="lg:col-span-5 hidden lg:block">
-                    <div class="relative w-full h-[400px] rounded-2xl overflow-hidden border border-white/10 glow-purple">
-                        <img src="assets/apollo.JPG" alt="Audio Console" class="w-full h-full object-cover">
-                        <div class="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent"></div>
-                    </div>
+                <!-- IMAGE -->
+                <div class="img-col">
+                    <img src="assets/apollo.JPG" alt="Consola de audio en Spectre Studio" class="studio-img img-glow-purple">
                 </div>
             </div>
-        </section>
+        </div>
+    </section>
 
-        <section class="slide" id="slide-3">
-            <div class="max-w-6xl w-full flex flex-col gap-4 md:gap-8 pt-8 md:pt-0 pb-28 md:pb-4">
-                <div class="border-l-4 border-cyan-400 pl-4">
-                    <span class="text-[10px] md:text-xs tracking-wider uppercase text-cyan-400 font-semibold">El Perfil del Artista</span>
-                    <h2 class="text-2xl md:text-4xl font-bold text-white mt-1">¿Para quién diseñamos esto?</h2>
+    <!-- ══════════════════════════════════════════
+         SLIDE 3 — ¿PARA QUIÉN ES?
+    ═══════════════════════════════════════════ -->
+    <section class="slide" id="slide-3">
+        <div class="slide-inner" style="display:flex; flex-direction:column; gap:1.25rem;">
+            <div>
+                <p class="section-label sl-cyan">El Perfil del Artista</p>
+                <h2 class="slide-heading">¿Para quién está hecho esto?</h2>
+            </div>
+            <p class="slide-body">
+                Spectre Core no es un servicio genérico de grabación por hora. Está diseñado para artistas independientes que se toman su carrera en serio y quieren dar el salto al profesionalismo de forma estructurada.
+            </p>
+            <div class="three-col">
+                <div class="card" style="display:flex; flex-direction:column; gap:0.6rem;">
+                    <div class="icon-badge icon-badge-purple"><i class="fa-solid fa-rotate"></i></div>
+                    <h3 style="font-size:0.9rem; font-weight:700;">Cansados del "Sencillo Suelto"</h3>
+                    <p style="font-size:0.8rem; color:var(--text-2); line-height:1.6;">Artistas que lanzan música esporádica sin estructura ni plan y sienten que sus recursos se van sin generar impacto real en su audiencia.</p>
                 </div>
-                <p class="text-slate-400 text-xs md:text-base max-w-3xl">
-                    Este programa no es un servicio transaccional genérico. Está pensado para artistas independientes que se toman su carrera en serio y quieren dar el salto al profesionalismo.
-                </p>
-                <div class="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6 mt-2">
-                    <div class="bg-zinc-900/30 p-5 md:p-6 rounded-2xl border border-white/5 hover:border-purple-500/30 transition-all duration-300">
-                        <div class="w-8 h-8 md:w-10 md:h-10 rounded-xl bg-purple-500/10 flex items-center justify-center text-purple-400 mb-3 md:mb-4 text-base md:text-lg">
-                            <i class="fa-solid fa-rotate"></i>
-                        </div>
-                        <h3 class="font-bold text-white mb-2 text-sm md:text-base">Cansados del "Sencillo x Sencillo"</h3>
-                        <p class="text-[11px] md:text-xs text-slate-400 leading-relaxed">Artistas que sienten que lanzar música sin constancia estructural o planeación es gastar recursos sin obtener impacto ni engagement.</p>
-                    </div>
-                    <div class="bg-zinc-900/30 p-5 md:p-6 rounded-2xl border border-white/5 hover:border-cyan-500/30 transition-all duration-300">
-                        <div class="w-8 h-8 md:w-10 md:h-10 rounded-xl bg-cyan-500/10 flex items-center justify-center text-cyan-400 mb-3 md:mb-4 text-base md:text-lg">
-                            <i class="fa-solid fa-compass"></i>
-                        </div>
-                        <h3 class="font-bold text-white mb-2 text-sm md:text-base">Falta de Dirección Real</h3>
-                        <p class="text-[11px] md:text-xs text-slate-400 leading-relaxed">Quienes tienen talento y letras, pero les falta un guía en el estudio que critique de manera constructiva, dirija y estructure la visión del tema.</p>
-                    </div>
-                    <div class="bg-zinc-900/30 p-5 md:p-6 rounded-2xl border border-white/5 hover:border-purple-500/30 transition-all duration-300">
-                        <div class="w-8 h-8 md:w-10 md:h-10 rounded-xl bg-purple-500/10 flex items-center justify-center text-purple-400 mb-3 md:mb-4 text-base md:text-lg">
-                            <i class="fa-solid fa-bullhorn"></i>
-                        </div>
-                        <h3 class="font-bold text-white mb-2 text-sm md:text-base">El Vacío Post-Máster</h3>
-                        <p class="text-[11px] md:text-xs text-slate-400 leading-relaxed">Para quienes terminan de grabar una canción y se topan con la pared de no saber cómo promocionarla, qué publicar, ni cómo crear contenido orgánico estratégico.</p>
-                    </div>
+                <div class="card" style="display:flex; flex-direction:column; gap:0.6rem;">
+                    <div class="icon-badge icon-badge-cyan"><i class="fa-solid fa-compass"></i></div>
+                    <h3 style="font-size:0.9rem; font-weight:700;">Falta de Dirección en Cabina</h3>
+                    <p style="font-size:0.8rem; color:var(--text-2); line-height:1.6;">Quienes tienen talento y material, pero les falta un guía que critique de forma constructiva, estructure la visión del tema y dirija la entrega vocal.</p>
+                </div>
+                <div class="card" style="display:flex; flex-direction:column; gap:0.6rem;">
+                    <div class="icon-badge icon-badge-purple"><i class="fa-solid fa-bullhorn"></i></div>
+                    <h3 style="font-size:0.9rem; font-weight:700;">El Vacío Después del Máster</h3>
+                    <p style="font-size:0.8rem; color:var(--text-2); line-height:1.6;">Para quienes terminan de grabar y se topan con la pared de no saber cómo lanzar, qué publicar ni cómo construir contenido orgánico con lo que tienen.</p>
                 </div>
             </div>
-        </section>
+        </div>
+    </section>
 
-        <section class="slide" id="slide-4">
-            <div class="max-w-6xl w-full grid grid-cols-1 lg:grid-cols-12 gap-6 md:gap-10 items-center pt-8 md:pt-0 pb-28 md:pb-4">
-                <div class="lg:col-span-5 hidden lg:block">
-                    <div class="relative w-full h-[400px] rounded-2xl overflow-hidden border border-white/10 glow-cyan">
-                        <img src="assets/mic.JPG" class="w-full h-full object-cover">
-                        <div class="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent"></div>
-                    </div>
+    <!-- ══════════════════════════════════════════
+         SLIDE 4 — EL PROBLEMA (MODELO POR HORA)
+    ═══════════════════════════════════════════ -->
+    <section class="slide" id="slide-4">
+        <div class="slide-inner">
+            <div class="two-col img-left">
+                <!-- IMAGE -->
+                <div class="img-col">
+                    <img src="assets/mic.JPG" alt="Micrófono en cabina" class="studio-img img-glow-cyan">
                 </div>
-                <div class="lg:col-span-7 flex flex-col gap-4 md:gap-6">
-                    <div class="border-l-4 border-red-500 pl-4">
-                        <span class="text-[10px] md:text-xs tracking-wider uppercase text-red-400 font-semibold">El Problema Tradicional</span>
-                        <h2 class="text-2xl md:text-4xl font-bold text-white mt-1">El Modelo por Hora está Roto</h2>
+                <!-- TEXT -->
+                <div style="display:flex; flex-direction:column; gap:1.1rem;">
+                    <div>
+                        <p class="section-label sl-red">El Problema Tradicional</p>
+                        <h2 class="slide-heading">El Modelo por Hora Está Roto</h2>
                     </div>
-                    <p class="text-slate-400 text-xs md:text-base leading-relaxed">
-                        Pagarle a un estudio tradicional por "horas sueltas" sabotea tu calidad artística:
+                    <p class="slide-body">
+                        Pagar horas sueltas a un estudio sin dirección artística sabotea tu calidad y tu presupuesto al mismo tiempo.
                     </p>
-                    <ul class="flex flex-col gap-3">
-                        <li class="flex gap-3 items-start text-xs md:text-sm text-slate-300">
-                            <i class="fa-solid fa-xmark text-red-500 mt-1 shrink-0"></i>
-                            <span><strong>El factor reloj:</strong> Grabar estresado por el tiempo limita tu desempeño y mata la creatividad.</span>
-                        </li>
-                        <li class="flex gap-3 items-start text-xs md:text-sm text-slate-300">
-                            <i class="fa-solid fa-xmark text-red-500 mt-1 shrink-0"></i>
-                            <span><strong>Cero mentoría:</strong> Al operador por hora no le importa si tu entrega vocal es floja o desafinada, solo le importa marcar su tiempo.</span>
-                        </li>
-                        <li class="flex gap-3 items-start text-xs md:text-sm text-slate-300">
-                            <i class="fa-solid fa-xmark text-red-500 mt-1 shrink-0"></i>
-                            <span><strong>Improvisación cara:</strong> Terminar componiendo o buscando flujos en el sillón del estudio drena tu presupuesto.</span>
-                        </li>
+                    <div style="display:flex; flex-direction:column; gap:0.65rem;">
+                        <div class="check-item" style="font-size:0.85rem; color:var(--text-2);">
+                            <i class="fa-solid fa-xmark" style="color:var(--red); margin-top:0.2rem;"></i>
+                            <p><strong style="color:var(--text-1);">El factor reloj:</strong> Grabar con el taxímetro corriendo genera estrés y limita tu desempeño vocal y creativo.</p>
+                        </div>
+                        <div class="check-item" style="font-size:0.85rem; color:var(--text-2);">
+                            <i class="fa-solid fa-xmark" style="color:var(--red); margin-top:0.2rem;"></i>
+                            <p><strong style="color:var(--text-1);">Sin mentoría real:</strong> Al operador por hora no le importa si tu entrega vocal es débil; solo le importa cerrar su turno.</p>
+                        </div>
+                        <div class="check-item" style="font-size:0.85rem; color:var(--text-2);">
+                            <i class="fa-solid fa-xmark" style="color:var(--red); margin-top:0.2rem;"></i>
+                            <p><strong style="color:var(--text-1);">Improvisación cara:</strong> Componer o buscar flujos en el sillón del estudio drena tu dinero sin producir resultado.</p>
+                        </div>
+                    </div>
+                    <div class="highlight-box">
+                        <i class="fa-solid fa-circle-check" style="margin-right:0.4rem;"></i>
+                        <strong>La alternativa:</strong> Spectre Core elimina el taxímetro. Cada sesión presencial es para pulir y grabar una obra ya preparada, no para improvisar.
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ══════════════════════════════════════════
+         SLIDE 5 — QUÉ INCLUYE LA MEMBRESÍA
+    ═══════════════════════════════════════════ -->
+    <section class="slide" id="slide-5">
+        <div class="slide-inner" style="display:flex; flex-direction:column; gap:1.25rem;">
+            <div>
+                <p class="section-label sl-purple">Membresía Integral</p>
+                <h2 class="slide-heading">¿Qué incluye Spectre Core?</h2>
+            </div>
+            <div class="three-col">
+                <div class="card" style="display:flex; gap:0.85rem; align-items:flex-start;">
+                    <div class="icon-badge icon-badge-purple"><i class="fa-solid fa-music"></i></div>
+                    <div>
+                        <h4 style="font-size:0.85rem; font-weight:700; margin-bottom:0.25rem;">1 Canción Completa al Mes</h4>
+                        <p style="font-size:0.78rem; color:var(--text-2); line-height:1.6;">Single profesional terminado (WAV + MP3) listo para distribuirse en Spotify, Apple Music y demás plataformas.</p>
+                    </div>
+                </div>
+                <div class="card" style="display:flex; gap:0.85rem; align-items:flex-start;">
+                    <div class="icon-badge icon-badge-cyan"><i class="fa-solid fa-sliders"></i></div>
+                    <div>
+                        <h4 style="font-size:0.85rem; font-weight:700; margin-bottom:0.25rem;">Beat Custom a tu Medida</h4>
+                        <p style="font-size:0.78rem; color:var(--text-2); line-height:1.6;">Instrumental original creada desde cero según tus referencias, con hasta 2 rondas de ajustes incluidas.</p>
+                    </div>
+                </div>
+                <div class="card" style="display:flex; gap:0.85rem; align-items:flex-start;">
+                    <div class="icon-badge icon-badge-purple"><i class="fa-solid fa-microphone"></i></div>
+                    <div>
+                        <h4 style="font-size:0.85rem; font-weight:700; margin-bottom:0.25rem;">Sesión Dirigida de Hasta 4 Horas</h4>
+                        <p style="font-size:0.78rem; color:var(--text-2); line-height:1.6;">Una sesión mensual de grabación 1-a-1 con dirección vocal e ingeniería dedicada. Sin presión de tiempo.</p>
+                    </div>
+                </div>
+                <div class="card" style="display:flex; gap:0.85rem; align-items:flex-start;">
+                    <div class="icon-badge icon-badge-cyan"><i class="fa-solid fa-compass"></i></div>
+                    <div>
+                        <h4 style="font-size:0.85rem; font-weight:700; margin-bottom:0.25rem;">Asesoría de Lanzamiento</h4>
+                        <p style="font-size:0.78rem; color:var(--text-2); line-height:1.6;">Llamada de cierre para planear fecha de estreno, contenido orgánico y estrategia de salida de cada single.</p>
+                    </div>
+                </div>
+                <div class="card" style="display:flex; gap:0.85rem; align-items:flex-start;">
+                    <div class="icon-badge icon-badge-purple"><i class="fa-solid fa-book-open"></i></div>
+                    <div>
+                        <h4 style="font-size:0.85rem; font-weight:700; margin-bottom:0.25rem;">Biblioteca Spectre</h4>
+                        <p style="font-size:0.78rem; color:var(--text-2); line-height:1.6;">Videos formativos mensuales sobre técnica vocal, distribución digital, marketing orgánico y regalías.</p>
+                    </div>
+                </div>
+                <div class="card" style="display:flex; gap:0.85rem; align-items:flex-start;">
+                    <div class="icon-badge icon-badge-cyan"><i class="fa-solid fa-star"></i></div>
+                    <div>
+                        <h4 style="font-size:0.85rem; font-weight:700; margin-bottom:0.25rem;">Prioridad Absoluta de Agenda</h4>
+                        <p style="font-size:0.78rem; color:var(--text-2); line-height:1.6;">Tu fecha de estudio está garantizada cada mes, por encima de cualquier cliente externo.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ══════════════════════════════════════════
+         SLIDE 6 — EL FLUJO QUINCENAL
+    ═══════════════════════════════════════════ -->
+    <section class="slide" id="slide-6">
+        <div class="slide-inner" style="display:flex; flex-direction:column; gap:1.25rem;">
+            <div>
+                <p class="section-label sl-cyan">El Proceso de Trabajo</p>
+                <h2 class="slide-heading">Cómo funciona cada mes</h2>
+            </div>
+            <p class="slide-body">
+                El trabajo comienza mucho antes de pisar el estudio. Este flujo de cuatro pasos garantiza que tu sesión presencial sea 100% productiva.
+            </p>
+            <div class="four-col" style="position:relative;">
+                <div class="timeline-connector"></div>
+                <div class="step-card s-purple">
+                    <span style="font-size:0.6rem; font-weight:700; letter-spacing:0.12em; text-transform:uppercase; color:var(--purple);">Días 1–3</span>
+                    <h4 style="font-size:0.9rem; font-weight:700; margin:0.4rem 0 0.5rem;">La Definición</h4>
+                    <p style="font-size:0.78rem; color:var(--text-2); line-height:1.6;">Envías tus referencias por WhatsApp. Hacemos una llamada de 20 minutos para alinear el concepto sonoro y la temática del tema.</p>
+                </div>
+                <div class="step-card s-cyan">
+                    <span style="font-size:0.6rem; font-weight:700; letter-spacing:0.12em; text-transform:uppercase; color:var(--cyan);">Días 4–7</span>
+                    <h4 style="font-size:0.9rem; font-weight:700; margin:0.4rem 0 0.5rem;">La Producción</h4>
+                    <p style="font-size:0.78rem; color:var(--text-2); line-height:1.6;">Produzco el beat a tu medida. Te lo entrego para revisión con derecho a un máximo de 2 rondas de ajustes hasta aprobarlo.</p>
+                </div>
+                <div class="step-card s-purple">
+                    <span style="font-size:0.6rem; font-weight:700; letter-spacing:0.12em; text-transform:uppercase; color:var(--purple);">Días 8–14</span>
+                    <h4 style="font-size:0.9rem; font-weight:700; margin:0.4rem 0 0.5rem;">El Ensayo</h4>
+                    <p style="font-size:0.78rem; color:var(--text-2); line-height:1.6;">Con la instrumental aprobada en mano, escribes la letra, cuadras tus flujos y <strong>ensayas en casa hasta memorizarla</strong> antes de la sesión.</p>
+                </div>
+                <div class="step-card s-cyan">
+                    <span style="font-size:0.6rem; font-weight:700; letter-spacing:0.12em; text-transform:uppercase; color:var(--cyan);">Día 15+</span>
+                    <h4 style="font-size:0.9rem; font-weight:700; margin:0.4rem 0 0.5rem;">La Sesión</h4>
+                    <p style="font-size:0.78rem; color:var(--text-2); line-height:1.6;">Grabamos en cabina (hasta 4h). Después mezclo, masterizo y diseñamos juntos tu plan de contenido para el lanzamiento.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ══════════════════════════════════════════
+         SLIDE 7 — LA SESIÓN Y POLÍTICA
+    ═══════════════════════════════════════════ -->
+    <section class="slide" id="slide-7">
+        <div class="slide-inner">
+            <div class="two-col">
+                <!-- TEXT -->
+                <div style="display:flex; flex-direction:column; gap:1.1rem;">
+                    <div>
+                        <p class="section-label sl-purple">Reglas de Cabina</p>
+                        <h2 class="slide-heading">Una Sesión Mensual de Hasta 4 Horas</h2>
+                    </div>
+                    <p class="slide-body">
+                        ¿Por qué 4 horas es suficiente? Porque cuando llegas preparado, el tiempo en cabina es puro arte, no improvisación. Así aprovechamos cada minuto:
+                    </p>
+                    <div style="display:flex; flex-direction:column; gap:0.5rem;">
+                        <div class="check-item" style="font-size:0.83rem; color:var(--text-2);">
+                            <span style="width:0.45rem; height:0.45rem; border-radius:50%; background:var(--purple); flex-shrink:0; margin-top:0.35rem;"></span>
+                            <p><strong style="color:var(--text-1);">0 – 20 min:</strong> Ingeniería, calibración del micrófono y calentamiento vocal.</p>
+                        </div>
+                        <div class="check-item" style="font-size:0.83rem; color:var(--text-2);">
+                            <span style="width:0.45rem; height:0.45rem; border-radius:50%; background:var(--purple); flex-shrink:0; margin-top:0.35rem;"></span>
+                            <p><strong style="color:var(--text-1);">20 – 170 min:</strong> Captura de bloques principales, coros, dobles y armonías.</p>
+                        </div>
+                        <div class="check-item" style="font-size:0.83rem; color:var(--text-2);">
+                            <span style="width:0.45rem; height:0.45rem; border-radius:50%; background:var(--purple); flex-shrink:0; margin-top:0.35rem;"></span>
+                            <p><strong style="color:var(--text-1);">170 – 240 min:</strong> Ad-libs, arreglos avanzados, pre-escucha y cierre de tomas.</p>
+                        </div>
+                    </div>
+                </div>
+                <!-- POLICY -->
+                <div style="display:flex; flex-direction:column; gap:0.85rem;">
+                    <h3 style="font-size:0.95rem; font-weight:700; color:var(--red); display:flex; align-items:center; gap:0.5rem;">
+                        <i class="fa-solid fa-circle-exclamation"></i> Política de Asistencia
+                    </h3>
+                    <p style="font-size:0.82rem; color:var(--text-2); line-height:1.6;">
+                        La agenda se define de mutuo acuerdo y se respeta de forma estricta. Tu tiempo y el del equipo valen.
+                    </p>
+                    <div class="policy-box">
+                        Si cancelas o reagendas con <strong>menos de 24 horas de anticipación</strong>, la sesión presencial de ese mes se perderá. El trabajo continuará con las guías previas, sin derecho a reembolso.
+                    </div>
+                    <p style="font-size:0.8rem; color:var(--text-2); line-height:1.5;">
+                        <strong style="color:var(--text-1);">Para cancelar la membresía:</strong> avisa con al menos <strong style="color:var(--text-1);">15 días de anticipación</strong> antes de tu siguiente ciclo de pago.
+                    </p>
+                    <p style="font-size:0.8rem; color:var(--text-2); line-height:1.5;">
+                        <strong style="color:var(--text-1);">Llegar con la letra lista es obligatorio.</strong> No improvisamos en cabina: llegamos a capturar arte con intención.
+                    </p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ══════════════════════════════════════════
+         SLIDE 8 — REGALÍAS
+    ═══════════════════════════════════════════ -->
+    <section class="slide" id="slide-8">
+        <div class="slide-inner">
+            <div class="two-col img-left">
+                <!-- IMAGE -->
+                <div class="img-col">
+                    <img src="https://images.unsplash.com/photo-1611162617213-7d7a39e9b1d7?auto=format&fit=crop&w=600&q=80" alt="Spotify for Artists dashboard" class="studio-img img-glow-purple">
+                </div>
+                <!-- TEXT -->
+                <div style="display:flex; flex-direction:column; gap:1.1rem;">
+                    <div>
+                        <p class="section-label sl-cyan">Tu Propiedad Intelectual</p>
+                        <h2 class="slide-heading">100% de tus Regalías — Sin Letra Chiquita</h2>
+                    </div>
+                    <p class="slide-body">
+                        A diferencia de acuerdos de producción que retienen el máster o se quedan con la mayor parte, en Spectre Core priorizamos tu crecimiento económico como artista.
+                    </p>
+                    <!-- Bar visual -->
+                    <div>
+                        <div style="display:flex; justify-content:space-between; font-size:0.72rem; color:var(--text-3); margin-bottom:0.4rem;">
+                            <span>Tu parte</span><span>Heaven Music (editorial)</span>
+                        </div>
+                        <div class="royalty-bar"></div>
+                        <div style="display:flex; justify-content:space-between; font-size:0.72rem; margin-top:0.35rem;">
+                            <span style="color:var(--cyan); font-weight:700;">90% tuyo</span>
+                            <span style="color:var(--text-3);">10% editorial</span>
+                        </div>
+                    </div>
+                    <div style="display:flex; flex-direction:column; gap:0.6rem;">
+                        <div class="check-item" style="font-size:0.83rem; color:var(--text-2);">
+                            <i class="fa-solid fa-circle-check" style="color:var(--green);"></i>
+                            <p><strong style="color:var(--text-1);">Regalías de plataformas (100% tuyas):</strong> Todo lo que generes en Spotify, Apple Music, etc. a través de tu distribuidora (ej: DistroKid) va directo a ti.</p>
+                        </div>
+                        <div class="check-item" style="font-size:0.83rem; color:var(--text-2);">
+                            <i class="fa-solid fa-circle-check" style="color:var(--green);"></i>
+                            <p><strong style="color:var(--text-1);">Créditos editoriales del beat:</strong> Heaven Music retiene únicamente el 10% de los créditos de composición del beat para sociedades colectivas.</p>
+                        </div>
+                        <div class="check-item" style="font-size:0.83rem; color:var(--text-2);">
+                            <i class="fa-solid fa-circle-check" style="color:var(--green);"></i>
+                            <p><strong style="color:var(--text-1);">Derechos inmediatos:</strong> Los derechos del beat se liberan para ti en cuanto se liquida la mensualidad.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ══════════════════════════════════════════
+         SLIDE 9 — LA BIBLIOTECA SPECTRE
+    ═══════════════════════════════════════════ -->
+    <section class="slide" id="slide-9">
+        <div class="slide-inner" style="display:flex; flex-direction:column; gap:1.25rem;">
+            <div>
+                <p class="section-label sl-purple">Valor Educativo Agregado</p>
+                <h2 class="slide-heading">La Biblioteca Spectre</h2>
+            </div>
+            <p class="slide-body">
+                Este es el pilar que nos diferencia de cualquier estudio en Mérida. Cada mes recibes acceso a videos breves de capacitación grabados en cabina, diseñados para que crezcas como artista también fuera del estudio.
+            </p>
+            <div class="three-col">
+                <div class="card" style="display:flex; flex-direction:column; gap:0.6rem;">
+                    <span style="font-size:0.62rem; font-weight:700; letter-spacing:0.12em; text-transform:uppercase; color:var(--purple);">Mes 1 — El Estudio</span>
+                    <h4 style="font-size:0.9rem; font-weight:700;">Antes de Cabina</h4>
+                    <ul style="font-size:0.78rem; color:var(--text-2); line-height:1.8; list-style:none; padding:0;">
+                        <li>→ Cómo preparar tus cuerdas vocales</li>
+                        <li>→ El arte de mandar referencias claras</li>
+                        <li>→ Técnicas para no improvisar en estudio</li>
                     </ul>
-                    <div class="p-4 bg-purple-950/20 border border-purple-500/20 rounded-xl mt-2">
-                        <p class="text-[11px] md:text-xs text-purple-300 leading-relaxed">
-                            <i class="fa-solid fa-circle-check mr-2"></i><strong>La Alternativa:</strong> Spectre Core elimina el taxímetro del estudio. Trabajamos con un plan estructurado, donde cada minuto presencial es para pulir una obra ya ensayada.
-                        </p>
-                    </div>
                 </div>
-            </div>
-        </section>
-
-        <section class="slide" id="slide-5">
-            <div class="max-w-6xl w-full flex flex-col gap-4 md:gap-6 pt-8 md:pt-0 pb-28 md:pb-4">
-                <div class="border-l-4 border-purple-500 pl-4">
-                    <span class="text-[10px] md:text-xs tracking-wider uppercase text-purple-400 font-semibold">Membresía Integral</span>
-                    <h2 class="text-2xl md:text-4xl font-bold text-white mt-1">¿Qué incluye Spectre Core?</h2>
-                </div>
-                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 md:gap-4 mt-2">
-                    <div class="p-4 bg-zinc-900/40 rounded-xl border border-white/5 flex gap-3">
-                        <div class="text-purple-400 text-base md:text-lg shrink-0"><i class="fa-solid fa-music"></i></div>
-                        <div>
-                            <h4 class="font-semibold text-white text-xs md:text-sm">1 Canción Completa al Mes</h4>
-                            <p class="text-[10px] md:text-xs text-slate-400 mt-1">Producción integral de un single profesional (WAV + MP3 listos para distribución comercial).</p>
-                        </div>
-                    </div>
-                    <div class="p-4 bg-zinc-900/40 rounded-xl border border-white/5 flex gap-3">
-                        <div class="text-cyan-400 text-base md:text-lg shrink-0"><i class="fa-solid fa-sliders"></i></div>
-                        <div>
-                            <h4 class="font-semibold text-white text-xs md:text-sm">Instrumental Personalizada</h4>
-                            <p class="text-[10px] md:text-xs text-slate-400 mt-1">Instrumental original adaptada a tus referencias, pulida antes de pisar el estudio.</p>
-                        </div>
-                    </div>
-                    <div class="p-4 bg-zinc-900/40 rounded-xl border border-white/5 flex gap-3">
-                        <div class="text-purple-400 text-base md:text-lg shrink-0"><i class="fa-solid fa-microphone"></i></div>
-                        <div>
-                            <h4 class="font-semibold text-white text-xs md:text-sm">Sesión de Grabación Dirigida</h4>
-                            <p class="text-[10px] md:text-xs text-slate-400 mt-1"><strong>Exactamente 1 sesión mensual enfocada de hasta 4 horas</strong> con dirección de voz e ingeniería 1-a-1.</p>
-                        </div>
-                    </div>
-                    <div class="p-4 bg-zinc-900/40 rounded-xl border border-white/5 flex gap-3">
-                        <div class="text-cyan-400 text-base md:text-lg shrink-0"><i class="fa-solid fa-compass"></i></div>
-                        <div>
-                            <h4 class="font-semibold text-white text-xs md:text-sm">Asesoramiento de Lanzamiento</h4>
-                            <p class="text-[10px] md:text-xs text-slate-400 mt-1">Llamada dedicada de cierre para planificar la salida, fechas óptimas y contenidos orgánicos.</p>
-                        </div>
-                    </div>
-                    <div class="p-4 bg-zinc-900/40 rounded-xl border border-white/5 flex gap-3">
-                        <div class="text-purple-400 text-base md:text-lg shrink-0"><i class="fa-solid fa-book-open"></i></div>
-                        <div>
-                            <h4 class="font-semibold text-white text-xs md:text-sm">Biblioteca Spectre de Contenido</h4>
-                            <p class="text-[10px] md:text-xs text-slate-400 mt-1">Acceso a videos formativos mensuales (preparación vocal, marketing orgánico, regalías).</p>
-                        </div>
-                    </div>
-                    <div class="p-4 bg-zinc-900/40 rounded-xl border border-white/5 flex gap-3">
-                        <div class="text-cyan-400 text-base md:text-lg shrink-0"><i class="fa-solid fa-star"></i></div>
-                        <div>
-                            <h4 class="font-semibold text-white text-xs md:text-sm">Prioridad Absoluta de Agenda</h4>
-                            <p class="text-[10px] md:text-xs text-slate-400 mt-1">Aseguras tu fecha y bloque de estudio cada mes sobre clientes regulares externos.</p>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </section>
-
-        <section class="slide" id="slide-6">
-            <div class="max-w-6xl w-full flex flex-col gap-4 md:gap-6 pt-8 md:pt-0 pb-28 md:pb-4">
-                <div class="border-l-4 border-cyan-400 pl-4">
-                    <span class="text-[10px] md:text-xs tracking-wider uppercase text-cyan-400 font-semibold">El Proceso de Trabajo</span>
-                    <h2 class="text-2xl md:text-4xl font-bold text-white mt-1">El Flujo Quincenal "Fuego Rápido"</h2>
-                </div>
-                <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mt-2">
-                    <div class="p-4 md:p-5 bg-zinc-900/30 rounded-xl border-t-4 border-purple-500/80 border-x border-b border-white/5">
-                        <span class="text-[10px] text-purple-400 font-bold block mb-1">DÍAS 1 AL 3</span>
-                        <h4 class="font-bold text-white text-sm md:text-base">La Definición</h4>
-                        <p class="text-[11px] md:text-xs text-slate-400 mt-2 leading-relaxed">Envías tus references por WhatsApp. Seteamos la llamada de 20 minutos y definimos la línea de sonido y temática.</p>
-                    </div>
-                    <div class="p-4 md:p-5 bg-zinc-900/30 rounded-xl border-t-4 border-cyan-500/80 border-x border-b border-white/5">
-                        <span class="text-[10px] text-cyan-400 font-bold block mb-1">DÍAS 4 AL 7</span>
-                        <h4 class="font-bold text-white text-sm md:text-base">La Producción</h4>
-                        <p class="text-[11px] md:text-xs text-slate-400 mt-2 leading-relaxed">Diseño el beat a tu medida. Se te entrega y tienes derecho a un máximo de <strong>2 rondas de ajustes</strong> para dejarlo aprobado.</p>
-                    </div>
-                    <div class="p-4 md:p-5 bg-zinc-900/30 rounded-xl border-t-4 border-purple-500/80 border-x border-b border-white/5">
-                        <span class="text-[10px] text-purple-400 font-bold block mb-1">DÍAS 8 AL 14</span>
-                        <h4 class="font-bold text-white text-sm md:text-base">El Ensayo</h4>
-                        <p class="text-[11px] md:text-xs text-slate-400 mt-2 leading-relaxed">Con la instrumental en mano, escribes la letra, cuadras tus flujos y <strong>ensayas hasta memorizarla</strong> en casa antes de la sesión.</p>
-                    </div>
-                    <div class="p-4 md:p-5 bg-zinc-900/30 rounded-xl border-t-4 border-cyan-500/80 border-x border-b border-white/5">
-                        <span class="text-[10px] text-cyan-400 font-bold block mb-1">DÍA 15 EN ADELANTE</span>
-                        <h4 class="font-bold text-white text-sm md:text-base">La Magia</h4>
-                        <p class="text-[11px] md:text-xs text-slate-400 mt-2 leading-relaxed">Grabamos en el estudio en tu sesión dedicada de 4h. Posteriormente mezclo, masterizo y diseñamos tu plan de marketing de salida.</p>
-                    </div>
-                </div>
-            </div>
-        </section>
-
-        <section class="slide" id="slide-7">
-            <div class="max-w-6xl w-full grid grid-cols-1 lg:grid-cols-12 gap-6 md:gap-10 items-center pt-8 md:pt-0 pb-28 md:pb-4">
-                <div class="lg:col-span-7 flex flex-col gap-4 md:gap-6">
-                    <div class="border-l-4 border-purple-500 pl-4">
-                        <span class="text-[10px] md:text-xs tracking-wider uppercase text-purple-400 font-semibold">Reglas de Cabina</span>
-                        <h2 class="text-2xl md:text-4xl font-bold text-white mt-1">Exactamente 1 Sesión al Mes (Hasta 4 Horas)</h2>
-                    </div>
-                    <p class="text-slate-400 text-xs md:text-base leading-relaxed">
-                        ¿Por qué 4 horas es el estándar de oro en Spectre Core? Porque la preparación previa elimina el desperdicio de tiempo. En cabina operamos como profesionales:
-                    </p>
-                    <ul class="flex flex-col gap-3">
-                        <li class="flex gap-3 items-center text-xs md:text-sm text-slate-300">
-                            <span class="w-2 h-2 rounded-full bg-purple-400 shrink-0"></span>
-                            <span><strong>Minuto 0 al 20:</strong> Ingeniería, calibración de mic y calentamiento vocal.</span>
-                        </li>
-                        <li class="flex gap-3 items-center text-xs md:text-sm text-slate-300">
-                            <span class="w-2 h-2 rounded-full bg-purple-400 shrink-0"></span>
-                            <span><strong>Minuto 20 al 170:</strong> Captura de bloques (principales, coros, dobles, armonías).</span>
-                        </li>
-                        <li class="flex gap-3 items-center text-xs md:text-sm text-slate-300">
-                            <span class="w-2 h-2 rounded-full bg-purple-400 shrink-0"></span>
-                            <span><strong>Minuto 170 al 240:</strong> Arreglos avanzados, ad-libs, pre-escucha y cierre de tomas.</span>
-                        </li>
+                <div class="card" style="display:flex; flex-direction:column; gap:0.6rem;">
+                    <span style="font-size:0.62rem; font-weight:700; letter-spacing:0.12em; text-transform:uppercase; color:var(--cyan);">Mes 2 — El Lanzamiento</span>
+                    <h4 style="font-size:0.9rem; font-weight:700;">Salir al Mercado</h4>
+                    <ul style="font-size:0.78rem; color:var(--text-2); line-height:1.8; list-style:none; padding:0;">
+                        <li>→ DistroKid paso a paso, sin enredos</li>
+                        <li>→ Cómo elegir la fecha correcta del estreno</li>
+                        <li>→ El plan de contenido del día uno</li>
                     </ul>
                 </div>
-                <div class="lg:col-span-5 bg-zinc-900/40 p-5 md:p-6 rounded-2xl border border-white/5 flex flex-col gap-3 md:gap-4">
-                    <h3 class="font-bold text-red-400 text-sm md:text-lg flex items-center gap-2"><i class="fa-solid fa-circle-exclamation text-base"></i>Política de Inasistencias</h3>
-                    <p class="text-[11px] md:text-xs text-slate-400 leading-relaxed">
-                        Tu sesión se agenda de mutuo acuerdo. En Spectre Core respetamos la agenda y el tiempo de todos de manera rigurosa:
-                    </p>
-                    <div class="p-3 md:p-4 bg-red-950/20 rounded-xl border border-red-500/15 text-[11px] md:text-xs text-red-300 leading-relaxed">
-                        Si cancelas o reagendas con <strong>menos de 24 horas de anticipación</strong>, se perderá la sesión presencial de ese mes. El trabajo continuará usando guías previas, sin derecho a reembolso.
-                    </div>
-                    <span class="text-[10px] md:text-xs text-slate-400 leading-normal">
-                        <strong>Llegar con letra en mano es obligatorio.</strong> No improvisamos en el sillón; capturamos arte con intención.
-                    </span>
+                <div class="card" style="display:flex; flex-direction:column; gap:0.6rem;">
+                    <span style="font-size:0.62rem; font-weight:700; letter-spacing:0.12em; text-transform:uppercase; color:var(--purple);">Mes 3 — La Audiencia</span>
+                    <h4 style="font-size:0.9rem; font-weight:700;">Crecer tu Marca</h4>
+                    <ul style="font-size:0.78rem; color:var(--text-2); line-height:1.8; list-style:none; padding:0;">
+                        <li>→ Storytelling sin sonar desesperado</li>
+                        <li>→ Reels musicales sencillos y efectivos</li>
+                        <li>→ Regalías editoriales explicadas simple</li>
+                    </ul>
                 </div>
             </div>
-        </section>
+        </div>
+    </section>
 
-        <section class="slide" id="slide-8">
-            <div class="max-w-6xl w-full grid grid-cols-1 lg:grid-cols-12 gap-6 md:gap-10 items-center pt-8 md:pt-0 pb-28 md:pb-4">
-                <div class="lg:col-span-5 hidden lg:block">
-                    <div class="relative w-full h-[380px] rounded-2xl overflow-hidden border border-white/10 glow-purple">
-                        <img src="https://cdn.prod.website-files.com/6214119634c0683336c165cb/66a81097f404346623621bdb_66a8100ef404346623619025_Captura%2520de%2520pantalla%25202024-07-26%2520a%2520las%252010.23.19.png" alt="Spotify for Artists" class="w-full h-full object-cover">
-                        <div class="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent"></div>
+    <!-- ══════════════════════════════════════════
+         SLIDE 10 — CONTENIDO EN CABINA
+    ═══════════════════════════════════════════ -->
+    <section class="slide" id="slide-10">
+        <div class="slide-inner">
+            <div class="two-col">
+                <!-- TEXT -->
+                <div style="display:flex; flex-direction:column; gap:1.1rem;">
+                    <div>
+                        <p class="section-label sl-cyan">Social Media</p>
+                        <h2 class="slide-heading">Música que También se Ve</h2>
                     </div>
-                </div>
-                <div class="lg:col-span-7 flex flex-col gap-4 md:gap-6">
-                    <div class="border-l-4 border-cyan-400 pl-4">
-                        <span class="text-[10px] md:text-xs tracking-wider uppercase text-cyan-400 font-semibold">Tus Regalías</span>
-                        <h2 class="text-2xl md:text-4xl font-bold text-white mt-1">100% tuyas, sin letras chiquitas</h2>
-                    </div>
-                    <p class="text-slate-400 text-xs md:text-base leading-relaxed">
-                        A diferencia de otros tratos de producción que condicionan el máster o se quedan con la mayor parte, en Spectre Core priorizamos tu crecimiento comercial:
+                    <p class="slide-body">
+                        Hoy la música no solo se escucha: se consume visualmente. Para cada single que trabajemos, el estudio está equipado para que captures contenido de alta calidad el mismo día de tu sesión, sin interrumpir tu flujo creativo.
                     </p>
-                    <div class="flex flex-col gap-3 text-[11px] md:text-sm">
-                        <div class="flex gap-3 items-start">
-                            <i class="fa-solid fa-circle-check text-green-400 mt-1 shrink-0"></i>
-                            <p class="text-slate-300"><strong>Regalías de Distribución (100% tuyas):</strong> El dinero bruto que generes en plataformas digitales a través de tu agregadora (Ej: DistroKid) va directo a ti.</p>
-                        </div>
-                        <div class="flex gap-3 items-start">
-                            <i class="fa-solid fa-circle-check text-green-400 mt-1 shrink-0"></i>
-                            <p class="text-slate-300"><strong>Créditos de Composición (Respeto Legal):</strong> Heaven Music únicamente retiene el 10% de créditos de composición del beat (publishing) para sociedades colectivas. El 90% restante es tuyo.</p>
-                        </div>
-                        <div class="flex gap-3 items-start">
-                            <i class="fa-solid fa-circle-check text-green-400 mt-1 shrink-0"></i>
-                            <p class="text-slate-300"><strong>Liberación bajo pago:</strong> Los derechos del beat se liberan de inmediato para ti una vez liquidada la mensualidad.</p>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </section>
-
-        <section class="slide" id="slide-9">
-            <div class="max-w-6xl w-full flex flex-col gap-4 md:gap-6 pt-8 md:pt-0 pb-28 md:pb-4">
-                <div class="border-l-4 border-purple-500 pl-4">
-                    <span class="text-[10px] md:text-xs tracking-wider uppercase text-purple-400 font-semibold">Valor Agregado Educativo</span>
-                    <h2 class="text-2xl md:text-4xl font-bold text-white mt-1">La Biblioteca Spectre</h2>
-                </div>
-                <p class="text-slate-400 text-xs md:text-base max-w-3xl">
-                    Este es el pilar que nos diferencia de cualquier estudio en Mérida. Acceso inmediato a videos breves de capacitación grabados directamente en cabina:
-                </p>
-                <div class="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6 mt-2">
-                    <div class="p-4 md:p-5 bg-zinc-900/40 rounded-xl border border-white/5">
-                        <span class="text-[10px] text-purple-400 font-bold tracking-wide uppercase">MES 1: El Estudio</span>
-                        <h4 class="font-bold text-white text-sm md:text-base mt-1">Antes de Cabina</h4>
-                        <p class="text-[11px] md:text-xs text-slate-400 mt-2 leading-relaxed">• Cómo preparar tus cuerdas vocales.<br>• El arte de mandar referencias claras.<br>• Técnicas para evitar improvisar en estudio.</p>
-                    </div>
-                    <div class="p-4 md:p-5 bg-zinc-900/40 rounded-xl border border-white/5">
-                        <span class="text-[10px] text-cyan-400 font-bold tracking-wide uppercase">MES 2: El Lanzamiento</span>
-                        <h4 class="font-bold text-white text-sm md:text-base mt-1">La Salida al Mercado</h4>
-                        <p class="text-[11px] md:text-xs text-slate-400 mt-2 leading-relaxed">• DistroKid paso a paso y sin enredos.<br>• Elegir la fecha correcta del estreno.<br>• El plan estratégico el día uno.</p>
-                    </div>
-                    <div class="p-4 md:p-5 bg-zinc-900/40 rounded-xl border border-white/5">
-                        <span class="text-[10px] text-purple-400 font-bold tracking-wide uppercase">MES 3: La Audiencia</span>
-                        <h4 class="font-bold text-white text-sm md:text-base mt-1">Crecer tu Marca</h4>
-                        <p class="text-[11px] md:text-xs text-slate-400 mt-2 leading-relaxed">• Contar historias sin sonar desesperado.<br>• Reels musicales sencillos y virales.<br>• Regalías y regalías editoriales explicadas.</p>
-                    </div>
-                </div>
-            </div>
-        </section>
-
-        <section class="slide" id="slide-10">
-            <div class="max-w-6xl w-full grid grid-cols-1 lg:grid-cols-12 gap-6 md:gap-10 items-center pt-8 md:pt-0 pb-28 md:pb-4">
-                <div class="lg:col-span-7 flex flex-col gap-4 md:gap-6">
-                    <div class="border-l-4 border-cyan-400 pl-4">
-                        <span class="text-[10px] md:text-xs tracking-wider uppercase text-cyan-400 font-semibold">Social Media</span>
-                        <h2 class="text-2xl md:text-4xl font-bold text-white mt-1">Estrategia de Contenido en Cabina</h2>
-                    </div>
-                    <p class="text-slate-400 text-xs md:text-base leading-relaxed">
-                        Hoy la música no solo se escucha, se ve. Para cada single que trabajemos te daremos el soporte necesario para documentar el proceso sin interrumpir tu flujo creativo:
-                    </p>
-                    <div class="flex flex-col gap-3 md:gap-4 text-[11px] md:text-sm">
-                        <div class="p-4 bg-zinc-900/30 rounded-xl border border-white/5 flex gap-3">
-                            <span class="text-purple-400 text-base md:text-lg shrink-0"><i class="fa-solid fa-camera"></i></span>
-                            <p class="text-slate-300"><strong>Estudio equipado para documentar:</strong> Contamos con tripiés estables, aros de luz y soportes listos en cabina para que tu celular capte clips óptimos en formato vertical.</p>
-                        </div>
-                        <div class="p-4 bg-zinc-900/30 rounded-xl border border-white/5 flex gap-3">
-                            <span class="text-cyan-400 text-base md:text-lg shrink-0"><i class="fa-solid fa-photo-film"></i></span>
-                            <p class="text-slate-300"><strong>Estrategia instantánea:</strong> Genera material orgánico de calidad (detrás de cámaras, reacciones, capturas al micro) para TikToks y Reels el mismo día de la sesión.</p>
-                        </div>
-                    </div>
-                </div>
-                <div class="lg:col-span-5 hidden lg:block">
-                    <div class="relative w-full h-[400px] rounded-2xl overflow-hidden border border-white/10 glow-cyan">
-                        <img src="https://images.unsplash.com/photo-1611162617213-7d7a39e9b1d7?auto=format&fit=crop&w=500&q=80" alt="Video Record Mobile" class="w-full h-full object-cover">
-                        <div class="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent"></div>
-                    </div>
-                </div>
-            </div>
-        </section>
-
-        <section class="slide" id="slide-11">
-            <div class="max-w-6xl w-full grid grid-cols-1 lg:grid-cols-12 gap-6 md:gap-10 items-center pt-8 md:pt-0 pb-28 md:pb-4">
-                <div class="lg:col-span-5 hidden lg:block">
-                    <div class="relative w-full h-[400px] rounded-2xl overflow-hidden border border-white/10 glow-purple">
-                        <img src="https://images.unsplash.com/photo-1492691527719-9d1e07e534b4?auto=format&fit=crop&w=500&q=80" alt="Cinematic camera setup" class="w-full h-full object-cover">
-                        <div class="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent"></div>
-                    </div>
-                </div>
-                <div class="lg:col-span-7 flex flex-col gap-4 md:gap-6">
-                    <div class="border-l-4 border-purple-500 pl-4">
-                        <span class="text-[10px] md:text-xs tracking-wider uppercase text-purple-400 font-semibold">Actualizaciones / Roadmap</span>
-                        <h2 class="text-2xl md:text-4xl font-bold text-white mt-1">Evolución: Los Próximos Updates</h2>
-                    </div>
-                    <p class="text-slate-400 text-xs md:text-base leading-relaxed">
-                        Este programa está diseñado para crecer a la par de tus proyectos. Como miembro activo de Spectre Core, tendrás acceso preferencial y anticipado a nuestras próximas adiciones:
-                    </p>
-                    <div class="flex flex-col gap-3 md:gap-4 text-[11px] md:text-sm">
-                        <div class="flex gap-3">
-                            <span class="text-cyan-400 text-base md:text-lg shrink-0 mt-0.5"><i class="fa-solid fa-video"></i></span>
+                    <div style="display:flex; flex-direction:column; gap:0.75rem;">
+                        <div class="card" style="display:flex; gap:1rem; align-items:flex-start;">
+                            <div class="icon-badge icon-badge-purple"><i class="fa-solid fa-camera"></i></div>
                             <div>
-                                <h4 class="font-bold text-white text-sm md:text-base">Módulos de Filmmaking y Dirección Visual</h4>
-                                <p class="text-slate-400 mt-1 text-xs md:text-sm leading-relaxed">Incorporaremos la dirección y filmación de videoclips profesionales optimizados (Vertical visualizers y trailers cinemáticos) en el estudio.</p>
+                                <h4 style="font-size:0.85rem; font-weight:700; margin-bottom:0.25rem;">Estudio Equipado para Documentar</h4>
+                                <p style="font-size:0.78rem; color:var(--text-2); line-height:1.6;">Tripiés estables, aros de luz y soportes para celular listos en cabina. Todo en formato vertical para TikTok y Reels.</p>
                             </div>
                         </div>
-                        <div class="flex gap-3">
-                            <span class="text-purple-400 text-base md:text-lg shrink-0 mt-0.5"><i class="fa-solid fa-images"></i></span>
+                        <div class="card" style="display:flex; gap:1rem; align-items:flex-start;">
+                            <div class="icon-badge icon-badge-cyan"><i class="fa-solid fa-photo-film"></i></div>
                             <div>
-                                <h4 class="font-bold text-white text-sm md:text-base">Identidad Visual Completa</h4>
-                                <p class="text-slate-400 mt-1 text-xs md:text-sm leading-relaxed">Sesiones de fotografía de marca para alimentar tus redes y portadas de canciones personalizadas de alta fidelidad gráfica.</p>
+                                <h4 style="font-size:0.85rem; font-weight:700; margin-bottom:0.25rem;">Contenido Orgánico al Instante</h4>
+                                <p style="font-size:0.78rem; color:var(--text-2); line-height:1.6;">Detrás de cámaras, reacciones y clips al micrófono: material auténtico y listo para publicar el mismo día.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <!-- IMAGE -->
+                <div class="img-col">
+                    <img src="https://images.unsplash.com/photo-1611162617213-7d7a39e9b1d7?auto=format&fit=crop&w=600&q=80" alt="Grabando contenido en estudio" class="studio-img img-glow-cyan">
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ══════════════════════════════════════════
+         SLIDE 11 — ROADMAP / UPDATES
+    ═══════════════════════════════════════════ -->
+    <section class="slide" id="slide-11">
+        <div class="slide-inner">
+            <div class="two-col img-left">
+                <!-- IMAGE -->
+                <div class="img-col">
+                    <img src="https://images.unsplash.com/photo-1492691527719-9d1e07e534b4?auto=format&fit=crop&w=600&q=80" alt="Setup de filmmaking" class="studio-img img-glow-purple">
+                </div>
+                <!-- TEXT -->
+                <div style="display:flex; flex-direction:column; gap:1.1rem;">
+                    <div>
+                        <p class="section-label sl-purple">Roadmap</p>
+                        <h2 class="slide-heading">Spectre Core Sigue Creciendo</h2>
+                    </div>
+                    <p class="slide-body">
+                        El programa está diseñado para expandirse junto a tu carrera. Como miembro activo tendrás acceso anticipado a todo lo que llegue:
+                    </p>
+                    <div style="display:flex; flex-direction:column; gap:0.85rem;">
+                        <div style="display:flex; gap:1rem; align-items:flex-start;">
+                            <div class="icon-badge icon-badge-cyan"><i class="fa-solid fa-video"></i></div>
+                            <div>
+                                <h4 style="font-size:0.9rem; font-weight:700; margin-bottom:0.3rem;">Filmmaking y Dirección Visual</h4>
+                                <p style="font-size:0.8rem; color:var(--text-2); line-height:1.6;">Producción y filmación de videoclips profesionales, visualizadores verticales y trailers cinemáticos dentro del estudio.</p>
+                            </div>
+                        </div>
+                        <div style="display:flex; gap:1rem; align-items:flex-start;">
+                            <div class="icon-badge icon-badge-purple"><i class="fa-solid fa-images"></i></div>
+                            <div>
+                                <h4 style="font-size:0.9rem; font-weight:700; margin-bottom:0.3rem;">Identidad Visual Completa</h4>
+                                <p style="font-size:0.8rem; color:var(--text-2); line-height:1.6;">Sesiones de fotografía de marca para tus redes y portadas personalizadas de alta fidelidad gráfica para cada single.</p>
                             </div>
                         </div>
                     </div>
                 </div>
             </div>
-        </section>
+        </div>
+    </section>
 
-        <section class="slide" id="slide-12">
-            <div class="max-w-5xl w-full flex flex-col gap-4 md:gap-6 pt-8 md:pt-0 pb-28 md:pb-4">
-                <div class="border-l-4 border-cyan-400 pl-4">
-                    <span class="text-[10px] md:text-xs tracking-wider uppercase text-cyan-400 font-semibold">En Conclusión</span>
-                    <h2 class="text-2xl md:text-4xl font-bold text-white mt-1">Todo lo que te llevas cada mes</h2>
+    <!-- ══════════════════════════════════════════
+         SLIDE 12 — RESUMEN
+    ═══════════════════════════════════════════ -->
+    <section class="slide" id="slide-12">
+        <div class="slide-inner" style="display:flex; flex-direction:column; gap:1.25rem;">
+            <div>
+                <p class="section-label sl-purple">El Panorama Completo</p>
+                <h2 class="slide-heading">Todo lo que Obtienes con Spectre Core</h2>
+            </div>
+            <p class="slide-body">No es un servicio de grabación. Es un sistema completo de desarrollo artístico mensual.</p>
+            <div class="three-col">
+                <div class="card card-purple" style="display:flex; gap:0.85rem; align-items:flex-start;">
+                    <div class="sum-badge p">1</div>
+                    <div><h4 style="font-size:0.82rem; font-weight:700; margin-bottom:0.2rem;">Beat Custom + 2 ajustes</h4><p style="font-size:0.75rem; color:var(--text-2); line-height:1.5;">Instrumental original al 100% según tus referencias.</p></div>
                 </div>
-                <p class="text-slate-400 text-xs md:text-base max-w-2xl">
-                    Hagamos un recuento. Spectre Core no te vende horas muertas; te da una infraestructura completa para que lances música profesional de forma constante:
-                </p>
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-2">
-                    <div class="p-4 bg-zinc-900/40 rounded-xl border border-white/5 flex gap-3 items-center">
-                        <div class="w-8 h-8 rounded-full bg-purple-500/10 flex items-center justify-center text-purple-400 text-xs shrink-0 font-bold">1</div>
-                        <p class="text-xs md:text-sm text-slate-300"><strong>Un single profesional completo</strong> (Producción, mezcla y máster comercial de primer nivel).</p>
-                    </div>
-                    <div class="p-4 bg-zinc-900/40 rounded-xl border border-white/5 flex gap-3 items-center">
-                        <div class="w-8 h-8 rounded-full bg-cyan-500/10 flex items-center justify-center text-cyan-400 text-xs shrink-0 font-bold">2</div>
-                        <p class="text-xs md:text-sm text-slate-300"><strong>Instrumental personalizada</strong> diseñado 100% a la medida de tu identidad y referencias musicales.</p>
-                    </div>
-                    <div class="p-4 bg-zinc-900/40 rounded-xl border border-white/5 flex gap-3 items-center">
-                        <div class="w-8 h-8 rounded-full bg-purple-500/10 flex items-center justify-center text-purple-400 text-xs shrink-0 font-bold">3</div>
-                        <p class="text-xs md:text-sm text-slate-300"><strong>Sesión dirigida en cabina (4h)</strong> con ingeniería y dirección artística dedicada 1-a-1.</p>
-                    </div>
-                    <div class="p-4 bg-zinc-900/40 rounded-xl border border-white/5 flex gap-3 items-center">
-                        <div class="w-8 h-8 rounded-full bg-cyan-500/10 flex items-center justify-center text-cyan-400 text-xs shrink-0 font-bold">4</div>
-                        <p class="text-xs md:text-sm text-slate-300"><strong>Soporte para contenido orgánico</strong> con cabina equipada para documentar tus Reels/TikToks.</p>
-                    </div>
-                    <div class="p-4 bg-zinc-900/40 rounded-xl border border-white/5 flex gap-3 items-center">
-                        <div class="w-8 h-8 rounded-full bg-purple-500/10 flex items-center justify-center text-purple-400 text-xs shrink-0 font-bold">5</div>
-                        <p class="text-xs md:text-sm text-slate-300"><strong>100% de tus regalías de distribución</strong> libres y protección legal real de tu obra.</p>
-                    </div>
-                    <div class="p-4 bg-zinc-900/40 rounded-xl border border-white/5 flex gap-3 items-center">
-                        <div class="w-8 h-8 rounded-full bg-cyan-500/10 flex items-center justify-center text-cyan-400 text-xs shrink-0 font-bold">6</div>
-                        <p class="text-xs md:text-sm text-slate-300"><strong>Acceso a la biblioteca educativa</strong> y consultoría estratégica para planificar tus lanzamientos.</p>
-                    </div>
+                <div class="card card-cyan" style="display:flex; gap:0.85rem; align-items:flex-start;">
+                    <div class="sum-badge c">2</div>
+                    <div><h4 style="font-size:0.82rem; font-weight:700; margin-bottom:0.2rem;">Sesión 1-a-1 de 4 horas</h4><p style="font-size:0.75rem; color:var(--text-2); line-height:1.5;">Cabina profesional con ingeniería y dirección vocal.</p></div>
+                </div>
+                <div class="card card-purple" style="display:flex; gap:0.85rem; align-items:flex-start;">
+                    <div class="sum-badge p">3</div>
+                    <div><h4 style="font-size:0.82rem; font-weight:700; margin-bottom:0.2rem;">1 Canción Terminada (WAV + MP3)</h4><p style="font-size:0.75rem; color:var(--text-2); line-height:1.5;">Single con mezcla y máster listo para plataformas.</p></div>
+                </div>
+                <div class="card card-cyan" style="display:flex; gap:0.85rem; align-items:flex-start;">
+                    <div class="sum-badge c">4</div>
+                    <div><h4 style="font-size:0.82rem; font-weight:700; margin-bottom:0.2rem;">100% de tus Regalías</h4><p style="font-size:0.75rem; color:var(--text-2); line-height:1.5;">Todo lo generado en plataformas va directo a ti.</p></div>
+                </div>
+                <div class="card card-purple" style="display:flex; gap:0.85rem; align-items:flex-start;">
+                    <div class="sum-badge p">5</div>
+                    <div><h4 style="font-size:0.82rem; font-weight:700; margin-bottom:0.2rem;">Estrategia de Lanzamiento</h4><p style="font-size:0.75rem; color:var(--text-2); line-height:1.5;">Asesoría de fechas, contenidos y plan de salida.</p></div>
+                </div>
+                <div class="card card-cyan" style="display:flex; gap:0.85rem; align-items:flex-start;">
+                    <div class="sum-badge c">6</div>
+                    <div><h4 style="font-size:0.82rem; font-weight:700; margin-bottom:0.2rem;">Biblioteca + Contenido en Cabina</h4><p style="font-size:0.75rem; color:var(--text-2); line-height:1.5;">Formación mensual + equipo para TikTok y Reels.</p></div>
                 </div>
             </div>
-        </section>
-
-        <section class="slide" id="slide-13">
-            <div class="max-w-4xl text-center flex flex-col items-center gap-4 md:gap-6 pt-8 md:pt-0 pb-28 md:pb-4">
-                <span class="px-3 py-1 bg-red-500/10 border border-red-500/30 rounded-full text-[10px] md:text-xs font-semibold tracking-wider text-red-400 uppercase">
-                    CUPO ESTRICTAMENTE LIMITADO A 3 ARTISTAS
-                </span>
-                <h2 class="text-3xl md:text-6xl font-extrabold tracking-tight gradient-text-purple py-1">
-                    ¿Listo para dar el salto?
-                </h2>
-                <p class="text-slate-400 text-xs md:text-lg max-w-2xl font-light px-4">
-                    Únete a la membresía de crecimiento musical más robusta y honesta de Mérida.
-                </p>
-                
-                <div class="bg-zinc-900/60 border border-white/5 rounded-2xl md:rounded-3xl p-5 md:p-8 w-full max-w-sm md:max-w-md my-2 md:my-4 flex flex-col gap-2">
-                    <span class="text-[10px] md:text-xs uppercase tracking-widest text-slate-400">Inversión Mensual</span>
-                    <span class="text-3xl md:text-5xl font-extrabold text-cyan-400">$3,000 MXN</span>
-                    <span class="text-[9px] md:text-xs text-slate-500 mt-2 italic">*Sin plazos forzosos • Contrato de protección mutua simple • Cancelación anticipada de 15 días</span>
-                </div>
-
-                <a href="https://wa.me/message/AYZYS4QNAGQKM1" target="_blank" class="px-6 md:px-8 py-3 md:py-4 bg-green-500 hover:bg-green-600 active:scale-95 text-white text-xs md:text-base font-bold rounded-xl md:rounded-2xl transition-all duration-300 shadow-lg shadow-green-500/20 flex items-center gap-3">
-                    <i class="fa-brands fa-whatsapp text-sm md:text-lg"></i> Aparta tu lugar por WhatsApp
-                </a>
-                
-                <p class="text-[9px] md:text-xs text-slate-600 px-4">
-                    *Al confirmar tu cupo, firmamos tu contrato y activamos tu primera sesión.
-                </p>
+            <div style="text-align:center; padding:0.85rem 1rem; background:linear-gradient(90deg, var(--purple-lo), var(--cyan-lo)); border:1px solid var(--border-hi); border-radius:14px;">
+                <p style="font-size:0.88rem; font-weight:600; color:var(--text-1);">Pago mensual anticipado. Sin extras ocultos. Sin contratos forzosos.</p>
             </div>
-        </section>
+        </div>
+    </section>
 
-    </main>
+    <!-- ══════════════════════════════════════════
+         SLIDE 13 — PRECIO Y CTA
+    ═══════════════════════════════════════════ -->
+    <section class="slide" id="slide-13">
+        <div class="slide-inner">
+            <div class="tag tag-red" style="margin-bottom:0.5rem;">
+                <i class="fa-solid fa-lock" style="font-size:0.55rem;"></i>
+                Cupo estrictamente limitado a 3 artistas
+            </div>
+            <h2 style="font-family:'Syne',sans-serif; font-size:clamp(2rem,8vw,4.5rem); font-weight:800; line-height:1; background:linear-gradient(150deg,#fff 40%,var(--purple) 100%); -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text; margin-bottom:0.5rem;">
+                ¿Listo para<br>dar el salto?
+            </h2>
+            <p style="font-size:clamp(0.85rem,1.8vw,1rem); color:var(--text-2); max-width:36ch; text-align:center; line-height:1.6;">
+                Únete al programa de crecimiento musical más completo y transparente de Mérida.
+            </p>
+            <div class="price-card">
+                <p style="font-size:0.65rem; font-weight:700; letter-spacing:0.15em; text-transform:uppercase; color:var(--text-3); margin-bottom:0.75rem;">Inversión Mensual</p>
+                <p class="price-amount">$3,000</p>
+                <p style="font-size:0.75rem; color:var(--text-3); margin-top:0.25rem;">MXN / mes · pago anticipado</p>
+                <div style="width:100%; height:1px; background:var(--border); margin:1.1rem 0;"></div>
+                <ul style="text-align:left; font-size:0.78rem; color:var(--text-2); line-height:1.9; list-style:none; padding:0;">
+                    <li><i class="fa-solid fa-circle-check" style="color:var(--green); margin-right:0.4rem;"></i>Pago al inicio del mes — luego trabajamos</li>
+                    <li><i class="fa-solid fa-circle-check" style="color:var(--green); margin-right:0.4rem;"></i>Sin plazos forzosos ni contratos largos</li>
+                    <li><i class="fa-solid fa-circle-check" style="color:var(--green); margin-right:0.4rem;"></i>Para cancelar: avisa con mínimo 15 días de anticipación</li>
+                    <li><i class="fa-solid fa-circle-check" style="color:var(--green); margin-right:0.4rem;"></i>Contrato de protección mutua simple</li>
+                </ul>
+            </div>
+            <a href="https://wa.me/message/AYZYS4QNAGQKM1" target="_blank" class="btn-wa">
+                <i class="fa-brands fa-whatsapp" style="font-size:1.1rem;"></i>
+                Aparta tu lugar por WhatsApp
+            </a>
+            <p style="font-size:0.7rem; color:var(--text-3); text-align:center; max-width:32ch; line-height:1.5;">
+                Al confirmar tu cupo firmamos el contrato y activamos tu primera sesión.
+            </p>
+        </div>
+    </section>
 
-    <div class="absolute top-0 left-0 w-full h-1 bg-zinc-900 z-50">
-        <div id="progress-bar" class="h-full bg-gradient-to-r from-purple-500 to-cyan-500 w-0 transition-all duration-300"></div>
-    </div>
+</main>
 
-    <div class="absolute bottom-4 md:bottom-6 left-1/2 -translate-x-1/2 flex items-center gap-4 md:gap-6 z-50 bg-black/70 backdrop-blur-md border border-white/5 py-2 md:py-3 px-4 md:px-6 rounded-full max-w-[90%] md:max-w-auto">
-        <button id="prev-btn" class="text-slate-400 hover:text-white transition-colors p-2 text-base md:text-lg active:scale-90" aria-label="Anterior">
-            <i class="fa-solid fa-chevron-left"></i>
-        </button>
-        
-        <span id="slide-counter" class="text-[10px] md:text-xs tracking-widest font-mono text-slate-400 font-semibold min-w-[50px] text-center">
-            1 / 13
-        </span>
-        
-        <button id="next-btn" class="text-slate-400 hover:text-white transition-colors p-2 text-base md:text-lg active:scale-90" aria-label="Siguiente">
-            <i class="fa-solid fa-chevron-right"></i>
-        </button>
-    </div>
+<!-- DOT NAV -->
+<nav id="dots" aria-label="Navegación de diapositivas"></nav>
 
-    <div class="hidden lg:flex absolute right-6 top-1/2 -translate-y-1/2 flex-col gap-3 z-50 bg-zinc-950/40 backdrop-blur-md p-3 border border-white/5 rounded-full">
-        <button class="w-3 h-3 rounded-full bg-purple-500 ring-2 ring-purple-500/50 transition-all duration-300 dot-indicator active" onclick="goToSlide(1)" title="Portada"></button>
-        <button class="w-3 h-3 rounded-full bg-zinc-700 transition-all duration-300 dot-indicator" onclick="goToSlide(2)" title="Ecosistema"></button>
-        <button class="w-3 h-3 rounded-full bg-zinc-700 transition-all duration-300 dot-indicator" onclick="goToSlide(3)" title="Para quién es"></button>
-        <button class="w-3 h-3 rounded-full bg-zinc-700 transition-all duration-300 dot-indicator" onclick="goToSlide(4)" title="El Problema"></button>
-        <button class="w-3 h-3 rounded-full bg-zinc-700 transition-all duration-300 dot-indicator" onclick="goToSlide(5)" title="Membresía"></button>
-        <button class="w-3 h-3 rounded-full bg-zinc-700 transition-all duration-300 dot-indicator" onclick="goToSlide(6)" title="El Flujo"></button>
-        <button class="w-3 h-3 rounded-full bg-zinc-700 transition-all duration-300 dot-indicator" onclick="goToSlide(7)" title="La Sesión"></button>
-        <button class="w-3 h-3 rounded-full bg-zinc-700 transition-all duration-300 dot-indicator" onclick="goToSlide(8)" title="Regalías"></button>
-        <button class="w-3 h-3 rounded-full bg-zinc-700 transition-all duration-300 dot-indicator" onclick="goToSlide(9)" title="Biblioteca"></button>
-        <button class="w-3 h-3 rounded-full bg-zinc-700 transition-all duration-300 dot-indicator" onclick="goToSlide(10)" title="Estrategia"></button>
-        <button class="w-3 h-3 rounded-full bg-zinc-700 transition-all duration-300 dot-indicator" onclick="goToSlide(11)" title="Futuro"></button>
-        <button class="w-3 h-3 rounded-full bg-zinc-700 transition-all duration-300 dot-indicator" onclick="goToSlide(12)" title="Resumen"></button>
-        <button class="w-3 h-3 rounded-full bg-zinc-700 transition-all duration-300 dot-indicator" onclick="goToSlide(13)" title="Inversión"></button>
-    </div>
+<!-- BOTTOM NAV -->
+<div id="nav">
+    <button class="nav-btn" id="prev-btn" aria-label="Anterior"><i class="fa-solid fa-chevron-left"></i></button>
+    <span id="counter">1 / 13</span>
+    <button class="nav-btn" id="next-btn" aria-label="Siguiente"><i class="fa-solid fa-chevron-right"></i></button>
+</div>
 
+<script>
+    const TOTAL = 13;
+    let current = 1;
 
-    <script>
-        let currentSlide = 1;
-        const totalSlides = 13;
-        const slides = document.querySelectorAll('.slide');
-        const dots = document.querySelectorAll('.dot-indicator');
-        const prevBtn = document.getElementById('prev-btn');
-        const nextBtn = document.getElementById('next-btn');
-        const counter = document.getElementById('slide-counter');
-        const progressBar = document.getElementById('progress-bar');
+    const slides   = document.querySelectorAll('.slide');
+    const counter  = document.getElementById('counter');
+    const progress = document.getElementById('progress-bar');
+    const dotsNav  = document.getElementById('dots');
+    const prevBtn  = document.getElementById('prev-btn');
+    const nextBtn  = document.getElementById('next-btn');
 
-        // Touch swipe configuration
-        let startX = 0;
-        let startY = 0;
-        let endX = 0;
-        let endY = 0;
+    // Images shown/hidden via CSS (img-col class) — no JS needed
 
-        function updatePresentation() {
-            // Update active slide state
-            slides.forEach((slide, index) => {
-                if (index + 1 === currentSlide) {
-                    slide.classList.add('active');
-                    // Reset scroll to top when slide becomes active
-                    slide.scrollTop = 0;
-                } else {
-                    slide.classList.remove('active');
-                }
-            });
+    // Build dots
+    for (let i = 1; i <= TOTAL; i++) {
+        const btn = document.createElement('button');
+        btn.className = 'dot' + (i === 1 ? ' active' : '');
+        btn.setAttribute('aria-label', `Ir a diapositiva ${i}`);
+        btn.addEventListener('click', () => goTo(i));
+        dotsNav.appendChild(btn);
+    }
+    const dots = document.querySelectorAll('.dot');
 
-            // Update floating dot states
-            dots.forEach((dot, index) => {
-                if (index + 1 === currentSlide) {
-                    dot.classList.add('bg-purple-500', 'ring-2', 'ring-purple-500/50');
-                    dot.classList.remove('bg-zinc-700');
-                } else {
-                    dot.classList.remove('bg-purple-500', 'ring-2', 'ring-purple-500/50');
-                    dot.classList.add('bg-zinc-700');
-                }
-            });
-
-            // Update bottom navigation counter and progress bar width
-            counter.innerText = `${currentSlide} / ${totalSlides}`;
-            const progressPercent = ((currentSlide - 1) / (totalSlides - 1)) * 100;
-            progressBar.style.width = `${progressPercent}%`;
-        }
-
-        function nextSlide() {
-            if (currentSlide < totalSlides) {
-                currentSlide++;
-                updatePresentation();
-            }
-        }
-
-        function prevSlide() {
-            if (currentSlide > 1) {
-                currentSlide--;
-                updatePresentation();
-            }
-        }
-
-        function goToSlide(slideIndex) {
-            if (slideIndex >= 1 && slideIndex <= totalSlides) {
-                currentSlide = slideIndex;
-                updatePresentation();
-            }
-        }
-
-        // Add event listeners for UI buttons
-        nextBtn.addEventListener('click', nextSlide);
-        prevBtn.addEventListener('click', prevSlide);
-
-        // Add Keyboard listener (Right Arrow, Left Arrow, Space, Backspace)
-        document.addEventListener('keydown', (e) => {
-            if (e.key === 'ArrowRight' || e.key === ' ') {
-                e.preventDefault();
-                nextSlide();
-            } else if (e.key === 'ArrowLeft' || e.key === 'Backspace') {
-                e.preventDefault();
-                prevSlide();
-            }
+    function update() {
+        slides.forEach((s, i) => {
+            s.classList.toggle('active', i + 1 === current);
+            if (i + 1 === current) s.scrollTop = 0;
         });
+        dots.forEach((d, i) => d.classList.toggle('active', i + 1 === current));
+        counter.textContent = `${current} / ${TOTAL}`;
+        const pct = ((current - 1) / (TOTAL - 1)) * 100;
+        progress.style.width = pct + '%';
+    }
 
-        // Touch/Swipe Listeners
-        document.addEventListener('touchstart', (e) => {
-            startX = e.touches[0].clientX;
-            startY = e.touches[0].clientY;
-        }, { passive: true });
+    function next() { if (current < TOTAL) { current++; update(); } }
+    function prev() { if (current > 1)     { current--; update(); } }
+    function goTo(n) { if (n >= 1 && n <= TOTAL) { current = n; update(); } }
 
-        document.addEventListener('touchend', (e) => {
-            endX = e.changedTouches[0].clientX;
-            endY = e.changedTouches[0].clientY;
-            handleSwipe();
-        }, { passive: true });
+    nextBtn.addEventListener('click', next);
+    prevBtn.addEventListener('click', prev);
 
-        function handleSwipe() {
-            const swipeThresholdX = 60; // Minimum horizontal swipe distance in pixels
-            const maxSwipeThresholdY = 80; // Maximum allowed vertical swipe to prevent switching slides while scrolling
-            
-            const diffX = startX - endX;
-            const diffY = Math.abs(startY - endY);
+    document.addEventListener('keydown', e => {
+        if (e.key === 'ArrowRight' || e.key === ' ') { e.preventDefault(); next(); }
+        if (e.key === 'ArrowLeft'  || e.key === 'Backspace') { e.preventDefault(); prev(); }
+    });
 
-            // Only switch slide if it was a clear horizontal gesture, ignoring vertical scrolls
-            if (Math.abs(diffX) > swipeThresholdX && diffY < maxSwipeThresholdY) {
-                if (diffX > 0) {
-                    // Swiped Left -> Next Slide
-                    nextSlide();
-                } else {
-                    // Swiped Right -> Prev Slide
-                    prevSlide();
-                }
-            }
-        }
+    // Swipe
+    let sx = 0, sy = 0;
+    document.addEventListener('touchstart', e => { sx = e.touches[0].clientX; sy = e.touches[0].clientY; }, { passive: true });
+    document.addEventListener('touchend',   e => {
+        const dx = sx - e.changedTouches[0].clientX;
+        const dy = Math.abs(sy - e.changedTouches[0].clientY);
+        if (Math.abs(dx) > 60 && dy < 80) dx > 0 ? next() : prev();
+    }, { passive: true });
 
-        // Initialize presentation on load
-        window.onload = function() {
-            updatePresentation();
-        };
-    </script>
+    update();
+</script>
 </body>
 </html>
