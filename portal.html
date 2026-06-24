@@ -1211,7 +1211,7 @@ function renderProyectos() {
             .reduce((s, f) => s + (parseFloat(f['Monto'])||0), 0);
           const totalColor = pagadoPorProyecto > solicitado ? 'var(--green)' : pagadoPorProyecto > 0 ? 'var(--yellow)' : 'var(--muted2)';
           return `<tr>
-            <td><div class="project-name">${p['Nombre del proyecto']||'—'}</div><div class="project-service">${p['ID']||''}</div></td>
+            <td><div class="project-name">${p['Nombre del proyecto']||'—'}</div></td>
             <td><span style="font-family:'DM Mono',monospace;font-size:.7rem;color:var(--muted)">${p['Tipo de servicio']||'—'}</span></td>
             <td><span style="font-family:'DM Mono',monospace;font-size:.7rem;color:var(--muted)">${formatFecha(p['Fecha inicio'])}</span></td>
             <td><span style="font-family:'DM Mono',monospace;font-size:.7rem;color:var(--muted)">${formatFecha(p['Fecha entrega'])}</span></td>
@@ -1234,7 +1234,6 @@ function renderProyectos() {
           <div class="project-mobile-top">
             <div>
               <div class="project-mobile-name">${p['Nombre del proyecto']||'—'}</div>
-              <div style="font-family:'DM Mono',monospace;font-size:.6rem;color:var(--muted2)">${p['ID']||''}</div>
             </div>
             ${getStatusBadge(p['Estado proyecto'])}
           </div>
@@ -1501,4 +1500,3 @@ function doLogout() {
 </script>
 </body>
 </html>
-
