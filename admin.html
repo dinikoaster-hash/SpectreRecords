@@ -189,6 +189,28 @@ body::before{content:'';position:fixed;inset:0;background-image:url("data:image/
 .toast.error{border-left-color:var(--red);}
 
 .empty-state{font-family:DM Mono,monospace;font-size:.72rem;color:var(--muted2);padding:3rem;text-align:center;letter-spacing:.08em;border:1px dashed var(--border2);}
+/* CHARTS */
+.charts-grid{display:grid;grid-template-columns:1fr 1fr;gap:1px;border:1px solid var(--border);margin-bottom:2rem;}
+.chart-card{background:var(--surface);padding:1.4rem;}
+.chart-title{font-family:DM Mono,monospace;font-size:.58rem;letter-spacing:.18em;text-transform:uppercase;color:var(--muted);margin-bottom:1rem;}
+.bar-chart{display:flex;flex-direction:column;gap:.5rem;}
+.bar-row{display:flex;align-items:center;gap:.7rem;font-size:.72rem;}
+.bar-label{font-family:DM Mono,monospace;font-size:.62rem;color:var(--muted);min-width:80px;text-align:right;flex-shrink:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.bar-track{flex:1;background:var(--surface2);height:20px;border-radius:0;overflow:hidden;border:1px solid var(--border);}
+.bar-fill{height:100%;transition:width .6s ease;min-width:2px;}
+.bar-value{font-family:Bebas Neue,sans-serif;font-size:.9rem;color:var(--text);min-width:70px;}
+.donut-wrap{display:flex;align-items:center;gap:1.5rem;flex-wrap:wrap;}
+.donut-legend{display:flex;flex-direction:column;gap:.5rem;flex:1;min-width:120px;}
+.donut-item{display:flex;align-items:center;gap:.5rem;font-family:DM Mono,monospace;font-size:.62rem;color:var(--muted);}
+.donut-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0;}
+.donut-item-val{font-family:Bebas Neue,sans-serif;font-size:.9rem;color:var(--text);margin-left:auto;}
+.dash-filter-bar{display:flex;gap:.8rem;margin-bottom:1.5rem;flex-wrap:wrap;align-items:center;}
+.dash-filter-label{font-family:DM Mono,monospace;font-size:.6rem;letter-spacing:.15em;color:var(--muted);text-transform:uppercase;}
+@media(max-width:900px){.charts-grid{grid-template-columns:1fr;}.bar-label{min-width:60px;font-size:.58rem;}}
+/* CUSTOM PERSONAL TAGS */
+.personal-tag{display:inline-flex;align-items:center;gap:.4rem;background:rgba(168,85,247,.1);border:1px solid rgba(168,85,247,.25);padding:.2rem .6rem;font-family:DM Mono,monospace;font-size:.58rem;color:var(--purple-light);cursor:pointer;transition:background .2s;}
+.personal-tag:hover{background:rgba(248,113,113,.1);border-color:rgba(248,113,113,.3);color:var(--red);}
+.personal-tags-wrap{display:flex;flex-wrap:wrap;gap:.4rem;margin-top:.5rem;}
 .spinner{width:20px;height:20px;border:2px solid var(--border2);border-top-color:var(--gold);border-radius:50%;animation:spin 1s linear infinite;margin:0 auto .8rem;}
 .loading-state{text-align:center;padding:3rem;font-family:DM Mono,monospace;font-size:.68rem;color:var(--muted);letter-spacing:.1em;}
 .section-divider{border:none;border-top:1px solid var(--border);margin:2rem 0;}
@@ -328,6 +350,13 @@ body::before{content:'';position:fixed;inset:0;background-image:url("data:image/
           <div><div class="page-eyebrow">// Spectre Records</div><div class="page-title">REPORTE GENERAL</div></div>
           <button class="btn btn-ghost" onclick="loadAdmin()" style="font-size:.65rem;padding:.6rem 1.2rem;">&#x27F3; Actualizar</button>
         </div>
+        <!-- Filtro año dashboard -->
+        <div class="dash-filter-bar">
+          <span class="dash-filter-label">// Año:</span>
+          <select class="filter-select" id="dashYearFilter" onchange="renderDashboard()" style="min-width:100px;">
+            <option value="">Todos</option>
+          </select>
+        </div>
         <div class="stats-grid" id="dashStats">
           <div class="stat-card"><div class="stat-label">Total facturado</div><div class="stat-value sv-gold" id="stTotal">&#x2014;</div></div>
           <div class="stat-card"><div class="stat-label">Proyectos activos</div><div class="stat-value sv-purple" id="stActivos">&#x2014;</div></div>
@@ -336,6 +365,12 @@ body::before{content:'';position:fixed;inset:0;background-image:url("data:image/
           <div class="stat-card"><div class="stat-label">Por cobrar</div><div class="stat-value sv-yellow" id="stPendiente">&#x2014;</div></div>
           <div class="stat-card"><div class="stat-label">Finalizados</div><div class="stat-value sv-green" id="stFinalizados">&#x2014;</div></div>
           <div class="stat-card"><div class="stat-label">Cancelados</div><div class="stat-value sv-red" id="stCancelados">&#x2014;</div></div>
+        </div>
+        <!-- GRÁFICAS -->
+        <div class="charts-grid" id="dashCharts">
+          <div class="chart-card"><div class="chart-title">// Ingresos por artista</div><div id="chartArtistas"><div class="loading-state"><div class="spinner"></div></div></div></div>
+          <div class="chart-card"><div class="chart-title">// Gastos por persona</div><div id="chartPersonal"><div class="loading-state"><div class="spinner"></div></div></div></div>
+          <div class="chart-card" style="grid-column:1/-1"><div class="chart-title">// Ingresos por mes</div><div id="chartMeses"><div class="loading-state"><div class="spinner"></div></div></div></div>
         </div>
         <div class="dash-section">
           <div class="dash-eyebrow">// Proyectos en curso</div>
@@ -411,6 +446,9 @@ body::before{content:'';position:fixed;inset:0;background-image:url("data:image/
           <input class="filter-input" id="searchFinanzas" placeholder="// Buscar concepto o artista..." oninput="renderFinanzas()"/>
           <select class="filter-select" id="filterPagoEstado" onchange="renderFinanzas()">
             <option value="">Todos</option><option value="pagado">Pagados</option><option value="pendiente">Pendientes</option>
+          </select>
+          <select class="filter-select" id="filterFinYear" onchange="renderFinanzas()" style="min-width:90px;">
+            <option value="">Todos los años</option>
           </select>
         </div>
         <div class="table-wrap" id="finanzasContainer"><div class="loading-state"><div class="spinner"></div>Cargando...</div></div>
@@ -539,11 +577,7 @@ body::before{content:'';position:fixed;inset:0;background-image:url("data:image/
             <div class="form-group"><label class="form-label">Fecha de entrega</label><input class="form-input" id="npFechaE" type="date"/></div>
             <div class="form-group"><label class="form-label">Monto total (MXN)</label><input class="form-input" id="npMonto" type="number" placeholder="2500"/></div>
             <div class="form-group"><label class="form-label">Asignado a</label>
-              <select class="form-input" id="npAsignado">
-                <option value="">Sin asignar</option>
-                <option value="Heaven">Heaven</option>
-                <option value="Darol">Darol</option>
-              </select>
+              <select class="form-input" id="npAsignado"></select>
             </div>
             <div class="form-group full"><label class="form-label">Bonos incluidos</label><input class="form-input" id="npBonos" placeholder="Cover Art, Reel, Gorra..."/></div>
             <div class="form-group full"><label class="form-label">Notas</label><input class="form-input" id="npNotas" placeholder="Observaciones..."/></div>
@@ -626,11 +660,7 @@ body::before{content:'';position:fixed;inset:0;background-image:url("data:image/
         <div class="form-group full"><label class="form-label">Notas</label><input class="form-input" id="mpNotas"/></div>
         <div class="form-group"><label class="form-label">Monto solicitado (MXN)</label><input class="form-input" id="mpSolicitado" type="number" placeholder="2500"/></div>
         <div class="form-group"><label class="form-label">Asignado a</label>
-          <select class="form-input" id="mpAsignado">
-            <option value="">Sin asignar</option>
-            <option value="Heaven">Heaven</option>
-            <option value="Darol">Darol</option>
-          </select>
+          <select class="form-input" id="mpAsignado"></select>
         </div>
         <div class="form-group full"><label class="form-label">Subir archivo a Drive (reemplaza el actual)</label><input class="form-file" id="mpArchivo" type="file" accept="*/*"/></div>
         <div class="form-group full"><label class="form-label">Link archivos entregados (manual o desde Drive)</label><input class="form-input" id="mpArchivos" placeholder="https://drive.google.com/..."/></div>
@@ -667,12 +697,13 @@ body::before{content:'';position:fixed;inset:0;background-image:url("data:image/
         <div class="form-group"><label class="form-label">Estado</label>
           <select class="form-input" id="fpEstado"><option value="Pagado">Pagado</option><option value="Pendiente">Pendiente</option></select>
         </div>
-        <div class="form-group" id="fpPersonalGroup" style="display:none"><label class="form-label">Para (Personal)</label>
-          <select class="form-input" id="fpPersonal">
-            <option value="">Sin asignar</option>
-            <option value="Heaven">Heaven</option>
-            <option value="Darol">Darol</option>
-          </select>
+        <div class="form-group" id="fpPersonalGroup" style="display:none">
+          <label class="form-label">Para (Personal)</label>
+          <div style="display:flex;gap:.5rem;align-items:center;">
+            <select class="form-input" id="fpPersonal" style="flex:1;"></select>
+            <button type="button" class="btn btn-ghost" onclick="abrirAddPersona()" style="font-size:.6rem;padding:.5rem .8rem;white-space:nowrap;">+ Añadir</button>
+          </div>
+          <div class="personal-tags-wrap" id="personaTagsWrap"></div>
         </div>
       </div>
     </div>
@@ -817,6 +848,29 @@ body::before{content:'';position:fixed;inset:0;background-image:url("data:image/
   </div>
 </div>
 
+<!-- MODAL: NUEVA PERSONA -->
+<div class="modal-overlay" id="modalAddPersona">
+  <div class="modal" style="max-width:360px;">
+    <div class="modal-header">
+      <div class="modal-title">NUEVA PERSONA</div>
+      <button class="modal-close" onclick="closeModal('modalAddPersona')">&#x2715;</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-group">
+        <label class="form-label">Nombre</label>
+        <input class="form-input" id="newPersonaNombre" placeholder="Ej: Carlos, Estudio, etc." onkeydown="if(event.key==='Enter')guardarNuevaPersona()"/>
+      </div>
+      <div style="font-family:DM Mono,monospace;font-size:.62rem;color:var(--muted);margin-top:.8rem;line-height:1.6;">
+        // Esta persona se guardar&#xE1; localmente y aparecer&#xE1; en todos los filtros de gastos.
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-green" onclick="guardarNuevaPersona()">Guardar &#x2192;</button>
+      <button class="btn btn-ghost" onclick="closeModal('modalAddPersona')">Cancelar</button>
+    </div>
+  </div>
+</div>
+
 <script>
 const OAUTH_CLIENT_ID = '517201895021-4q6nl7376jgag4bmrrqbo9t141n81v93.apps.googleusercontent.com';
 const SHEET_ID        = '18-hf-2pCs1UhUUi66Ke_JmheavXk_V-Enus0p3yfNd0';
@@ -833,6 +887,59 @@ let userRole = 'heaven'; // 'heaven' | 'darol'
 let finView = 'ingresos';
 let prjView = 'activos';
 let catView = 'todos';
+
+// PERSONAS CUSTOM (guardadas en localStorage)
+const PERSONAS_KEY = 'sr_custom_personas';
+const DEFAULT_PERSONAS = ['Heaven','Darol'];
+function getPersonas(){
+  const saved = localStorage.getItem(PERSONAS_KEY);
+  let custom = [];
+  try { custom = saved ? JSON.parse(saved) : []; } catch(e){ custom=[]; }
+  return [...DEFAULT_PERSONAS, ...custom.filter(p=>!DEFAULT_PERSONAS.includes(p))];
+}
+function saveCustomPersonas(list){
+  const custom = list.filter(p=>!DEFAULT_PERSONAS.includes(p));
+  localStorage.setItem(PERSONAS_KEY, JSON.stringify(custom));
+}
+function populatePersonaSelects(){
+  const personas = getPersonas();
+  ['fpPersonal','mpAsignado','npAsignado'].forEach(selId=>{
+    const sel = document.getElementById(selId); if(!sel) return;
+    const cur = sel.value;
+    sel.innerHTML = '<option value="">Sin asignar</option>' + personas.map(p=>`<option value="${p}">${p}</option>`).join('');
+    if(cur) sel.value = cur;
+  });
+  renderPersonaTags();
+}
+function renderPersonaTags(){
+  const wrap = document.getElementById('personaTagsWrap'); if(!wrap) return;
+  const personas = getPersonas();
+  const custom = personas.filter(p=>!DEFAULT_PERSONAS.includes(p));
+  if(!custom.length){ wrap.innerHTML=''; return; }
+  wrap.innerHTML = custom.map(p=>`<span class="personal-tag" title="Click para eliminar" onclick="eliminarPersona('${p}')">${p} ✕</span>`).join('');
+}
+function abrirAddPersona(){
+  document.getElementById('newPersonaNombre').value='';
+  openModal('modalAddPersona');
+  setTimeout(()=>document.getElementById('newPersonaNombre').focus(),100);
+}
+function guardarNuevaPersona(){
+  const nombre = document.getElementById('newPersonaNombre').value.trim();
+  if(!nombre){ toast('Escribe un nombre','error'); return; }
+  const personas = getPersonas();
+  if(personas.map(p=>p.toLowerCase()).includes(nombre.toLowerCase())){ toast('Ya existe','error'); return; }
+  saveCustomPersonas([...personas, nombre]);
+  populatePersonaSelects();
+  document.getElementById('fpPersonal').value = nombre;
+  closeModal('modalAddPersona');
+  toast(`✓ ${nombre} agregado`,'success');
+}
+function eliminarPersona(nombre){
+  const personas = getPersonas().filter(p=>p!==nombre);
+  saveCustomPersonas(personas);
+  populatePersonaSelects();
+  toast(`✓ ${nombre} eliminado`,'success');
+}
 
 // CURSOR
 const cur=document.getElementById('cursor'),ring=document.getElementById('cursorRing');
@@ -1026,7 +1133,7 @@ async function loadAdmin(delay=0){
   renderFinanzas();renderCursosAdmin();renderCatalogo();renderTareas();
   // Refresh badge
   const pend=allTareas.filter(t=>t['Estado']==='Pendiente').length;const b=document.getElementById('badgeTareas');if(b){b.style.display=pend>0?'inline':'none';b.textContent=pend;}
-  populateArtistSelects();populateProyectoSelects();updateBadges();
+  populateArtistSelects();populateProyectoSelects();populateYearFilters();updateBadges();
 }
 
 function updateBadges(){
@@ -1067,11 +1174,15 @@ function fmt(n){return n?'$'+parseFloat(n).toLocaleString('es-MX'):'$0';}
 
 // DASHBOARD
 function renderDashboard(){
+  const yearSel = document.getElementById('dashYearFilter');
+  const yearFilter = yearSel ? parseInt(yearSel.value)||0 : 0;
+  const finBase = yearFilter ? allFinanzas.filter(f=>{ const d=parseFecha(f['Fecha']||''); return d&&d.getFullYear()===yearFilter; }) : allFinanzas;
+
   const activos=allProyectos.filter(p=>!/finalizado|cancelado/i.test(p['Estado proyecto']||'')).length;
   const fin=allProyectos.filter(p=>/finalizado/i.test(p['Estado proyecto']||'')).length;
   const cancelados=allProyectos.filter(p=>/cancelado/i.test(p['Estado proyecto']||'')).length;
-  const ingresosCobrados=allFinanzas.filter(f=>(f['Tipo']||'').toLowerCase()==='ingreso'&&/pagado/i.test(f['Estado']||'')).reduce((s,f)=>s+(parseFloat(f['Monto'])||0),0);
-  const ingresosPend=allFinanzas.filter(f=>(f['Tipo']||'').toLowerCase()==='ingreso'&&/pendiente/i.test(f['Estado']||'')).reduce((s,f)=>s+(parseFloat(f['Monto'])||0),0);
+  const ingresosCobrados=finBase.filter(f=>(f['Tipo']||'').toLowerCase()==='ingreso'&&/pagado/i.test(f['Estado']||'')).reduce((s,f)=>s+(parseFloat(f['Monto'])||0),0);
+  const ingresosPend=finBase.filter(f=>(f['Tipo']||'').toLowerCase()==='ingreso'&&/pendiente/i.test(f['Estado']||'')).reduce((s,f)=>s+(parseFloat(f['Monto'])||0),0);
   document.getElementById('stArtistas').textContent=allArtistas.length||'0';
   document.getElementById('stActivos').textContent=activos||'0';
   document.getElementById('stFinalizados').textContent=fin||'0';
@@ -1079,6 +1190,70 @@ function renderDashboard(){
   document.getElementById('stCobrado').textContent=fmt(ingresosCobrados);
   document.getElementById('stPendiente').textContent=fmt(ingresosPend);
   document.getElementById('stTotal').textContent=fmt(ingresosCobrados+ingresosPend);
+
+  // ── GRÁFICA 1: Ingresos por artista ──
+  const ingByArtist = {};
+  finBase.filter(f=>(f['Tipo']||'').toLowerCase()==='ingreso'&&/pagado/i.test(f['Estado']||'')).forEach(f=>{
+    const a=getArtista(f['Cliente']);
+    const nombre=a?(a['AKA']||a['Nombre']||f['Cliente']||'Sin artista'):(f['Cliente']||'Sin artista');
+    ingByArtist[nombre]=(ingByArtist[nombre]||0)+(parseFloat(f['Monto'])||0);
+  });
+  const artistEntries=Object.entries(ingByArtist).sort((a,b)=>b[1]-a[1]).slice(0,8);
+  const maxArtist=artistEntries.length?artistEntries[0][1]:1;
+  const COLORS=['#a855f7','#34d399','#fbbf24','#f87171','#60a5fa','#fb923c','#c084fc','#4ade80'];
+  document.getElementById('chartArtistas').innerHTML = artistEntries.length
+    ? `<div class="bar-chart">${artistEntries.map(([name,val],i)=>`
+        <div class="bar-row">
+          <div class="bar-label" title="${name}">${name}</div>
+          <div class="bar-track"><div class="bar-fill" style="width:${Math.round(val/maxArtist*100)}%;background:${COLORS[i%COLORS.length]};"></div></div>
+          <div class="bar-value" style="color:${COLORS[i%COLORS.length]}">$${val.toLocaleString('es-MX')}</div>
+        </div>`).join('')}</div>`
+    : '<div style="font-family:DM Mono,monospace;font-size:.65rem;color:var(--muted2);padding:1rem">// Sin datos</div>';
+
+  // ── GRÁFICA 2: Gastos por persona ──
+  const gastosByPersona = {};
+  finBase.filter(f=>(f['Tipo']||'').toLowerCase()==='gasto'&&/pagado/i.test(f['Estado']||'')).forEach(f=>{
+    const p=f['Personal']||'Sin asignar';
+    gastosByPersona[p]=(gastosByPersona[p]||0)+(parseFloat(f['Monto'])||0);
+  });
+  const personaEntries=Object.entries(gastosByPersona).sort((a,b)=>b[1]-a[1]);
+  const maxPersona=personaEntries.length?personaEntries[0][1]:1;
+  const PGCOLORS=['#fbbf24','#a855f7','#f87171','#34d399','#60a5fa','#fb923c'];
+  document.getElementById('chartPersonal').innerHTML = personaEntries.length
+    ? `<div class="bar-chart">${personaEntries.map(([name,val],i)=>`
+        <div class="bar-row">
+          <div class="bar-label" title="${name}">${name}</div>
+          <div class="bar-track"><div class="bar-fill" style="width:${Math.round(val/maxPersona*100)}%;background:${PGCOLORS[i%PGCOLORS.length]};"></div></div>
+          <div class="bar-value" style="color:${PGCOLORS[i%PGCOLORS.length]}">$${val.toLocaleString('es-MX')}</div>
+        </div>`).join('')}</div>`
+    : '<div style="font-family:DM Mono,monospace;font-size:.65rem;color:var(--muted2);padding:1rem">// Sin datos de gastos</div>';
+
+  // ── GRÁFICA 3: Ingresos por mes ──
+  const MESES=['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'];
+  const mesData = {};
+  finBase.filter(f=>(f['Tipo']||'').toLowerCase()==='ingreso'&&/pagado/i.test(f['Estado']||'')).forEach(f=>{
+    const d=parseFecha(f['Fecha']||'');
+    if(!d) return;
+    const key=`${d.getFullYear()}-${String(d.getMonth()).padStart(2,'0')}`;
+    mesData[key]=(mesData[key]||0)+(parseFloat(f['Monto'])||0);
+  });
+  const mesEntries=Object.entries(mesData).sort((a,b)=>a[0].localeCompare(b[0])).slice(-12);
+  const maxMes=mesEntries.length?Math.max(...mesEntries.map(e=>e[1])):1;
+  document.getElementById('chartMeses').innerHTML = mesEntries.length
+    ? `<div style="display:flex;align-items:flex-end;gap:4px;height:80px;padding:0 .5rem;">
+        ${mesEntries.map(([key,val])=>{
+          const [yr,mo]=key.split('-');
+          const pct=Math.max(4,Math.round(val/maxMes*100));
+          return `<div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;min-width:0;">
+            <div style="font-family:Bebas Neue,sans-serif;font-size:.65rem;color:var(--green);white-space:nowrap;overflow:hidden;max-width:100%;text-align:center">$${val>=1000?Math.round(val/1000)+'k':val.toLocaleString()}</div>
+            <div style="width:100%;height:${pct}%;background:linear-gradient(180deg,var(--purple-light),var(--purple));border-radius:2px 2px 0 0;min-height:4px;"></div>
+            <div style="font-family:DM Mono,monospace;font-size:.52rem;color:var(--muted);white-space:nowrap;">${MESES[parseInt(mo)]} ${yr.slice(2)}</div>
+          </div>`;
+        }).join('')}
+      </div>`
+    : '<div style="font-family:DM Mono,monospace;font-size:.65rem;color:var(--muted2);padding:1rem">// Sin datos del periodo</div>';
+
+  // ── Proyectos activos y pagos pendientes ──
   const al=allProyectos.filter(p=>!/finalizado|cancelado/i.test(p['Estado proyecto']||''));
   document.getElementById('dashProyectos').innerHTML=al.length
     ?`<div class="table-wrap"><table class="data-table"><thead><tr><th>Proyecto</th><th>Artista</th><th>Servicio</th><th>Estado</th></tr></thead><tbody>
@@ -1089,7 +1264,7 @@ function renderDashboard(){
         <td>${getBadge(p['Estado proyecto'])}</td></tr>`;}).join('')}
       </tbody></table></div>`
     :'<div class="empty-state">// No hay proyectos activos</div>';
-  const pl=allFinanzas.filter(f=>/pendiente/i.test(f['Estado']||''));
+  const pl=finBase.filter(f=>/pendiente/i.test(f['Estado']||''));
   document.getElementById('dashPendientes').innerHTML=pl.length
     ?`<div class="table-wrap"><table class="data-table"><thead><tr><th>Concepto</th><th>Artista</th><th>Monto</th><th>Estado</th></tr></thead><tbody>
       ${pl.map(f=>{const a=getArtista(f['Cliente']);return`<tr>
@@ -1315,6 +1490,18 @@ async function actualizarProyecto(){
   else{toast('Error al actualizar','error');}
 }
 
+function populateYearFilters(){
+  const years = [...new Set(
+    allFinanzas.map(f=>{ const d=parseFecha(f['Fecha']||''); return d?d.getFullYear():null; }).filter(Boolean)
+  )].sort((a,b)=>b-a);
+  ['filterFinYear','dashYearFilter'].forEach(selId=>{
+    const sel=document.getElementById(selId); if(!sel) return;
+    const cur=sel.value;
+    sel.innerHTML='<option value="">'+(selId==='dashYearFilter'?'Todos':'Todos los años')+'</option>'+years.map(y=>`<option value="${y}">${y}</option>`).join('');
+    if(cur&&years.includes(parseInt(cur)))sel.value=cur;
+  });
+}
+
 // FINANZAS
 function setFinView(view){
   finView=view;
@@ -1398,10 +1585,14 @@ function renderFinRow(f){
     +'</tr>';
 }
 function renderFinanzas(){
-  const allIngresosCobrados=allFinanzas.filter(f=>(f['Tipo']||'').toLowerCase()==='ingreso'&&/pagado/i.test(f['Estado']||'')).reduce((s,f)=>s+(parseFloat(f['Monto'])||0),0);
-  const allPorCobrar=allFinanzas.filter(f=>(f['Tipo']||'').toLowerCase()==='ingreso'&&/pendiente/i.test(f['Estado']||'')).reduce((s,f)=>s+(parseFloat(f['Monto'])||0),0);
-  const allGastos=allFinanzas.filter(f=>(f['Tipo']||'').toLowerCase()==='gasto'&&/pagado/i.test(f['Estado']||'')).reduce((s,f)=>s+(parseFloat(f['Monto'])||0),0);
-  const allGastosPend=allFinanzas.filter(f=>(f['Tipo']||'').toLowerCase()==='gasto'&&/pendiente/i.test(f['Estado']||'')).reduce((s,f)=>s+(parseFloat(f['Monto'])||0),0);
+  const yearSel = document.getElementById('filterFinYear');
+  const yearFilter = yearSel ? parseInt(yearSel.value)||0 : 0;
+  const finBase = yearFilter ? allFinanzas.filter(f=>{ const d=parseFecha(f['Fecha']||''); return d&&d.getFullYear()===yearFilter; }) : allFinanzas;
+
+  const allIngresosCobrados=finBase.filter(f=>(f['Tipo']||'').toLowerCase()==='ingreso'&&/pagado/i.test(f['Estado']||'')).reduce((s,f)=>s+(parseFloat(f['Monto'])||0),0);
+  const allPorCobrar=finBase.filter(f=>(f['Tipo']||'').toLowerCase()==='ingreso'&&/pendiente/i.test(f['Estado']||'')).reduce((s,f)=>s+(parseFloat(f['Monto'])||0),0);
+  const allGastos=finBase.filter(f=>(f['Tipo']||'').toLowerCase()==='gasto'&&/pagado/i.test(f['Estado']||'')).reduce((s,f)=>s+(parseFloat(f['Monto'])||0),0);
+  const allGastosPend=finBase.filter(f=>(f['Tipo']||'').toLowerCase()==='gasto'&&/pendiente/i.test(f['Estado']||'')).reduce((s,f)=>s+(parseFloat(f['Monto'])||0),0);
   const balance=allIngresosCobrados-allGastos;
   const finBox=document.getElementById('finSummaryBox');
   if(userRole==='darol'){
@@ -1416,7 +1607,7 @@ function renderFinanzas(){
   }
   const q=(document.getElementById('searchFinanzas').value||'').toLowerCase();
   const est=document.getElementById('filterPagoEstado').value;
-  const base=allFinanzas.filter(f=>{
+  const base=finBase.filter(f=>{
     const a=getArtista(f['Cliente']);const na=a?(a['AKA']||a['Nombre']||''):f['Cliente']||'';
     const m=!q||(f['Concepto']||'').toLowerCase().includes(q)||na.toLowerCase().includes(q)||(f['ID']||'').toLowerCase().includes(q);
     const e=!est||(f['Estado']||'').toLowerCase().includes(est);
@@ -1527,6 +1718,7 @@ function populateArtistSelects(){
     });
     if(cur)sel.value=cur;
   });
+  populatePersonaSelects();
 }
 
 async function guardarProyecto(){
