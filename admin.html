@@ -305,8 +305,11 @@ body::before{content:'';position:fixed;inset:0;background-image:url("data:image/
         <img src="assets/logo_sr.PNG" alt="Spectre Records"/>
       </div>
       <nav class="sidebar-nav">
-        <button class="nav-item active" onclick="showPage('dashboard',this)">
+        <button class="nav-item active" onclick="showPage('dashboard',this)" id="navDashHeaven">
           <span class="nav-icon">&#x25C8;</span><span>Dashboard</span>
+        </button>
+        <button class="nav-item" onclick="showPage('dashboard-darol',this)" id="navDashDarol" style="display:none">
+          <span class="nav-icon">&#x25C8;</span><span>Mi Panel</span>
         </button>
         <button class="nav-item" onclick="showPage('artistas',this)">
           <span class="nav-icon">&#x266A;</span><span>Artistas</span>
@@ -384,6 +387,39 @@ body::before{content:'';position:fixed;inset:0;background-image:url("data:image/
         </div>
       </div>
 
+      <!-- DASHBOARD DAROL -->
+      <div class="page" id="page-dashboard-darol">
+        <div class="page-header">
+          <div><div class="page-eyebrow">// Darol</div><div class="page-title">MI PANEL</div></div>
+          <button class="btn btn-ghost" onclick="loadAdmin()" style="font-size:.65rem;padding:.6rem 1.2rem;">&#x27F3; Actualizar</button>
+        </div>
+        <!-- Stats Darol -->
+        <div class="stats-grid" id="darolStats" style="margin-bottom:1.5rem;">
+          <div class="stat-card"><div class="stat-label">Total cobrado</div><div class="stat-value sv-green" id="dstCobrado">&#x2014;</div></div>
+          <div class="stat-card"><div class="stat-label">Por cobrar</div><div class="stat-value sv-yellow" id="dstPendiente">&#x2014;</div></div>
+          <div class="stat-card"><div class="stat-label">Proyectos activos</div><div class="stat-value sv-purple" id="dstActivos">&#x2014;</div></div>
+          <div class="stat-card"><div class="stat-label">Proyectos terminados</div><div class="stat-value sv-green" id="dstFinalizados">&#x2014;</div></div>
+        </div>
+        <!-- Gráfica: cobros por mes -->
+        <div class="dash-section">
+          <div class="dash-eyebrow">// Historial</div>
+          <div class="dash-section-title">COBROS POR MES</div>
+          <div style="background:var(--surface);border:1px solid var(--border);padding:1.4rem;" id="darolChartMeses"></div>
+        </div>
+        <!-- Proyectos asignados -->
+        <div class="dash-section">
+          <div class="dash-eyebrow">// Mis proyectos activos</div>
+          <div class="dash-section-title">EN PROCESO</div>
+          <div id="darolProyectos"><div class="loading-state"><div class="spinner"></div>Cargando...</div></div>
+        </div>
+        <!-- Pagos pendientes propios -->
+        <div class="dash-section">
+          <div class="dash-eyebrow">// Pendiente de cobro</div>
+          <div class="dash-section-title">POR COBRAR</div>
+          <div id="darolPendientes"><div class="loading-state"><div class="spinner"></div>Cargando...</div></div>
+        </div>
+      </div>
+
       <!-- ARTISTAS -->
       <div class="page" id="page-artistas">
         <div class="page-header">
@@ -429,7 +465,7 @@ body::before{content:'';position:fixed;inset:0;background-image:url("data:image/
           <div><div class="page-eyebrow">// Flujo de caja</div><div class="page-title">FINANZAS</div></div>
           <div style="display:flex;gap:.6rem;">
             <button class="btn btn-ghost" onclick="loadAdmin()" style="font-size:.65rem;padding:.6rem 1.2rem;">&#x27F3; Actualizar</button>
-            <button class="btn btn-gold" onclick="openModal('modalPago')">+ Nuevo pago</button>
+            <button class="btn btn-gold" id="btnNuevoPago" onclick="openModal('modalPago')">+ Nuevo pago</button>
           </div>
         </div>
         <div class="fin-summary" id="finSummaryBox">
@@ -1129,7 +1165,7 @@ async function loadAdmin(delay=0){
     fetchSheet(SH.artistas),fetchSheet(SH.proyectos),fetchSheet(SH.finanzas),fetchSheet(SH.cursos),fetchSheet(SH.catalogo),fetchSheet(SH.tareas)
   ]);
   renderDashboard();renderArtistas();
-  if(userRole==='darol')renderProyectosDarol();else renderProyectos();
+  if(userRole==='darol'){renderProyectosDarol();renderDarolDashboard();}else renderProyectos();
   renderFinanzas();renderCursosAdmin();renderCatalogo();renderTareas();
   // Refresh badge
   const pend=allTareas.filter(t=>t['Estado']==='Pendiente').length;const b=document.getElementById('badgeTareas');if(b){b.style.display=pend>0?'inline':'none';b.textContent=pend;}
@@ -1651,14 +1687,16 @@ function renderFinanzas(){
   }
   let summaryHtml='';
   if(userRole==='darol'){
-    const darolPagado=viewList.filter(f=>/pagado/i.test(f['Estado']||'')).reduce((s,f)=>s+(parseFloat(f['Monto'])||0),0);
-    const darolPend=viewList.filter(f=>/pendiente/i.test(f['Estado']||'')).reduce((s,f)=>s+(parseFloat(f['Monto'])||0),0);
-    summaryHtml='<div style="display:flex;gap:1px;border:1px solid var(--border);border-top:none;">'
-      +'<div style="flex:1;background:var(--surface);padding:1rem 1.4rem;"><div style="font-family:DM Mono,monospace;font-size:.58rem;letter-spacing:.15em;text-transform:uppercase;color:var(--muted2);margin-bottom:.3rem;">Cobrado</div><div style="font-family:Bebas Neue,sans-serif;font-size:1.6rem;color:var(--green)">$'+darolPagado.toLocaleString()+'</div></div>'
-      +'<div style="flex:1;background:var(--surface);padding:1rem 1.4rem;"><div style="font-family:DM Mono,monospace;font-size:.58rem;letter-spacing:.15em;text-transform:uppercase;color:var(--muted2);margin-bottom:.3rem;">Por cobrar</div><div style="font-family:Bebas Neue,sans-serif;font-size:1.6rem;color:var(--yellow)">$'+darolPend.toLocaleString()+'</div></div>'
+    // Summary siempre muestra TOTALES GLOBALES de Darol (sin filtros)
+    const allDarol=allFinanzas.filter(f=>(f['Personal']||'').toLowerCase()==='darol');
+    const darolPagadoTotal=allDarol.filter(f=>/pagado/i.test(f['Estado']||'')).reduce((s,f)=>s+(parseFloat(f['Monto'])||0),0);
+    const darolPendTotal=allDarol.filter(f=>/pendiente/i.test(f['Estado']||'')).reduce((s,f)=>s+(parseFloat(f['Monto'])||0),0);
+    summaryHtml='<div style="display:flex;gap:1px;border:1px solid var(--border);margin-bottom:1.2rem;">'
+      +'<div style="flex:1;background:var(--surface);padding:1.1rem 1.4rem;"><div style="font-family:DM Mono,monospace;font-size:.58rem;letter-spacing:.15em;text-transform:uppercase;color:var(--muted2);margin-bottom:.3rem;">Cobrado</div><div style="font-family:Bebas Neue,sans-serif;font-size:1.8rem;color:var(--green)">$'+darolPagadoTotal.toLocaleString()+'</div></div>'
+      +'<div style="flex:1;background:var(--surface);padding:1.1rem 1.4rem;"><div style="font-family:DM Mono,monospace;font-size:.58rem;letter-spacing:.15em;text-transform:uppercase;color:var(--muted2);margin-bottom:.3rem;">Por cobrar</div><div style="font-family:Bebas Neue,sans-serif;font-size:1.8rem;color:var(--yellow)">$'+darolPendTotal.toLocaleString()+'</div></div>'
       +'</div>';
     // Darol view: simpler table (no Tipo col, no Artista col, show Estado)
-    document.getElementById('finanzasContainer').innerHTML='<table class="data-table"><thead><tr><th>Concepto</th><th>Proyecto</th><th>Fecha</th><th>Monto</th><th>Estado</th></tr></thead><tbody>'+html+'</tbody></table>'+summaryHtml;
+    document.getElementById('finanzasContainer').innerHTML=summaryHtml+'<table class="data-table"><thead><tr><th>Concepto</th><th>Proyecto</th><th>Fecha</th><th>Monto</th><th>Estado</th></tr></thead><tbody>'+html+'</tbody></table>';
   } else {
     document.getElementById('finanzasContainer').innerHTML='<table class="data-table"><thead><tr><th>Concepto</th><th>Tipo</th><th>Artista</th><th>Proyecto</th><th>Fecha</th><th>Monto</th><th>Personal</th><th>Acciones</th></tr></thead><tbody>'+html+'</tbody></table>';
   }
@@ -2196,28 +2234,29 @@ function togglePersonalField(){
 // ════════════════════════════════════════════
 function applyRoleUI(){
   const isDarol=userRole==='darol';
-  // Sidebar items visibles para Darol: solo Catálogo, sus pagos, sus proyectos, tareas
-  const hideForDarol=['navTareas','navNuevo'];
-  // Darol puede ver: catalogo, finanzas (solo sus pagos), proyectos (solo asignados), tareas
-  // Heaven ve todo
   document.querySelectorAll('.nav-item').forEach(btn=>{
     const page=btn.getAttribute('onclick')?.match(/'([^']+)'/)?.[1];
     if(!page) return;
     if(isDarol){
-      // Darol solo ve: catalogo, finanzas, proyectos, tareas
-      const allowed=['catalogo','finanzas','proyectos','tareas'];
+      const allowed=['catalogo','finanzas','proyectos','tareas','dashboard-darol'];
       btn.style.display=allowed.includes(page)?'':'none';
     } else {
       btn.style.display='';
     }
   });
-  // Para Darol: ocultar botones de crear/editar en finanzas y proyectos generales
-  // Set default page
+  // Swap dashboard nav icons
+  const navH=document.getElementById('navDashHeaven');
+  const navD=document.getElementById('navDashDarol');
+  if(navH) navH.style.display=isDarol?'none':'';
+  if(navD) navD.style.display=isDarol?'':'none';
+  // Ocultar botón nuevo pago para Darol
+  const btnNuevoPago=document.getElementById('btnNuevoPago');
+  if(btnNuevoPago) btnNuevoPago.style.display=isDarol?'none':'';
+
   if(isDarol){
-    const catBtn=document.getElementById('navCatalogo');
-    setTimeout(()=>showPage('catalogo', catBtn),100);
+    setTimeout(()=>showPage('dashboard-darol', navD),100);
   } else {
-    const dashBtn=document.querySelector('.nav-item');
+    const dashBtn=document.getElementById('navDashHeaven');
     setTimeout(()=>showPage('dashboard', dashBtn),100);
   }
 }
@@ -2234,7 +2273,9 @@ function renderTareas(){
   let list=allTareas.filter(t=>{
     const e=!filterEst||(t['Estado']||'')=== filterEst;
     const a=!filterAsig||(t['Asignado']||'')=== filterAsig;
-    return e&&a;
+    // Darol solo ve sus propias tareas
+    const roleOk=userRole!=='darol'||(t['Asignado']||'').toLowerCase()==='darol';
+    return e&&a&&roleOk;
   });
 
   // Pendientes arriba
@@ -2479,6 +2520,74 @@ async function actualizarProyectoDarol(){
   else{toast('Error al actualizar','error');}
 }
 
+// ════════════════════════════════════════════
+// DASHBOARD DAROL
+// ════════════════════════════════════════════
+function renderDarolDashboard(){
+  const allDarol=allFinanzas.filter(f=>(f['Personal']||'').toLowerCase()==='darol');
+  const cobrado=allDarol.filter(f=>/pagado/i.test(f['Estado']||'')).reduce((s,f)=>s+(parseFloat(f['Monto'])||0),0);
+  const pendiente=allDarol.filter(f=>/pendiente/i.test(f['Estado']||'')).reduce((s,f)=>s+(parseFloat(f['Monto'])||0),0);
+  const misProyectos=allProyectos.filter(p=>(p['Asignado']||'').toLowerCase()==='darol');
+  const activos=misProyectos.filter(p=>!/finalizado|cancelado/i.test(p['Estado proyecto']||'')).length;
+  const finalizados=misProyectos.filter(p=>/finalizado/i.test(p['Estado proyecto']||'')).length;
+
+  document.getElementById('dstCobrado').textContent=fmt(cobrado);
+  document.getElementById('dstPendiente').textContent=fmt(pendiente);
+  document.getElementById('dstActivos').textContent=activos||'0';
+  document.getElementById('dstFinalizados').textContent=finalizados||'0';
+
+  // Gráfica barras por mes
+  const MESES=['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'];
+  const mesData={};
+  allDarol.filter(f=>/pagado/i.test(f['Estado']||'')).forEach(f=>{
+    const d=parseFecha(f['Fecha']||'');if(!d)return;
+    const key=`${d.getFullYear()}-${String(d.getMonth()).padStart(2,'0')}`;
+    mesData[key]=(mesData[key]||0)+(parseFloat(f['Monto'])||0);
+  });
+  const mesEntries=Object.entries(mesData).sort((a,b)=>a[0].localeCompare(b[0])).slice(-12);
+  const maxMes=mesEntries.length?Math.max(...mesEntries.map(e=>e[1])):1;
+  document.getElementById('darolChartMeses').innerHTML=mesEntries.length
+    ?`<div style="display:flex;align-items:flex-end;gap:6px;height:100px;">
+        ${mesEntries.map(([key,val])=>{
+          const [yr,mo]=key.split('-');
+          const pct=Math.max(4,Math.round(val/maxMes*100));
+          return`<div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;min-width:0;">
+            <div style="font-family:Bebas Neue,sans-serif;font-size:.65rem;color:var(--green);white-space:nowrap;overflow:hidden;max-width:100%;text-align:center">$${val>=1000?Math.round(val/1000)+'k':val}</div>
+            <div style="width:100%;height:${pct}%;background:linear-gradient(180deg,var(--green),rgba(52,211,153,.4));min-height:4px;border-radius:2px 2px 0 0;"></div>
+            <div style="font-family:DM Mono,monospace;font-size:.52rem;color:var(--muted);white-space:nowrap;">${MESES[parseInt(mo)]} ${yr.slice(2)}</div>
+          </div>`;
+        }).join('')}
+      </div>`
+    :'<div style="font-family:DM Mono,monospace;font-size:.65rem;color:var(--muted2)">// Sin historial de cobros</div>';
+
+  // Proyectos activos
+  const activosList=misProyectos.filter(p=>!/finalizado|cancelado/i.test(p['Estado proyecto']||''));
+  document.getElementById('darolProyectos').innerHTML=activosList.length
+    ?`<div class="table-wrap"><table class="data-table"><thead><tr><th>Proyecto</th><th>Artista</th><th>Servicio</th><th>Estado</th><th>Entrega</th></tr></thead><tbody>
+        ${activosList.map(p=>{const a=getArtista(p['Cliente']);return`<tr>
+          <td style="font-weight:600">${p['Nombre del proyecto']||'—'}</td>
+          <td style="font-family:DM Mono,monospace;font-size:.72rem;color:var(--purple-light)">${a?a['AKA']||a['Nombre']:p['Cliente']||'—'}</td>
+          <td style="font-family:DM Mono,monospace;font-size:.68rem;color:var(--muted)">${p['Tipo de servicio']||'—'}</td>
+          <td>${getBadge(p['Estado proyecto'])}</td>
+          <td style="font-family:DM Mono,monospace;font-size:.68rem;color:var(--muted)">${p['Fecha entrega']||'—'}</td>
+        </tr>`;}).join('')}
+      </tbody></table></div>`
+    :'<div class="empty-state">// Sin proyectos activos en este momento</div>';
+
+  // Pagos pendientes
+  const pendList=allDarol.filter(f=>/pendiente/i.test(f['Estado']||''));
+  document.getElementById('darolPendientes').innerHTML=pendList.length
+    ?`<div class="table-wrap"><table class="data-table"><thead><tr><th>Concepto</th><th>Proyecto</th><th>Fecha</th><th>Monto</th></tr></thead><tbody>
+        ${pendList.map(f=>{const proy=allProyectos.find(p=>p['ID']===f['Proyecto']);return`<tr>
+          <td style="font-weight:600">${f['Concepto']||'—'}</td>
+          <td style="font-family:DM Mono,monospace;font-size:.68rem;color:var(--muted)">${proy?proy['Nombre del proyecto']:f['Proyecto']||'—'}</td>
+          <td style="font-family:DM Mono,monospace;font-size:.68rem;color:var(--muted)">${f['Fecha']||'—'}</td>
+          <td style="font-family:Bebas Neue,sans-serif;font-size:1.1rem;color:var(--yellow)">+${fmt(f['Monto'])}</td>
+        </tr>`;}).join('')}
+      </tbody></table></div>`
+    :'<div class="empty-state">// Todo al corriente — sin cobros pendientes 🎉</div>';
+}
+
 function showPage(name,el){
   document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
   document.querySelectorAll('.nav-item').forEach(b=>b.classList.remove('active'));
@@ -2489,6 +2598,7 @@ function showPage(name,el){
   if(name==='proyectos'){if(userRole==='darol')renderProyectosDarol();else setPrjView(prjView);}
   if(name==='artistas')renderArtistas();
   if(name==='dashboard')renderDashboard();
+  if(name==='dashboard-darol')renderDarolDashboard();
   if(name==='cursos')renderCursosAdmin();
   if(name==='catalogo')renderCatalogo();
 }
