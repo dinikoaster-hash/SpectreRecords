@@ -866,9 +866,9 @@
           </div>
         </div>
         <div id="archivosContainer" class="files-notice">
-          Los archivos entregados aparecerán aquí.<br>
-          El estudio los cargará directamente.<br><br>
-          <span style="color:var(--muted2)">// Saludos</span>
+          Aquí aparecerán los links de descarga de tus archivos.<br>
+          El estudio los agrega directamente en tus Proyectos.<br><br>
+          <span style="color:var(--muted2)">// Saludos Sobrino!</span>
         </div>
       </div>
     </div>
@@ -1205,8 +1205,11 @@ function renderProyectos() {
       <tbody>
         ${proyList.map(p => {
           const liq = calcLiq(p);
-          const totalPagado = parseFloat(p['TotalPagado'])||0;
           const solicitado  = parseFloat(p['Solicitado'])||0;
+          const pagadoPorProyecto = allFinanzas
+            .filter(f => f['Proyecto'] === p['ID'] && (f['Tipo']||'').toLowerCase() === 'ingreso' && /pagado/i.test(f['Estado']||''))
+            .reduce((s, f) => s + (parseFloat(f['Monto'])||0), 0);
+          const totalColor = pagadoPorProyecto > solicitado ? 'var(--green)' : pagadoPorProyecto > 0 ? 'var(--yellow)' : 'var(--muted2)';
           return `<tr>
             <td><div class="project-name">${p['Nombre del proyecto']||'—'}</div><div class="project-service">${p['ID']||''}</div></td>
             <td><span style="font-family:'DM Mono',monospace;font-size:.7rem;color:var(--muted)">${p['Tipo de servicio']||'—'}</span></td>
@@ -1214,7 +1217,7 @@ function renderProyectos() {
             <td><span style="font-family:'DM Mono',monospace;font-size:.7rem;color:var(--muted)">${formatFecha(p['Fecha entrega'])}</span></td>
             <td>${getStatusBadge(p['Estado proyecto'])}</td>
             <td style="font-family:'Bebas Neue',sans-serif;font-size:1.1rem;color:var(--purple-light);text-align:center">${solicitado>0?'$'+solicitado.toLocaleString()+' MXN':'—'}</td>
-            <td style="font-family:'Bebas Neue',sans-serif;font-size:1.1rem;color:var(--yellow);text-align:center">${totalPagado>0?'$'+totalPagado.toLocaleString()+' MXN':'—'}</td>
+            <td style="font-family:'Bebas Neue',sans-serif;font-size:1.1rem;color:${totalColor};text-align:center">${pagadoPorProyecto>0?'$'+pagadoPorProyecto.toLocaleString()+' MXN':'—'}</td>
             <td style="text-align:center">${liq.html}</td>
           </tr>`;
         }).join('')}
@@ -1223,8 +1226,10 @@ function renderProyectos() {
     <div class="projects-mobile" style="display:none">
       ${proyList.map(p => {
         const liq = calcLiq(p);
-        const totalPagado = parseFloat(p['TotalPagado'])||0;
         const solicitado  = parseFloat(p['Solicitado'])||0;
+        const pagadoPorProyecto = allFinanzas
+          .filter(f => f['Proyecto'] === p['ID'] && (f['Tipo']||'').toLowerCase() === 'ingreso' && /pagado/i.test(f['Estado']||''))
+          .reduce((s, f) => s + (parseFloat(f['Monto'])||0), 0);
         return `<div class="project-mobile-card">
           <div class="project-mobile-top">
             <div>
@@ -1238,7 +1243,7 @@ function renderProyectos() {
             ${p['Fecha inicio']?`<span>Inicio: ${formatFecha(p['Fecha inicio'])}</span>`:''}
             ${p['Fecha entrega']?`<span>Entrega: ${formatFecha(p['Fecha entrega'])}</span>`:''}
             ${solicitado>0?`<span style="color:var(--purple-light)">Solicitado: $${solicitado.toLocaleString()} MXN</span>`:''}
-            ${totalPagado>0?`<span style="color:var(--yellow);font-weight:600">Total final: $${totalPagado.toLocaleString()} MXN</span>`:''}
+            ${pagadoPorProyecto>0?`<span style="color:var(--yellow);font-weight:600">Pagado: $${pagadoPorProyecto.toLocaleString()} MXN</span>`:''}
             ${liq.mobile}
           </div>
         </div>`;
@@ -1271,7 +1276,7 @@ function renderFinanzas() {
     return `
       <div class="finance-card" style="${!isPaid?'border:1px solid rgba(248,113,113,.25);':''}">
         <div class="finance-card-top">
-          <div class="finance-id">${f['ID']||''}</div>
+          <div></div>
           ${isPaid
             ? '<span class="badge badge-paid">Pagado</span>'
             : '<span class="badge badge-unpaid">Pendiente</span>'}
@@ -1496,3 +1501,4 @@ function doLogout() {
 </script>
 </body>
 </html>
+
