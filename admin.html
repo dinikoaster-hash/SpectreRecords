@@ -237,6 +237,9 @@ body::before{content:'';position:fixed;inset:0;background-image:url("data:image/
 .personal-tag{display:inline-flex;align-items:center;gap:.4rem;background:rgba(168,85,247,.1);border:1px solid rgba(168,85,247,.25);padding:.2rem .6rem;font-family:DM Mono,monospace;font-size:.58rem;color:var(--purple-light);cursor:pointer;transition:background .2s;}
 .personal-tag:hover{background:rgba(248,113,113,.1);border-color:rgba(248,113,113,.3);color:var(--red);}
 .personal-tags-wrap{display:flex;flex-wrap:wrap;gap:.4rem;margin-top:.5rem;}
+.toggle-btn{font-family:DM Mono,monospace;font-size:.68rem;letter-spacing:.12em;text-transform:uppercase;padding:.7rem 1.6rem;border:none;cursor:none;transition:background .2s,color .2s;background:var(--surface2);color:var(--muted);}
+.toggle-btn.active{background:var(--purple);color:#fff;}
+.toggle-btn:hover:not(.active){background:var(--surface);color:var(--text);}
 .spinner{width:20px;height:20px;border:2px solid var(--border2);border-top-color:var(--gold);border-radius:50%;animation:spin 1s linear infinite;margin:0 auto .8rem;}
 .loading-state{text-align:center;padding:3rem;font-family:DM Mono,monospace;font-size:.68rem;color:var(--muted);letter-spacing:.1em;}
 .section-divider{border:none;border-top:1px solid var(--border);margin:2rem 0;}
@@ -2525,68 +2528,97 @@ async function marcarTareaPendiente(rowNum){
 }
 
 // ════════════════════════════════════════════
-// PROYECTOS DAROL \u2014 vista limitada
+// PROYECTOS DAROL — vista limitada
 // ════════════════════════════════════════════
+let darolProyTab = 'beats'; // 'beats' | 'otros' | 'colabs'
+
+function setDarolProyTab(tab, el){
+  darolProyTab = tab;
+  document.querySelectorAll('.darol-tab').forEach(b=>b.classList.remove('active'));
+  if(el) el.classList.add('active');
+  renderProyectosDarol();
+}
+
 function renderProyectosDarol(){
-  // Filter by search too
   const q=(document.getElementById('searchProyectos')?.value||'').toLowerCase();
-  const list=allProyectos.filter(p=>{
-    const asig1=(p['Asignado']||'').toLowerCase()==='darol';
-    const asig2=(p['Asignado2']||'').toLowerCase()==='darol';
-    const m=!q||(p['Nombre del proyecto']||'').toLowerCase().includes(q);
-    return (asig1||asig2)&&m;
-  });
   const container=document.getElementById('proyectosContainer');
-  // Hide toggle buttons \u2014 Darol sees all his projects
+
+  // Hide Heaven-only controls
   ['toggleActivos','toggleFinalizados','toggleCancelados'].forEach(id=>{
     const el=document.getElementById(id);if(el)el.style.display='none';
   });
-  // Hide + Nuevo button
   const btnNuevo=document.querySelector('#page-proyectos .btn-gold');
   if(btnNuevo) btnNuevo.style.display='none';
 
-  if(!list.length){
-    container.innerHTML='<div class="empty-state">// No tienes proyectos asignados aún</div>';
-    return;
+  const all=allProyectos.filter(p=>{
+    const m=!q||(p['Nombre del proyecto']||'').toLowerCase().includes(q);
+    return m&&((p['Asignado']||'').toLowerCase()==='darol'||(p['Asignado2']||'').toLowerCase()==='darol');
+  });
+  const propios = all.filter(p=>(p['Asignado']||'').toLowerCase()==='darol');
+  const colabs  = all.filter(p=>(p['Asignado2']||'').toLowerCase()==='darol');
+  const BEAT_RE = /beat/i;
+  const beats   = propios.filter(p=>BEAT_RE.test(p['Tipo de servicio']||''));
+  const otros   = propios.filter(p=>!BEAT_RE.test(p['Tipo de servicio']||''));
+
+  function buildTable(list, emptyMsg){
+    if(!list.length) return `<div class="empty-state">${emptyMsg}</div>`;
+    const rows=list.map(p=>{
+      const a=getArtista(p['Cliente']);
+      const na=a?a['AKA']||a['Nombre']:p['Cliente']||'—';
+      const rn=p._rowNumber;
+      const estado=p['Estado proyecto']||'';
+      const isActive=!/finalizado|cancelado/i.test(estado);
+      return `<tr>
+        <td><div style="font-weight:600;font-size:.85rem">${p['Nombre del proyecto']||'—'}</div></td>
+        <td style="font-size:.72rem;color:var(--purple-light)">${na}</td>
+        <td style="font-size:.68rem;color:var(--muted)">${p['Tipo de servicio']||'—'}</td>
+        <td style="font-size:.68rem;color:var(--muted)">${p['Fecha inicio']||'—'}</td>
+        <td>${getBadge(estado)}</td>
+        <td><div class="td-actions"><button class="btn-xs btn-xs-edit" onclick="editProyectoDarol(${rn})">Editar</button></div></td>
+      </tr>`;
+    }).join('');
+    const mobRows=list.map(p=>{
+      const a=getArtista(p['Cliente']);
+      const na=a?a['AKA']||a['Nombre']:p['Cliente']||'—';
+      const rn=p._rowNumber;
+      return`<div class="mob-card-row">
+        <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:.5rem;margin-bottom:.4rem;">
+          <div class="mob-card-title">${p['Nombre del proyecto']||'—'}</div>
+          ${getBadge(p['Estado proyecto'])}
+        </div>
+        <div class="mob-card-meta">
+          <span style="color:var(--purple-light)"><b>${na}</b></span>
+          ${p['Tipo de servicio']?`<span>${p['Tipo de servicio']}</span>`:''}
+          ${p['Fecha inicio']?`<span>Inicio: ${p['Fecha inicio']}</span>`:''}
+        </div>
+        <div class="mob-card-actions">
+          <button class="btn-xs btn-xs-edit" onclick="editProyectoDarol(${rn})">Editar</button>
+        </div>
+      </div>`;
+    }).join('');
+    return `<table class="data-table"><thead><tr>
+      <th>Proyecto</th><th>Artista</th><th>Servicio</th><th>Inicio</th><th>Estado</th><th>Acciones</th>
+    </tr></thead><tbody>${rows}</tbody></table><div class="mob-card">${mobRows}</div>`;
   }
-  const rows=list.map(p=>{
-    const a=getArtista(p['Cliente']);
-    const na=a?a['AKA']||a['Nombre']:p['Cliente']||'\u2014';
-    const rn=p._rowNumber;
-    const nombre=p['Nombre del proyecto']||'\u2014';
-    return `<tr>
-      <td><div style="font-weight:600;font-size:.85rem">${nombre}</div></td>
-      <td style="font-size:.72rem;color:var(--purple-light)">${na}</td>
-      <td style="font-size:.68rem;color:var(--muted)">${p['Tipo de servicio']||'\u2014'}</td>
-      <td style="font-size:.68rem;color:var(--muted)">${p['Fecha inicio']||'\u2014'}</td>
-      <td>${getBadge(p['Estado proyecto'])}</td>
-      <td><div class="td-actions">
-        <button class="btn-xs btn-xs-edit" onclick="editProyectoDarol(${rn})">Editar</button>
-      </div></td>
-    </tr>`;
-  }).join('');
-  const mobRows=list.map(p=>{
-    const a=getArtista(p['Cliente']);
-    const na=a?a['AKA']||a['Nombre']:p['Cliente']||'—';
-    const rn=p._rowNumber;
-    return`<div class="mob-card-row">
-      <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:.5rem;margin-bottom:.4rem;">
-        <div class="mob-card-title">${p['Nombre del proyecto']||'—'}</div>
-        ${getBadge(p['Estado proyecto'])}
-      </div>
-      <div class="mob-card-meta">
-        <span><b>${na}</b></span>
-        ${p['Tipo de servicio']?`<span>${p['Tipo de servicio']}</span>`:''}
-        ${p['Fecha inicio']?`<span>Inicio: ${p['Fecha inicio']}</span>`:''}
-      </div>
-      <div class="mob-card-actions">
-        <button class="btn-xs btn-xs-edit" onclick="editProyectoDarol(${rn})">Editar</button>
-      </div>
-    </div>`;
-  }).join('');
-  container.innerHTML=`<table class="data-table"><thead><tr>
-    <th>Proyecto</th><th>Artista</th><th>Servicio</th><th>Inicio</th><th>Estado</th><th>Acciones</th>
-  </tr></thead><tbody>${rows}</tbody></table><div class="mob-card">${mobRows}</div>`;
+
+  const tabBar=`<div style="display:flex;gap:1px;margin-bottom:1.5rem;flex-wrap:wrap;">
+    <button class="darol-tab toggle-btn${darolProyTab==='beats'?' active':''}" onclick="setDarolProyTab('beats',this)">
+      ♪ Beats por encargo${beats.length?` <span style="font-family:DM Mono,monospace;font-size:.6rem;opacity:.7">(${beats.length})</span>`:''}
+    </button>
+    <button class="darol-tab toggle-btn${darolProyTab==='otros'?' active':''}" onclick="setDarolProyTab('otros',this)">
+      ✦ Otros proyectos${otros.length?` <span style="font-family:DM Mono,monospace;font-size:.6rem;opacity:.7">(${otros.length})</span>`:''}
+    </button>
+    <button class="darol-tab toggle-btn${darolProyTab==='colabs'?' active':''}" onclick="setDarolProyTab('colabs',this)">
+      ⇄ Colaboraciones${colabs.length?` <span style="font-family:DM Mono,monospace;font-size:.6rem;opacity:.7">(${colabs.length})</span>`:''}
+    </button>
+  </div>`;
+
+  let content='';
+  if(darolProyTab==='beats') content=buildTable(beats,'// Sin beats por encargo asignados aún');
+  else if(darolProyTab==='otros') content=buildTable(otros,'// Sin otros proyectos asignados aún');
+  else content=buildTable(colabs,'// Sin colaboraciones registradas aún');
+
+  container.innerHTML=all.length ? tabBar+content : '<div class="empty-state">// No tienes proyectos asignados aún</div>';
 }
 
 function editProyectoDarol(rowNum){
