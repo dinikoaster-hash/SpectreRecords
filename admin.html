@@ -207,7 +207,33 @@ body::before{content:'';position:fixed;inset:0;background-image:url("data:image/
 .dash-filter-bar{display:flex;gap:.8rem;margin-bottom:1.5rem;flex-wrap:wrap;align-items:center;}
 .dash-filter-label{font-family:DM Mono,monospace;font-size:.6rem;letter-spacing:.15em;color:var(--muted);text-transform:uppercase;}
 @media(max-width:900px){.charts-grid{grid-template-columns:1fr;}.bar-label{min-width:60px;font-size:.58rem;}}
-/* CUSTOM PERSONAL TAGS */
+/* ── MOBILE TABLE → CARDS ── */
+.mob-card{display:none;flex-direction:column;gap:1px;margin-top:1px;}
+.mob-card-row{background:var(--surface);padding:.9rem 1rem;border-bottom:1px solid var(--border);}
+.mob-card-title{font-weight:700;font-size:.9rem;margin-bottom:.35rem;}
+.mob-card-meta{display:flex;flex-wrap:wrap;gap:.3rem .8rem;margin-bottom:.4rem;}
+.mob-card-meta span{font-family:DM Mono,monospace;font-size:.6rem;color:var(--muted);}
+.mob-card-meta span b{color:var(--text);}
+.mob-card-actions{display:flex;gap:.4rem;margin-top:.5rem;flex-wrap:wrap;}
+@media(max-width:700px){
+  .data-table{display:none !important;}
+  .mob-card{display:flex !important;}
+  .filter-bar{flex-direction:column;gap:.5rem;}
+  .filter-bar .filter-input,.filter-bar .filter-select{width:100%;}
+  .page-header{flex-direction:column;gap:.8rem;align-items:flex-start;}
+  .fin-summary-box{grid-template-columns:1fr 1fr !important;}
+  /* Dashboard tables inside table-wrap also need mob-card treatment */
+  #dashProyectos .table-wrap,#dashPendientes .table-wrap,
+  #darolProyectos .table-wrap,#darolPendientes .table-wrap{display:none !important;}
+  #dashProyectos .mob-card,#dashPendientes .mob-card,
+  #darolProyectos .mob-card,#darolPendientes .mob-card{display:flex !important;}
+  /* Charts stacked on mobile */
+  .charts-grid{grid-template-columns:1fr !important;}
+  .bar-label{min-width:55px !important;font-size:.55rem !important;}
+  .bar-value{min-width:55px;font-size:.8rem;}
+  /* Darol summary flex → stack on tiny screens */
+  #finanzasContainer > div[style*="display:flex"]{flex-direction:column !important;}
+}
 .personal-tag{display:inline-flex;align-items:center;gap:.4rem;background:rgba(168,85,247,.1);border:1px solid rgba(168,85,247,.25);padding:.2rem .6rem;font-family:DM Mono,monospace;font-size:.58rem;color:var(--purple-light);cursor:pointer;transition:background .2s;}
 .personal-tag:hover{background:rgba(248,113,113,.1);border-color:rgba(248,113,113,.3);color:var(--red);}
 .personal-tags-wrap{display:flex;flex-wrap:wrap;gap:.4rem;margin-top:.5rem;}
@@ -260,6 +286,7 @@ body::before{content:'';position:fixed;inset:0;background-image:url("data:image/
   [id^="toggle"]{font-size:.6rem !important;padding:.65rem 1rem !important;}
   #page-nuevo > div{max-width:100%;}
   #dashProyectos .table-wrap,#dashPendientes .table-wrap{overflow-x:auto;}
+  #darolProyectos .table-wrap,#darolPendientes .table-wrap{overflow-x:auto;}
   /* Catalog mobile: hide desktop table, show cards */
   #catalogoContainer .data-table{display:none;}
   .beat-cards-mobile{display:flex;}
@@ -1298,7 +1325,11 @@ function renderDashboard(){
         <td style="font-family:DM Mono,monospace;font-size:.72rem;color:var(--purple-light)">${a?a['AKA']||a['Nombre']:p['Cliente']||'\u2014'}</td>
         <td style="font-family:DM Mono,monospace;font-size:.7rem;color:var(--muted)">${p['Tipo de servicio']||'\u2014'}</td>
         <td>${getBadge(p['Estado proyecto'])}</td></tr>`;}).join('')}
-      </tbody></table></div>`
+      </tbody></table></div>
+      <div class="mob-card">${al.slice(-10).reverse().map(p=>{const a=getArtista(p['Cliente']);return`<div class="mob-card-row">
+        <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:.5rem;margin-bottom:.3rem;"><div class="mob-card-title">${p['Nombre del proyecto']||'—'}</div>${getBadge(p['Estado proyecto'])}</div>
+        <div class="mob-card-meta"><span style="color:var(--purple-light)">${a?a['AKA']||a['Nombre']:p['Cliente']||'—'}</span>${p['Tipo de servicio']?`<span>${p['Tipo de servicio']}</span>`:''}</div>
+      </div>`;}).join('')}</div>`
     :'<div class="empty-state">// No hay proyectos activos</div>';
   const pl=finBase.filter(f=>/pendiente/i.test(f['Estado']||''));
   document.getElementById('dashPendientes').innerHTML=pl.length
@@ -1308,7 +1339,11 @@ function renderDashboard(){
         <td style="font-family:DM Mono,monospace;font-size:.72rem;color:var(--purple-light)">${a?a['AKA']||a['Nombre']:f['Cliente']||'\u2014'}</td>
         <td style="font-family:Bebas Neue,sans-serif;font-size:1.2rem;color:var(--red)">${fmt(f['Monto'])}</td>
         <td><span class="badge badge-unpaid">Pendiente</span></td></tr>`;}).join('')}
-      </tbody></table></div>`
+      </tbody></table></div>
+      <div class="mob-card">${pl.map(f=>{const a=getArtista(f['Cliente']);return`<div class="mob-card-row">
+        <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:.5rem;margin-bottom:.3rem;"><div class="mob-card-title">${f['Concepto']||'—'}</div><span class="badge badge-unpaid">Pendiente</span></div>
+        <div class="mob-card-meta"><span style="color:var(--purple-light)">${a?a['AKA']||a['Nombre']:f['Cliente']||'—'}</span><span style="font-family:Bebas Neue,sans-serif;font-size:1rem;color:var(--red)">${fmt(f['Monto'])}</span></div>
+      </div>`;}).join('')}</div>`
     :'<div class="empty-state">// Sin pagos pendientes \uD83C\uDF89</div>';
 }
 
@@ -1695,10 +1730,47 @@ function renderFinanzas(){
       +'<div style="flex:1;background:var(--surface);padding:1.1rem 1.4rem;"><div style="font-family:DM Mono,monospace;font-size:.58rem;letter-spacing:.15em;text-transform:uppercase;color:var(--muted2);margin-bottom:.3rem;">Cobrado</div><div style="font-family:Bebas Neue,sans-serif;font-size:1.8rem;color:var(--green)">$'+darolPagadoTotal.toLocaleString()+'</div></div>'
       +'<div style="flex:1;background:var(--surface);padding:1.1rem 1.4rem;"><div style="font-family:DM Mono,monospace;font-size:.58rem;letter-spacing:.15em;text-transform:uppercase;color:var(--muted2);margin-bottom:.3rem;">Por cobrar</div><div style="font-family:Bebas Neue,sans-serif;font-size:1.8rem;color:var(--yellow)">$'+darolPendTotal.toLocaleString()+'</div></div>'
       +'</div>';
-    // Darol view: simpler table (no Tipo col, no Artista col, show Estado)
-    document.getElementById('finanzasContainer').innerHTML=summaryHtml+'<table class="data-table"><thead><tr><th>Concepto</th><th>Proyecto</th><th>Fecha</th><th>Monto</th><th>Estado</th></tr></thead><tbody>'+html+'</tbody></table>';
+    // Darol view: simpler table + mobile cards
+    const mobFinHtml=`<div class="mob-card">${viewList.map(f=>{
+      const isPaid=/pagado/i.test(f['Estado']||'');
+      return`<div class="mob-card-row">
+        <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:.5rem;margin-bottom:.3rem;">
+          <div class="mob-card-title" style="font-size:.85rem">${f['Concepto']||'—'}</div>
+          <span class="badge ${isPaid?'badge-paid':'badge-unpaid'}" style="flex-shrink:0">${isPaid?'Pagado':'Pendiente'}</span>
+        </div>
+        <div class="mob-card-meta">
+          ${f['Fecha']?`<span><b>${f['Fecha']}</b></span>`:''}
+          ${f['Proyecto']?`<span>Proyecto: <b>${f['Proyecto']}</b></span>`:''}
+        </div>
+        <div style="font-family:Bebas Neue,sans-serif;font-size:1.3rem;color:${isPaid?'var(--green)':'var(--yellow)'}">+${fmt(f['Monto'])}</div>
+      </div>`;
+    }).join('')}</div>`;
+    document.getElementById('finanzasContainer').innerHTML=summaryHtml+'<table class="data-table"><thead><tr><th>Concepto</th><th>Proyecto</th><th>Fecha</th><th>Monto</th><th>Estado</th></tr></thead><tbody>'+html+'</tbody></table>'+mobFinHtml;
   } else {
-    document.getElementById('finanzasContainer').innerHTML='<table class="data-table"><thead><tr><th>Concepto</th><th>Tipo</th><th>Artista</th><th>Proyecto</th><th>Fecha</th><th>Monto</th><th>Personal</th><th>Acciones</th></tr></thead><tbody>'+html+'</tbody></table>';
+    const mobFinHeaven=`<div class="mob-card">${viewList.map(f=>{
+      const isGasto=(f['Tipo']||'').toLowerCase()==='gasto';
+      const isPaid=/pagado/i.test(f['Estado']||'');
+      const a=getArtista(f['Cliente']);const artNombre=a?(a['AKA']||a['Nombre']||''):f['Cliente']||'';
+      return`<div class="mob-card-row">
+        <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:.5rem;margin-bottom:.3rem;">
+          <div class="mob-card-title" style="font-size:.85rem">${f['Concepto']||'—'}</div>
+          <span class="badge ${isPaid?'badge-paid':'badge-unpaid'}" style="flex-shrink:0">${isPaid?'Pagado':'Pendiente'}</span>
+        </div>
+        <div class="mob-card-meta">
+          ${artNombre?`<span>Artista: <b style="color:var(--purple-light)">${artNombre}</b></span>`:''}
+          ${f['Fecha']?`<span><b>${f['Fecha']}</b></span>`:''}
+          ${f['Personal']?`<span>Para: <b>${f['Personal']}</b></span>`:''}
+        </div>
+        <div style="display:flex;align-items:center;gap:.8rem;margin-top:.3rem;">
+          <div style="font-family:Bebas Neue,sans-serif;font-size:1.3rem;color:${isGasto?'var(--red)':'var(--green)'}">${isGasto?'−':'+'}${fmt(f['Monto'])}</div>
+          <div style="display:flex;gap:.3rem;">
+            <button class="btn-xs btn-xs-edit" onclick="editPago(${f._rowNumber})">Editar</button>
+            <button class="btn-xs btn-xs-del" onclick="confirmDelete('pago',${f._rowNumber},'${(f['Concepto']||'').replace(/'/g,"\\'")}')">Borrar</button>
+          </div>
+        </div>
+      </div>`;
+    }).join('')}</div>`;
+    document.getElementById('finanzasContainer').innerHTML='<table class="data-table"><thead><tr><th>Concepto</th><th>Tipo</th><th>Artista</th><th>Proyecto</th><th>Fecha</th><th>Monto</th><th>Personal</th><th>Acciones</th></tr></thead><tbody>'+html+'</tbody></table>'+mobFinHeaven;
   }
 }
 
@@ -2267,15 +2339,29 @@ function applyRoleUI(){
 function renderTareas(){
   const container=document.getElementById('tareasContainer');
   if(!container) return;
+  const isDarol=userRole==='darol';
   const filterEst=document.getElementById('filterTareaEstado')?.value||'';
   const filterAsig=document.getElementById('filterTareaAsignado')?.value||'';
 
+  // Regla de visibilidad:
+  // Heaven ve: tareas con Origen=Heaven (o sin Origen) + tareas donde Darol le asignó a Heaven
+  // Darol  ve: tareas con Origen=Darol + tareas donde Heaven le asignó a Darol
   let list=allTareas.filter(t=>{
+    const origen=(t['Origen']||'Heaven');
+    const asignado=(t['Asignado']||'');
+    let visible;
+    if(isDarol){
+      // Darol ve: creadas por él, O creadas por Heaven y asignadas a Darol
+      visible = origen.toLowerCase()==='darol'
+             || (origen.toLowerCase()==='heaven' && asignado.toLowerCase()==='darol');
+    } else {
+      // Heaven ve: creadas por él, O creadas por Darol y asignadas a Heaven
+      visible = origen.toLowerCase()==='heaven' || origen===''
+             || (origen.toLowerCase()==='darol' && asignado.toLowerCase()==='heaven');
+    }
     const e=!filterEst||(t['Estado']||'')=== filterEst;
     const a=!filterAsig||(t['Asignado']||'')=== filterAsig;
-    // Darol solo ve sus propias tareas
-    const roleOk=userRole!=='darol'||(t['Asignado']||'').toLowerCase()==='darol';
-    return e&&a&&roleOk;
+    return visible&&e&&a;
   });
 
   // Pendientes arriba
@@ -2285,18 +2371,32 @@ function renderTareas(){
     return oa-ob;
   });
 
-  // Badge en sidebar
-  const pend=allTareas.filter(t=>t['Estado']==='Pendiente').length;
+  // Badge: solo pendientes visibles para el rol actual
+  const pendPropias=allTareas.filter(t=>{
+    const origen=(t['Origen']||'Heaven');
+    const asignado=(t['Asignado']||'');
+    if(isDarol) return t['Estado']==='Pendiente'&&(origen.toLowerCase()==='darol'||(origen.toLowerCase()==='heaven'&&asignado.toLowerCase()==='darol'));
+    return t['Estado']==='Pendiente'&&(origen.toLowerCase()==='heaven'||origen===''||(origen.toLowerCase()==='darol'&&asignado.toLowerCase()==='heaven'));
+  }).length;
   const badge=document.getElementById('badgeTareas');
-  if(badge){badge.style.display=pend>0?'inline':'none';badge.textContent=pend;}
+  if(badge){badge.style.display=pendPropias>0?'inline':'none';badge.textContent=pendPropias;}
+
+  // Botón nueva tarea: ambos pueden crear
+  const btnNueva=document.getElementById('btnNuevaTarea');
+  if(btnNueva) btnNueva.style.display='';
+
+  // Filtro asignado: Darol no lo necesita (solo ve las suyas)
+  const filterAsigWrap=document.getElementById('filterTareaAsignado')?.closest('.filter-bar');
+  const filterAsigEl=document.getElementById('filterTareaAsignado');
+  if(filterAsigEl) filterAsigEl.style.display=isDarol?'none':'';
 
   if(!list.length){
     container.innerHTML='<div class="empty-state">// No hay tareas registradas aún</div>';
     return;
   }
 
-  const isDarol=userRole==='darol';
-  container.innerHTML=`<table class="data-table"><thead><tr>
+  // ── Desktop table ──
+  const tableHtml=`<table class="data-table"><thead><tr>
     <th>Título</th><th>Descripción</th><th>Asignado</th><th>Estado</th><th>Acciones</th>
   </tr></thead><tbody>${list.map(t=>{
     const est=t['Estado']||'Pendiente';
@@ -2305,29 +2405,51 @@ function renderTareas(){
       :'<span class="badge badge-pending">Pendiente</span>';
     const asigColor=t['Asignado']==='Darol'?'var(--yellow)':t['Asignado']==='Heaven'?'var(--purple-light)':'var(--muted)';
     const rn=t._rowNumber;
-    const titulo=(t['Titulo']||'').replace(/'/g,"\'");
+    const titulo=(t['Titulo']||'').replace(/'/g,"\\'");
+    const canEdit=(isDarol&&(t['Origen']||'Heaven').toLowerCase()==='darol')||((!isDarol)&&(t['Origen']||'Heaven').toLowerCase()!=='darol');
     return `<tr>
-      <td style="font-weight:600">${t['Titulo']||'\u2014'}</td>
-      <td style="font-family:DM Mono,monospace;font-size:.72rem;color:var(--muted)">${t['Descripcion']||'\u2014'}</td>
-      <td style="font-family:DM Mono,monospace;font-size:.68rem;color:${asigColor}">${t['Asignado']||'\u2014'}</td>
+      <td style="font-weight:600">${t['Titulo']||'—'}</td>
+      <td style="font-family:DM Mono,monospace;font-size:.72rem;color:var(--muted)">${t['Descripcion']||'—'}</td>
+      <td style="font-family:DM Mono,monospace;font-size:.68rem;color:${asigColor}">${t['Asignado']||'—'}</td>
       <td>${estBadge}</td>
       <td><div class="td-actions">
-        ${isDarol
-          ? (est==='Pendiente'
-            ? `<button class="btn-xs btn-xs-save" onclick="marcarTareaHecha(${rn})">✓ Hecho</button>`
-            : `<button class="btn-xs" style="background:rgba(251,191,36,.1);color:var(--yellow)" onclick="marcarTareaPendiente(${rn})">↩ Pendiente</button>`)
-          : `<button class="btn-xs btn-xs-edit" onclick="editTarea(${rn})">Editar</button>
-             <button class="btn-xs btn-xs-del" onclick="confirmDelete('tarea',${rn},'${titulo}')">Borrar</button>`
+        ${est==='Pendiente'
+          ?`<button class="btn-xs btn-xs-save" onclick="marcarTareaHecha(${rn})">✓ Hecho</button>`
+          :`<button class="btn-xs" style="background:rgba(251,191,36,.1);color:var(--yellow)" onclick="marcarTareaPendiente(${rn})">↩ Pendiente</button>`
         }
+        ${canEdit&&!isDarol?`<button class="btn-xs btn-xs-edit" onclick="editTarea(${rn})">Editar</button><button class="btn-xs btn-xs-del" onclick="confirmDelete('tarea',${rn},'${titulo}')">Borrar</button>`:''}
+        ${canEdit&&isDarol?`<button class="btn-xs btn-xs-edit" onclick="editTarea(${rn})">Editar</button>`:''}
       </div></td>
     </tr>`;
   }).join('')}</tbody></table>`;
 
-  // Para Darol: ocultar botón nueva tarea
-  const btnNueva=document.getElementById('btnNuevaTarea');
-  const tareasHeader=document.getElementById('tareasHeaderBtns');
-  if(isDarol){if(btnNueva)btnNueva.style.display='none';}
-  else{if(btnNueva)btnNueva.style.display='';}
+  // ── Mobile cards ──
+  const mobHtml=`<div class="mob-card">${list.map(t=>{
+    const est=t['Estado']||'Pendiente';
+    const estBadge=est==='Hecho'?'<span class="badge badge-done">Hecho</span>':'<span class="badge badge-pending">Pendiente</span>';
+    const asigColor=t['Asignado']==='Darol'?'var(--yellow)':t['Asignado']==='Heaven'?'var(--purple-light)':'var(--muted)';
+    const rn=t._rowNumber;
+    const titulo=(t['Titulo']||'').replace(/'/g,"\\'");
+    const canEdit=(isDarol&&(t['Origen']||'Heaven').toLowerCase()==='darol')||((!isDarol)&&(t['Origen']||'Heaven').toLowerCase()!=='darol');
+    return`<div class="mob-card-row">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:.5rem;margin-bottom:.4rem;">
+        <div class="mob-card-title">${t['Titulo']||'—'}</div>
+        ${estBadge}
+      </div>
+      ${t['Descripcion']?`<div style="font-family:DM Mono,monospace;font-size:.65rem;color:var(--muted);margin-bottom:.4rem">${t['Descripcion']}</div>`:''}
+      <div style="font-family:DM Mono,monospace;font-size:.6rem;color:${asigColor};margin-bottom:.5rem">→ ${t['Asignado']||'—'}</div>
+      <div class="mob-card-actions">
+        ${est==='Pendiente'
+          ?`<button class="btn-xs btn-xs-save" onclick="marcarTareaHecha(${rn})">✓ Hecho</button>`
+          :`<button class="btn-xs" style="background:rgba(251,191,36,.1);color:var(--yellow)" onclick="marcarTareaPendiente(${rn})">↩ Pendiente</button>`
+        }
+        ${canEdit&&!isDarol?`<button class="btn-xs btn-xs-edit" onclick="editTarea(${rn})">Editar</button><button class="btn-xs btn-xs-del" onclick="confirmDelete('tarea',${rn},'${titulo}')">Borrar</button>`:''}
+        ${canEdit&&isDarol?`<button class="btn-xs btn-xs-edit" onclick="editTarea(${rn})">Editar</button>`:''}
+      </div>
+    </div>`;
+  }).join('')}</div>`;
+
+  container.innerHTML=tableHtml+mobHtml;
 }
 
 function editTarea(rowNum){
@@ -2360,8 +2482,10 @@ async function guardarTarea(){
   const estado=document.getElementById('tareaEstado').value;
   const existingT=rowNum?allTareas.find(t=>t._rowNumber===rowNum):null;
   const id=existingT?existingT['ID']||'':nextId(allTareas,'ID','Tarea');
-  // Columns: ID | Titulo | Descripcion | Asignado | Estado
-  const values=[id,titulo,desc,asignado,estado];
+  // Origen: quien creó la tarea (preserve on edit, set on new)
+  const origen=existingT?existingT['Origen']||(userRole==='darol'?'Darol':'Heaven'):(userRole==='darol'?'Darol':'Heaven');
+  // Columns: ID | Titulo | Descripcion | Asignado | Estado | Origen
+  const values=[id,titulo,desc,asignado,estado,origen];
   let ok=false;
   if(rowNum){ok=await updateRow(SH.tareas,rowNum,values);}
   else{ok=await appendRow(SH.tareas,values);}
@@ -2378,7 +2502,7 @@ async function guardarTarea(){
 async function marcarTareaHecha(rowNum){
   const t=allTareas.find(x=>x._rowNumber===rowNum);
   if(!t) return;
-  const values=[t['ID']||'',t['Titulo']||'',t['Descripcion']||'',t['Asignado']||'','Hecho'];
+  const values=[t['ID']||'',t['Titulo']||'',t['Descripcion']||'',t['Asignado']||'','Hecho',t['Origen']||'Heaven'];
   const ok=await updateRow(SH.tareas,rowNum,values);
   if(ok){toast('✓ Tarea marcada como hecha','success');await loadAdmin(800);}
   else{toast('Error \u2014 activa OAuth primero','error');}
@@ -2387,7 +2511,7 @@ async function marcarTareaHecha(rowNum){
 async function marcarTareaPendiente(rowNum){
   const t=allTareas.find(x=>x._rowNumber===rowNum);
   if(!t) return;
-  const values=[t['ID']||'',t['Titulo']||'',t['Descripcion']||'',t['Asignado']||'','Pendiente'];
+  const values=[t['ID']||'',t['Titulo']||'',t['Descripcion']||'',t['Asignado']||'','Pendiente',t['Origen']||'Heaven'];
   const ok=await updateRow(SH.tareas,rowNum,values);
   if(ok){toast('↩ Tarea marcada como pendiente','success');await loadAdmin(800);}
   else{toast('Error \u2014 activa OAuth primero','error');}
@@ -2423,7 +2547,7 @@ function renderProyectosDarol(){
     const rn=p._rowNumber;
     const nombre=p['Nombre del proyecto']||'\u2014';
     return `<tr>
-      <td><div style="font-weight:600;font-size:.85rem">${nombre}</div><div style="font-size:.6rem;color:var(--muted2)">${p['ID']||''}</div></td>
+      <td><div style="font-weight:600;font-size:.85rem">${nombre}</div></td>
       <td style="font-size:.72rem;color:var(--purple-light)">${na}</td>
       <td style="font-size:.68rem;color:var(--muted)">${p['Tipo de servicio']||'\u2014'}</td>
       <td style="font-size:.68rem;color:var(--muted)">${p['Fecha inicio']||'\u2014'}</td>
@@ -2433,9 +2557,28 @@ function renderProyectosDarol(){
       </div></td>
     </tr>`;
   }).join('');
+  const mobRows=list.map(p=>{
+    const a=getArtista(p['Cliente']);
+    const na=a?a['AKA']||a['Nombre']:p['Cliente']||'—';
+    const rn=p._rowNumber;
+    return`<div class="mob-card-row">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:.5rem;margin-bottom:.4rem;">
+        <div class="mob-card-title">${p['Nombre del proyecto']||'—'}</div>
+        ${getBadge(p['Estado proyecto'])}
+      </div>
+      <div class="mob-card-meta">
+        <span><b>${na}</b></span>
+        ${p['Tipo de servicio']?`<span>${p['Tipo de servicio']}</span>`:''}
+        ${p['Fecha inicio']?`<span>Inicio: ${p['Fecha inicio']}</span>`:''}
+      </div>
+      <div class="mob-card-actions">
+        <button class="btn-xs btn-xs-edit" onclick="editProyectoDarol(${rn})">Editar</button>
+      </div>
+    </div>`;
+  }).join('');
   container.innerHTML=`<table class="data-table"><thead><tr>
     <th>Proyecto</th><th>Artista</th><th>Servicio</th><th>Inicio</th><th>Estado</th><th>Acciones</th>
-  </tr></thead><tbody>${rows}</tbody></table>`;
+  </tr></thead><tbody>${rows}</tbody></table><div class="mob-card">${mobRows}</div>`;
 }
 
 function editProyectoDarol(rowNum){
@@ -2571,7 +2714,15 @@ function renderDarolDashboard(){
           <td>${getBadge(p['Estado proyecto'])}</td>
           <td style="font-family:DM Mono,monospace;font-size:.68rem;color:var(--muted)">${p['Fecha entrega']||'—'}</td>
         </tr>`;}).join('')}
-      </tbody></table></div>`
+      </tbody></table></div>
+      <div class="mob-card">${activosList.map(p=>{const a=getArtista(p['Cliente']);return`<div class="mob-card-row">
+        <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:.5rem;margin-bottom:.3rem;"><div class="mob-card-title">${p['Nombre del proyecto']||'—'}</div>${getBadge(p['Estado proyecto'])}</div>
+        <div class="mob-card-meta">
+          <span style="color:var(--purple-light)">${a?a['AKA']||a['Nombre']:p['Cliente']||'—'}</span>
+          ${p['Tipo de servicio']?`<span>${p['Tipo de servicio']}</span>`:''}
+          ${p['Fecha entrega']?`<span>Entrega: ${p['Fecha entrega']}</span>`:''}
+        </div>
+      </div>`;}).join('')}</div>`
     :'<div class="empty-state">// Sin proyectos activos en este momento</div>';
 
   // Pagos pendientes
@@ -2584,7 +2735,17 @@ function renderDarolDashboard(){
           <td style="font-family:DM Mono,monospace;font-size:.68rem;color:var(--muted)">${f['Fecha']||'—'}</td>
           <td style="font-family:Bebas Neue,sans-serif;font-size:1.1rem;color:var(--yellow)">+${fmt(f['Monto'])}</td>
         </tr>`;}).join('')}
-      </tbody></table></div>`
+      </tbody></table></div>
+      <div class="mob-card">${pendList.map(f=>{const proy=allProyectos.find(p=>p['ID']===f['Proyecto']);return`<div class="mob-card-row">
+        <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:.5rem;margin-bottom:.3rem;">
+          <div class="mob-card-title">${f['Concepto']||'—'}</div>
+          <div style="font-family:Bebas Neue,sans-serif;font-size:1.1rem;color:var(--yellow)">+${fmt(f['Monto'])}</div>
+        </div>
+        <div class="mob-card-meta">
+          ${proy?`<span>${proy['Nombre del proyecto']}</span>`:''}
+          ${f['Fecha']?`<span>${f['Fecha']}</span>`:''}
+        </div>
+      </div>`;}).join('')}</div>`
     :'<div class="empty-state">// Todo al corriente — sin cobros pendientes 🎉</div>';
 }
 
