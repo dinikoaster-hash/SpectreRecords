@@ -591,7 +591,7 @@ body::before{content:'';position:fixed;inset:0;background-image:url("data:image/
           <div><div class="page-eyebrow">// Gestión interna</div><div class="page-title">TAREAS</div></div>
           <div style="display:flex;gap:.6rem;" id="tareasHeaderBtns">
             <button class="btn btn-ghost" onclick="loadAdmin()" style="font-size:.65rem;padding:.6rem 1.2rem;">&#x27F3; Actualizar</button>
-            <button class="btn btn-gold" onclick="openModal('modalTarea')" id="btnNuevaTarea">+ Nueva tarea</button>
+            <button class="btn btn-gold" onclick="populatePersonaSelects();openModal('modalTarea')" id="btnNuevaTarea">+ Nueva tarea</button>
           </div>
         </div>
         <div class="filter-bar">
@@ -966,7 +966,7 @@ function saveCustomPersonas(list){
 }
 function populatePersonaSelects(){
   const personas = getPersonas();
-  ['fpPersonal','mpAsignado','npAsignado'].forEach(selId=>{
+  ['fpPersonal','mpAsignado','npAsignado','tareaAsignado'].forEach(selId=>{
     const sel = document.getElementById(selId); if(!sel) return;
     const cur = sel.value;
     sel.innerHTML = '<option value="">Sin asignar</option>' + personas.map(p=>`<option value="${p}">${p}</option>`).join('');
@@ -1194,8 +1194,6 @@ async function loadAdmin(delay=0){
   renderDashboard();renderArtistas();
   if(userRole==='darol'){renderProyectosDarol();renderDarolDashboard();}else renderProyectos();
   renderFinanzas();renderCursosAdmin();renderCatalogo();renderTareas();
-  // Refresh badge
-  const pend=allTareas.filter(t=>t['Estado']==='Pendiente').length;const b=document.getElementById('badgeTareas');if(b){b.style.display=pend>0?'inline':'none';b.textContent=pend;}
   populateArtistSelects();populateProyectoSelects();populateYearFilters();updateBadges();
 }
 
@@ -2344,20 +2342,28 @@ function renderTareas(){
   const filterAsig=document.getElementById('filterTareaAsignado')?.value||'';
 
   // Regla de visibilidad:
-  // Heaven ve: lo que él creó (Origen=Heaven) + lo que Darol le asignó a Heaven
-  // Darol  ve: todo lo que él creó (sin importar a quién) + lo que Heaven le asignó a Darol
+  // Heaven ve: lo que él creó (Origen=Heaven o vacío con Asignado=Heaven) + lo que Darol le asignó a Heaven
+  // Darol  ve: todo lo que él creó (Origen=Darol) + lo que Heaven le asignó a Darol
+  // Nota: tareas antiguas sin Origen se infieren por Asignado
   let list=allTareas.filter(t=>{
-    const origen=(t['Origen']||'Heaven').toLowerCase();
+    const origenRaw=(t['Origen']||'').toLowerCase();
     const asignado=(t['Asignado']||'').toLowerCase();
+    // Si no hay Origen guardado, lo inferimos: si la creó Darol normalmente la asignaría a Heaven o a sí mismo
+    // No podemos saberlo con certeza, así que si Origen está vacío lo mostramos en ambas vistas
+    const origenVacio = origenRaw==='';
+    const origen = origenVacio ? '' : origenRaw;
     let visible;
     if(isDarol){
-      // Darol ve: todas las que él creó + las que Heaven creó y le asignó a él
+      // Darol ve: las que él creó (con Origen=Darol) + las que Heaven le asignó a él + las sin Origen asignadas a él
       visible = origen==='darol'
-             || (origen==='heaven' && asignado==='darol');
+             || (origen==='heaven' && asignado==='darol')
+             || (origenVacio && asignado==='darol');
     } else {
-      // Heaven ve: todas las que él creó + las que Darol creó y le asignó a Heaven
-      visible = origen==='heaven' || origen===''
-             || (origen==='darol' && asignado==='heaven');
+      // Heaven ve: las que él creó + las que Darol le asignó a él + las sin Origen asignadas a él
+      visible = origen==='heaven'
+             || (origen==='darol' && asignado==='heaven')
+             || (origenVacio && asignado==='heaven')
+             || origenVacio; // tareas legacy sin Origen van a Heaven por defecto
     }
     const e=!filterEst||(t['Estado']||'')=== filterEst;
     const a=!filterAsig||(t['Asignado']||'')=== filterAsig;
@@ -2404,7 +2410,7 @@ function renderTareas(){
     const asigColor=t['Asignado']==='Darol'?'var(--yellow)':t['Asignado']==='Heaven'?'var(--purple-light)':'var(--muted)';
     const rn=t._rowNumber;
     const titulo=(t['Titulo']||'').replace(/'/g,"\\'");
-    const canEdit=(isDarol&&(t['Origen']||'Heaven').toLowerCase()==='darol')||((!isDarol)&&(t['Origen']||'Heaven').toLowerCase()!=='darol');
+    const canEdit = (t['Origen']||'Heaven').toLowerCase()===(isDarol?'darol':'heaven');
     return `<tr>
       <td style="font-weight:600">${t['Titulo']||'—'}</td>
       <td style="font-family:DM Mono,monospace;font-size:.72rem;color:var(--muted)">${t['Descripcion']||'—'}</td>
@@ -2415,8 +2421,8 @@ function renderTareas(){
           ?`<button class="btn-xs btn-xs-save" onclick="marcarTareaHecha(${rn})">✓ Hecho</button>`
           :`<button class="btn-xs" style="background:rgba(251,191,36,.1);color:var(--yellow)" onclick="marcarTareaPendiente(${rn})">↩ Pendiente</button>`
         }
-        ${canEdit&&!isDarol?`<button class="btn-xs btn-xs-edit" onclick="editTarea(${rn})">Editar</button><button class="btn-xs btn-xs-del" onclick="confirmDelete('tarea',${rn},'${titulo}')">Borrar</button>`:''}
-        ${canEdit&&isDarol?`<button class="btn-xs btn-xs-edit" onclick="editTarea(${rn})">Editar</button>`:''}
+        ${canEdit?`<button class="btn-xs btn-xs-edit" onclick="editTarea(${rn})">Editar</button>`:''}
+        ${canEdit&&!isDarol?`<button class="btn-xs btn-xs-del" onclick="confirmDelete('tarea',${rn},'${titulo}')">Borrar</button>`:''}
       </div></td>
     </tr>`;
   }).join('')}</tbody></table>`;
@@ -2428,7 +2434,7 @@ function renderTareas(){
     const asigColor=t['Asignado']==='Darol'?'var(--yellow)':t['Asignado']==='Heaven'?'var(--purple-light)':'var(--muted)';
     const rn=t._rowNumber;
     const titulo=(t['Titulo']||'').replace(/'/g,"\\'");
-    const canEdit=(isDarol&&(t['Origen']||'Heaven').toLowerCase()==='darol')||((!isDarol)&&(t['Origen']||'Heaven').toLowerCase()!=='darol');
+    const canEdit = (t['Origen']||'Heaven').toLowerCase()===(isDarol?'darol':'heaven');
     return`<div class="mob-card-row">
       <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:.5rem;margin-bottom:.4rem;">
         <div class="mob-card-title">${t['Titulo']||'—'}</div>
@@ -2441,8 +2447,8 @@ function renderTareas(){
           ?`<button class="btn-xs btn-xs-save" onclick="marcarTareaHecha(${rn})">✓ Hecho</button>`
           :`<button class="btn-xs" style="background:rgba(251,191,36,.1);color:var(--yellow)" onclick="marcarTareaPendiente(${rn})">↩ Pendiente</button>`
         }
-        ${canEdit&&!isDarol?`<button class="btn-xs btn-xs-edit" onclick="editTarea(${rn})">Editar</button><button class="btn-xs btn-xs-del" onclick="confirmDelete('tarea',${rn},'${titulo}')">Borrar</button>`:''}
-        ${canEdit&&isDarol?`<button class="btn-xs btn-xs-edit" onclick="editTarea(${rn})">Editar</button>`:''}
+        ${canEdit?`<button class="btn-xs btn-xs-edit" onclick="editTarea(${rn})">Editar</button>`:''}
+        ${canEdit&&!isDarol?`<button class="btn-xs btn-xs-del" onclick="confirmDelete('tarea',${rn},'${titulo}')">Borrar</button>`:''}
       </div>
     </div>`;
   }).join('')}</div>`;
@@ -2457,6 +2463,7 @@ function editTarea(rowNum){
   document.getElementById('tareaRowNum').value=rowNum;
   document.getElementById('tareaTitulo').value=t['Titulo']||'';
   document.getElementById('tareaDesc').value=t['Descripcion']||'';
+  populatePersonaSelects();
   document.getElementById('tareaAsignado').value=t['Asignado']||'Heaven';
   document.getElementById('tareaEstado').value=t['Estado']||'Pendiente';
   openModal('modalTarea');
@@ -2465,7 +2472,7 @@ function editTarea(rowNum){
 async function marcarTareaHecha(rowNum){
   const t=allTareas.find(x=>x._rowNumber===rowNum);
   if(!t){toast('Tarea no encontrada','error');return;}
-  const values=[t['ID']||'',t['Titulo']||'',t['Descripcion']||'',t['Asignado']||'','Hecho'];
+  const values=[t['ID']||'',t['Titulo']||'',t['Descripcion']||'',t['Asignado']||'','Hecho',t['Origen']||(userRole==='darol'?'Darol':'Heaven')];
   const ok=await updateRow(SH.tareas,rowNum,values);
   if(ok){toast('✓ Tarea marcada como hecha','success');await loadAdmin(800);}
   else{toast('Error \u2014 activa OAuth primero','error');}
@@ -2495,15 +2502,6 @@ async function guardarTarea(){
     ['tareaTitulo','tareaDesc'].forEach(id=>{document.getElementById(id).value='';});
     await loadAdmin(800);
   } else {toast('Error al guardar \u2014 activa OAuth primero','error');}
-}
-
-async function marcarTareaHecha(rowNum){
-  const t=allTareas.find(x=>x._rowNumber===rowNum);
-  if(!t) return;
-  const values=[t['ID']||'',t['Titulo']||'',t['Descripcion']||'',t['Asignado']||'','Hecho',t['Origen']||'Heaven'];
-  const ok=await updateRow(SH.tareas,rowNum,values);
-  if(ok){toast('✓ Tarea marcada como hecha','success');await loadAdmin(800);}
-  else{toast('Error \u2014 activa OAuth primero','error');}
 }
 
 async function marcarTareaPendiente(rowNum){
