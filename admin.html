@@ -2344,20 +2344,20 @@ function renderTareas(){
   const filterAsig=document.getElementById('filterTareaAsignado')?.value||'';
 
   // Regla de visibilidad:
-  // Heaven ve: tareas con Origen=Heaven (o sin Origen) + tareas donde Darol le asignó a Heaven
-  // Darol  ve: tareas con Origen=Darol + tareas donde Heaven le asignó a Darol
+  // Heaven ve: lo que él creó (Origen=Heaven) + lo que Darol le asignó a Heaven
+  // Darol  ve: todo lo que él creó (sin importar a quién) + lo que Heaven le asignó a Darol
   let list=allTareas.filter(t=>{
-    const origen=(t['Origen']||'Heaven');
-    const asignado=(t['Asignado']||'');
+    const origen=(t['Origen']||'Heaven').toLowerCase();
+    const asignado=(t['Asignado']||'').toLowerCase();
     let visible;
     if(isDarol){
-      // Darol ve: creadas por él, O creadas por Heaven y asignadas a Darol
-      visible = origen.toLowerCase()==='darol'
-             || (origen.toLowerCase()==='heaven' && asignado.toLowerCase()==='darol');
+      // Darol ve: todas las que él creó + las que Heaven creó y le asignó a él
+      visible = origen==='darol'
+             || (origen==='heaven' && asignado==='darol');
     } else {
-      // Heaven ve: creadas por él, O creadas por Darol y asignadas a Heaven
-      visible = origen.toLowerCase()==='heaven' || origen===''
-             || (origen.toLowerCase()==='darol' && asignado.toLowerCase()==='heaven');
+      // Heaven ve: todas las que él creó + las que Darol creó y le asignó a Heaven
+      visible = origen==='heaven' || origen===''
+             || (origen==='darol' && asignado==='heaven');
     }
     const e=!filterEst||(t['Estado']||'')=== filterEst;
     const a=!filterAsig||(t['Asignado']||'')=== filterAsig;
@@ -2371,13 +2371,11 @@ function renderTareas(){
     return oa-ob;
   });
 
-  // Badge: solo pendientes visibles para el rol actual
-  const pendPropias=allTareas.filter(t=>{
-    const origen=(t['Origen']||'Heaven');
-    const asignado=(t['Asignado']||'');
-    if(isDarol) return t['Estado']==='Pendiente'&&(origen.toLowerCase()==='darol'||(origen.toLowerCase()==='heaven'&&asignado.toLowerCase()==='darol'));
-    return t['Estado']==='Pendiente'&&(origen.toLowerCase()==='heaven'||origen===''||(origen.toLowerCase()==='darol'&&asignado.toLowerCase()==='heaven'));
-  }).length;
+  // Badge: tareas pendientes ASIGNADAS al rol activo (sin importar quién las creó)
+  const meAsignado=isDarol?'darol':'heaven';
+  const pendPropias=allTareas.filter(t=>
+    t['Estado']==='Pendiente' && (t['Asignado']||'').toLowerCase()===meAsignado
+  ).length;
   const badge=document.getElementById('badgeTareas');
   if(badge){badge.style.display=pendPropias>0?'inline':'none';badge.textContent=pendPropias;}
 
