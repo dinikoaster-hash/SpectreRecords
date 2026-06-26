@@ -2413,61 +2413,65 @@ function renderTareas(){
     return;
   }
 
-  // ── Desktop table ──
-  const tableHtml=`<table class="data-table"><thead><tr>
-    <th>Título</th><th>Descripción</th><th>Asignado</th><th>Estado</th><th>Acciones</th>
-  </tr></thead><tbody>${list.map(t=>{
-    const est=t['Estado']||'Pendiente';
-    const estBadge=est==='Hecho'
-      ?'<span class="badge badge-done">Hecho</span>'
-      :'<span class="badge badge-pending">Pendiente</span>';
-    const asigColor=t['Asignado']==='Darol'?'var(--yellow)':t['Asignado']==='Heaven'?'var(--purple-light)':'var(--muted)';
-    const rn=t._rowNumber;
-    const titulo=(t['Titulo']||'').replace(/'/g,"\\'");
-    const canEdit = (t['Origen']||'Heaven').toLowerCase()===(isDarol?'darol':'heaven');
-    return `<tr>
-      <td style="font-weight:600">${t['Titulo']||'—'}</td>
-      <td style="font-family:DM Mono,monospace;font-size:.72rem;color:var(--muted)">${t['Descripcion']||'—'}</td>
-      <td style="font-family:DM Mono,monospace;font-size:.68rem;color:${asigColor}">${t['Asignado']||'—'}</td>
-      <td>${estBadge}</td>
-      <td><div class="td-actions">
-        ${est==='Pendiente'
-          ?`<button class="btn-xs btn-xs-save" onclick="marcarTareaHecha(${rn})">✓ Hecho</button>`
-          :`<button class="btn-xs" style="background:rgba(251,191,36,.1);color:var(--yellow)" onclick="marcarTareaPendiente(${rn})">↩ Pendiente</button>`
-        }
-        ${canEdit?`<button class="btn-xs btn-xs-edit" onclick="editTarea(${rn})">Editar</button>`:''}
-        ${canEdit&&!isDarol?`<button class="btn-xs btn-xs-del" onclick="confirmDelete('tarea',${rn},'${titulo}')">Borrar</button>`:''}
-      </div></td>
-    </tr>`;
-  }).join('')}</tbody></table>`;
+  const pendientes = list.filter(t=>(t['Estado']||'Pendiente')==='Pendiente');
+  const hechas     = list.filter(t=>(t['Estado']||'')==='Hecho');
 
-  // ── Mobile cards ──
-  const mobHtml=`<div class="mob-card">${list.map(t=>{
-    const est=t['Estado']||'Pendiente';
-    const estBadge=est==='Hecho'?'<span class="badge badge-done">Hecho</span>':'<span class="badge badge-pending">Pendiente</span>';
-    const asigColor=t['Asignado']==='Darol'?'var(--yellow)':t['Asignado']==='Heaven'?'var(--purple-light)':'var(--muted)';
-    const rn=t._rowNumber;
-    const titulo=(t['Titulo']||'').replace(/'/g,"\\'");
-    const canEdit = (t['Origen']||'Heaven').toLowerCase()===(isDarol?'darol':'heaven');
-    return`<div class="mob-card-row">
-      <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:.5rem;margin-bottom:.4rem;">
-        <div class="mob-card-title">${t['Titulo']||'—'}</div>
-        ${estBadge}
-      </div>
-      ${t['Descripcion']?`<div style="font-family:DM Mono,monospace;font-size:.65rem;color:var(--muted);margin-bottom:.4rem">${t['Descripcion']}</div>`:''}
-      <div style="font-family:DM Mono,monospace;font-size:.6rem;color:${asigColor};margin-bottom:.5rem">→ ${t['Asignado']||'—'}</div>
-      <div class="mob-card-actions">
-        ${est==='Pendiente'
-          ?`<button class="btn-xs btn-xs-save" onclick="marcarTareaHecha(${rn})">✓ Hecho</button>`
-          :`<button class="btn-xs" style="background:rgba(251,191,36,.1);color:var(--yellow)" onclick="marcarTareaPendiente(${rn})">↩ Pendiente</button>`
-        }
-        ${canEdit?`<button class="btn-xs btn-xs-edit" onclick="editTarea(${rn})">Editar</button>`:''}
-        ${canEdit&&!isDarol?`<button class="btn-xs btn-xs-del" onclick="confirmDelete('tarea',${rn},'${titulo}')">Borrar</button>`:''}
-      </div>
-    </div>`;
-  }).join('')}</div>`;
+  function buildTareaRows(rows){
+    return rows.map(t=>{
+      const est=t['Estado']||'Pendiente';
+      const estBadge=est==='Hecho'
+        ?'<span class="badge badge-done">Hecho</span>'
+        :'<span class="badge badge-pending">Pendiente</span>';
+      const asigColor=t['Asignado']==='Darol'?'var(--yellow)':t['Asignado']==='Heaven'?'var(--purple-light)':'var(--muted)';
+      const rn=t._rowNumber;
+      const titulo=(t['Titulo']||'').replace(/'/g,"\\'");
+      const canEdit=(t['Origen']||'Heaven').toLowerCase()===(isDarol?'darol':'heaven');
+      return{tr:`<tr style="${est==='Hecho'?'opacity:.55':''}">
+        <td style="font-weight:600">${t['Titulo']||'—'}</td>
+        <td style="font-family:DM Mono,monospace;font-size:.72rem;color:var(--muted)">${t['Descripcion']||'—'}</td>
+        <td style="font-family:DM Mono,monospace;font-size:.68rem;color:${asigColor}">${t['Asignado']||'—'}</td>
+        <td>${estBadge}</td>
+        <td><div class="td-actions">
+          ${est==='Pendiente'
+            ?`<button class="btn-xs btn-xs-save" onclick="marcarTareaHecha(${rn})">✓ Hecho</button>`
+            :`<button class="btn-xs" style="background:rgba(251,191,36,.1);color:var(--yellow)" onclick="marcarTareaPendiente(${rn})">↩ Pendiente</button>`}
+          ${canEdit?`<button class="btn-xs btn-xs-edit" onclick="editTarea(${rn})">Editar</button>`:''}
+          ${canEdit&&!isDarol?`<button class="btn-xs btn-xs-del" onclick="confirmDelete('tarea',${rn},'${titulo}')">Borrar</button>`:''}
+        </div></td>
+      </tr>`,
+      mob:`<div class="mob-card-row" style="${est==='Hecho'?'opacity:.55':''}">
+        <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:.5rem;margin-bottom:.4rem;">
+          <div class="mob-card-title">${t['Titulo']||'—'}</div>${estBadge}
+        </div>
+        ${t['Descripcion']?`<div style="font-family:DM Mono,monospace;font-size:.65rem;color:var(--muted);margin-bottom:.4rem">${t['Descripcion']}</div>`:''}
+        <div style="font-family:DM Mono,monospace;font-size:.6rem;color:${asigColor};margin-bottom:.5rem">→ ${t['Asignado']||'—'}</div>
+        <div class="mob-card-actions">
+          ${est==='Pendiente'
+            ?`<button class="btn-xs btn-xs-save" onclick="marcarTareaHecha(${rn})">✓ Hecho</button>`
+            :`<button class="btn-xs" style="background:rgba(251,191,36,.1);color:var(--yellow)" onclick="marcarTareaPendiente(${rn})">↩ Pendiente</button>`}
+          ${canEdit?`<button class="btn-xs btn-xs-edit" onclick="editTarea(${rn})">Editar</button>`:''}
+          ${canEdit&&!isDarol?`<button class="btn-xs btn-xs-del" onclick="confirmDelete('tarea',${rn},'${titulo}')">Borrar</button>`:''}
+        </div>
+      </div>`};
+    });
+  }
 
-  container.innerHTML=tableHtml+mobHtml;
+  function tareaSection(items, label, color){
+    if(!items.length) return '';
+    const built=buildTareaRows(items);
+    return `<div style="display:flex;align-items:center;gap:1rem;margin:1.2rem 0 .6rem;${label!=='// Pendientes'?'padding-top:.8rem;border-top:1px solid var(--border);':''}">
+        <span style="font-family:DM Mono,monospace;font-size:.58rem;letter-spacing:.18em;text-transform:uppercase;color:${color};">${label}</span>
+        <span style="font-family:DM Mono,monospace;font-size:.58rem;color:var(--muted2);opacity:.6">(${items.length})</span>
+      </div>
+      <table class="data-table"><thead><tr>
+        <th>Título</th><th>Descripción</th><th>Asignado</th><th>Estado</th><th>Acciones</th>
+      </tr></thead><tbody>${built.map(r=>r.tr).join('')}</tbody></table>
+      <div class="mob-card">${built.map(r=>r.mob).join('')}</div>`;
+  }
+
+  container.innerHTML=
+    tareaSection(pendientes,'// Pendientes','var(--purple-light)')+
+    tareaSection(hechas,'// Completadas','var(--muted2)');
 }
 
 function editTarea(rowNum){
@@ -2562,43 +2566,72 @@ function renderProyectosDarol(){
 
   function buildTable(list, emptyMsg){
     if(!list.length) return `<div class="empty-state">${emptyMsg}</div>`;
-    const rows=list.map(p=>{
-      const a=getArtista(p['Cliente']);
-      const na=a?a['AKA']||a['Nombre']:p['Cliente']||'—';
-      const rn=p._rowNumber;
-      const estado=p['Estado proyecto']||'';
-      const isActive=!/finalizado|cancelado/i.test(estado);
-      return `<tr>
-        <td><div style="font-weight:600;font-size:.85rem">${p['Nombre del proyecto']||'—'}</div></td>
-        <td style="font-size:.72rem;color:var(--purple-light)">${na}</td>
-        <td style="font-size:.68rem;color:var(--muted)">${p['Tipo de servicio']||'—'}</td>
-        <td style="font-size:.68rem;color:var(--muted)">${p['Fecha inicio']||'—'}</td>
-        <td>${getBadge(estado)}</td>
-        <td><div class="td-actions"><button class="btn-xs btn-xs-edit" onclick="editProyectoDarol(${rn})">Editar</button></div></td>
-      </tr>`;
-    }).join('');
-    const mobRows=list.map(p=>{
-      const a=getArtista(p['Cliente']);
-      const na=a?a['AKA']||a['Nombre']:p['Cliente']||'—';
-      const rn=p._rowNumber;
-      return`<div class="mob-card-row">
-        <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:.5rem;margin-bottom:.4rem;">
-          <div class="mob-card-title">${p['Nombre del proyecto']||'—'}</div>
-          ${getBadge(p['Estado proyecto'])}
-        </div>
-        <div class="mob-card-meta">
-          <span style="color:var(--purple-light)"><b>${na}</b></span>
-          ${p['Tipo de servicio']?`<span>${p['Tipo de servicio']}</span>`:''}
-          ${p['Fecha inicio']?`<span>Inicio: ${p['Fecha inicio']}</span>`:''}
-        </div>
-        <div class="mob-card-actions">
-          <button class="btn-xs btn-xs-edit" onclick="editProyectoDarol(${rn})">Editar</button>
-        </div>
+
+    const activos    = list.filter(p=>!/finalizado|cancelado/i.test(p['Estado proyecto']||''));
+    const finalizados= list.filter(p=>/finalizado/i.test(p['Estado proyecto']||''));
+    const cancelados = list.filter(p=>/cancelado/i.test(p['Estado proyecto']||''));
+
+    function divider(label, count){
+      return `<div style="display:flex;align-items:center;gap:1rem;margin:1.4rem 0 .6rem;padding-top:.8rem;border-top:1px solid var(--border);">
+        <span style="font-family:DM Mono,monospace;font-size:.58rem;letter-spacing:.18em;text-transform:uppercase;color:var(--muted2);">${label}</span>
+        <span style="font-family:DM Mono,monospace;font-size:.58rem;color:var(--muted2);opacity:.6">(${count})</span>
       </div>`;
-    }).join('');
-    return `<table class="data-table"><thead><tr>
-      <th>Proyecto</th><th>Artista</th><th>Servicio</th><th>Inicio</th><th>Estado</th><th>Acciones</th>
-    </tr></thead><tbody>${rows}</tbody></table><div class="mob-card">${mobRows}</div>`;
+    }
+
+    function buildRows(rows){
+      if(!rows.length) return '';
+      const trs=rows.map(p=>{
+        const a=getArtista(p['Cliente']);
+        const na=a?a['AKA']||a['Nombre']:p['Cliente']||'—';
+        const rn=p._rowNumber;
+        const estado=p['Estado proyecto']||'';
+        return `<tr>
+          <td><div style="font-weight:600;font-size:.85rem">${p['Nombre del proyecto']||'—'}</div></td>
+          <td style="font-size:.72rem;color:var(--purple-light)">${na}</td>
+          <td style="font-size:.68rem;color:var(--muted)">${p['Tipo de servicio']||'—'}</td>
+          <td style="font-size:.68rem;color:var(--muted)">${p['Fecha inicio']||'—'}</td>
+          <td>${getBadge(estado)}</td>
+          <td><div class="td-actions"><button class="btn-xs btn-xs-edit" onclick="editProyectoDarol(${rn})">Editar</button></div></td>
+        </tr>`;
+      }).join('');
+      const mobs=rows.map(p=>{
+        const a=getArtista(p['Cliente']);
+        const na=a?a['AKA']||a['Nombre']:p['Cliente']||'—';
+        const rn=p._rowNumber;
+        return`<div class="mob-card-row">
+          <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:.5rem;margin-bottom:.4rem;">
+            <div class="mob-card-title">${p['Nombre del proyecto']||'—'}</div>
+            ${getBadge(p['Estado proyecto'])}
+          </div>
+          <div class="mob-card-meta">
+            <span style="color:var(--purple-light)"><b>${na}</b></span>
+            ${p['Tipo de servicio']?`<span>${p['Tipo de servicio']}</span>`:''}
+            ${p['Fecha inicio']?`<span>Inicio: ${p['Fecha inicio']}</span>`:''}
+          </div>
+          <div class="mob-card-actions">
+            <button class="btn-xs btn-xs-edit" onclick="editProyectoDarol(${rn})">Editar</button>
+          </div>
+        </div>`;
+      }).join('');
+      return `<table class="data-table"><thead><tr>
+        <th>Proyecto</th><th>Artista</th><th>Servicio</th><th>Inicio</th><th>Estado</th><th>Acciones</th>
+      </tr></thead><tbody>${trs}</tbody></table><div class="mob-card">${mobs}</div>`;
+    }
+
+    let html='';
+    if(activos.length){
+      html+=divider('// En proceso',activos.length);
+      html+=buildRows(activos);
+    }
+    if(finalizados.length){
+      html+=divider('// Finalizados',finalizados.length);
+      html+=buildRows(finalizados);
+    }
+    if(cancelados.length){
+      html+=divider('// Cancelados',cancelados.length);
+      html+=buildRows(cancelados);
+    }
+    return html || `<div class="empty-state">${emptyMsg}</div>`;
   }
 
   const tabBar=`<div style="display:flex;gap:1px;margin-bottom:1.5rem;flex-wrap:wrap;">
@@ -2823,3 +2856,4 @@ function toast(msg,type=''){
 </script>
 </body>
 </html>
+
