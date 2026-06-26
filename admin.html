@@ -358,6 +358,10 @@ body::before{content:'';position:fixed;inset:0;background-image:url("data:image/
         <button class="nav-item" onclick="showPage('catalogo',this)" id="navCatalogo">
           <span class="nav-icon">&#x266B;</span><span>Cat&#xE1;logo</span>
         </button>
+        <button class="nav-item" onclick="showPage('suscripciones',this)" id="navSuscripciones">
+          <span class="nav-icon">↻</span><span>Suscripciones</span>
+          <span class="badge" id="badgeSusc" style="display:none"></span>
+        </button>
         <button class="nav-item" onclick="showPage('tareas',this)" id="navTareas">
           <span class="nav-icon">&#x2713;</span><span>Tareas</span>
           <span class="nav-badge purple" id="badgeTareas" style="display:none">0</span>
@@ -464,6 +468,14 @@ body::before{content:'';position:fixed;inset:0;background-image:url("data:image/
           <select class="filter-select" id="filterTipoArt" onchange="renderArtistas()">
             <option value="">Todos los niveles</option>
             <option>Est&#xE1;ndar</option><option>Miembro</option><option>Pro</option>
+          </select>
+          <select class="filter-select" id="filterCatArt" onchange="renderArtistas()">
+            <option value="">Todas las categor&#xED;as</option>
+            <option value="Activo">Activos</option>
+            <option value="Recurrente">Recurrentes</option>
+            <option value="Convenio">Convenio</option>
+            <option value="Prospecto">Prospectos</option>
+            <option value="Inactivo">Inactivos</option>
           </select>
         </div>
         <div id="artistasContainer"><div class="loading-state"><div class="spinner"></div>Cargando artistas...</div></div>
@@ -588,6 +600,22 @@ body::before{content:'';position:fixed;inset:0;background-image:url("data:image/
         <div class="beat-cards-mobile" id="catalogoMobile"></div>
       </div>
 
+      <!-- SUSCRIPCIONES -->
+      <div class="page" id="page-suscripciones">
+        <div class="page-header">
+          <div><div class="page-eyebrow">// CRM</div><div class="page-title">SUSCRIPCIONES</div></div>
+          <button class="btn btn-gold" onclick="abrirModalSusc()">+ Nueva suscripción</button>
+        </div>
+        <!-- Stats -->
+        <div class="stats-grid" id="suscStats" style="margin-bottom:1.5rem;">
+          <div class="stat-card"><div class="stat-label">Activas</div><div class="stat-value sv-green" id="suscActivas">—</div></div>
+          <div class="stat-card"><div class="stat-label">Ingreso mensual</div><div class="stat-value sv-gold" id="suscMensual">—</div></div>
+          <div class="stat-card"><div class="stat-label">Por renovar (7 días)</div><div class="stat-value sv-yellow" id="suscRenov">—</div></div>
+          <div class="stat-card"><div class="stat-label">Canceladas</div><div class="stat-value sv-red" id="suscCanceladas">—</div></div>
+        </div>
+        <div id="suscContainer"><div class="loading-state"><div class="spinner"></div>Cargando...</div></div>
+      </div>
+
       <!-- TAREAS -->
       <div class="page" id="page-tareas">
         <div class="page-header">
@@ -679,10 +707,28 @@ body::before{content:'';position:fixed;inset:0;background-image:url("data:image/
         <div class="form-group"><label class="form-label">Tel&#xE9;fono</label><input class="form-input" id="maTel" placeholder="9991234567"/></div>
         <div class="form-group"><label class="form-label">Correo</label><input class="form-input" id="maCorreo" placeholder="artista@email.com"/></div>
         <div class="form-group"><label class="form-label">C&#xF3;digo de acceso</label><input class="form-input" id="maCodigo" placeholder="ej: SNOKI2026"/></div>
-        <div class="form-group"><label class="form-label">Nivel</label>
+        <div class="form-group"><label class="form-label">Nivel (portal)</label>
           <select class="form-input" id="maTipo">
             <option>Est&#xE1;ndar</option><option>Miembro</option><option>Pro</option>
           </select>
+        </div>
+        <div class="form-group"><label class="form-label">Categor&#xED;a CRM</label>
+          <select class="form-input" id="maCategoria">
+            <option value="">Sin clasificar</option>
+            <option value="Activo">Activo</option>
+            <option value="Recurrente">Recurrente</option>
+            <option value="Convenio">Convenio</option>
+            <option value="Prospecto">Prospecto</option>
+            <option value="Inactivo">Inactivo</option>
+          </select>
+        </div>
+        <div class="form-group" id="convenioFields" style="display:none">
+          <label class="form-label">Precio convenio (MXN)</label>
+          <input class="form-input" id="maPrecioConvenio" type="number" placeholder="ej: 800"/>
+        </div>
+        <div class="form-group full" id="convenioNotasField" style="display:none">
+          <label class="form-label">Notas del convenio</label>
+          <input class="form-input" id="maNotasConvenio" placeholder="ej: 1 canción/mes grabación+mezcla, precio especial recurrente"/>
         </div>
         <div class="form-group full">
           <label class="form-label">Imagen (sube desde tu dispositivo → carpeta "Artistas_Images")</label>
@@ -920,6 +966,51 @@ body::before{content:'';position:fixed;inset:0;background-image:url("data:image/
   </div>
 </div>
 
+<!-- MODAL: NUEVA SUSCRIPCION -->
+<div class="modal-overlay" id="modalSusc">
+  <div class="modal" style="max-width:540px;">
+    <div class="modal-header">
+      <div class="modal-title" id="modalSuscTitle">NUEVA SUSCRIPCIÓN</div>
+      <button class="modal-close" onclick="closeModal('modalSusc')">&#x2715;</button>
+    </div>
+    <div class="modal-body">
+      <input type="hidden" id="suscRowNum"/>
+      <div class="form-grid">
+        <div class="form-group"><label class="form-label">Artista</label>
+          <select class="form-input" id="suscArtista"></select>
+        </div>
+        <div class="form-group"><label class="form-label">Plan</label>
+          <select class="form-input" id="suscPlan">
+            <option value="Básico">Básico — 1 canción/mes</option>
+            <option value="Estándar">Estándar — 2 canciones/mes</option>
+            <option value="Pro">Pro — ilimitado</option>
+            <option value="Personalizado">Personalizado</option>
+          </select>
+        </div>
+        <div class="form-group"><label class="form-label">Monto mensual (MXN)</label>
+          <input class="form-input" id="suscMonto" type="number" placeholder="ej: 900"/></div>
+        <div class="form-group"><label class="form-label">Estado</label>
+          <select class="form-input" id="suscEstado">
+            <option value="Activa">Activa</option>
+            <option value="Pausada">Pausada</option>
+            <option value="Cancelada">Cancelada</option>
+          </select>
+        </div>
+        <div class="form-group"><label class="form-label">Fecha inicio</label>
+          <input class="form-input" id="suscFechaInicio" type="date"/></div>
+        <div class="form-group"><label class="form-label">Próxima renovación</label>
+          <input class="form-input" id="suscFechaRenov" type="date"/></div>
+        <div class="form-group full"><label class="form-label">Notas</label>
+          <input class="form-input" id="suscNotas" placeholder="ej: incluye mezcla, sin masterización"/></div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-green" onclick="guardarSusc()">Guardar &#x2192;</button>
+      <button class="btn btn-ghost" onclick="closeModal('modalSusc')">Cancelar</button>
+    </div>
+  </div>
+</div>
+
 <!-- MODAL: NUEVA PERSONA -->
 <div class="modal-overlay" id="modalAddPersona">
   <div class="modal" style="max-width:360px;">
@@ -950,11 +1041,11 @@ const API_KEY         = 'AIzaSyC6K7d8zJc2TVrchsJQeIAfHEGJ5drA74c';
 const DRIVE_FOLDER_ID = '14FBLQdG5Ix3xWq1pf2fwaQfTJCj7BiR7';
 // Carpeta de imagenes de cover art en Drive (nombre: "Catalogo beats")
 const DRIVE_COVERS_FOLDER = 'Catalogo beats';
-const SH = { artistas:'Artistas', proyectos:'Proyectos', finanzas:'Finanzas', cursos:'Cursos', catalogo:'Catalogo', tareas:'Tareas' };
+const SH = { artistas:'Artistas', proyectos:'Proyectos', finanzas:'Finanzas', cursos:'Cursos', catalogo:'Catalogo', tareas:'Tareas', suscripciones:'Suscripciones' };
 const DEFAULT_PASS    = 'heaven2026';
 
 let oauthToken  = null;
-let allArtistas = [], allProyectos = [], allFinanzas = [], allCursos = [], allBeats = [], allTareas = [];
+let allArtistas = [], allProyectos = [], allFinanzas = [], allCursos = [], allBeats = [], allTareas = [], allSuscripciones = [];
 let userRole = 'heaven'; // 'heaven' | 'darol'
 let finView = 'ingresos';
 let prjView = 'activos';
@@ -1197,12 +1288,12 @@ async function loadAdmin(delay=0){
     if(saved){oauthToken=saved;updateOAuthUI(true);}
   }
   if(delay>0)await new Promise(r=>setTimeout(r,delay));
-  [allArtistas,allProyectos,allFinanzas,allCursos,allBeats,allTareas]=await Promise.all([
-    fetchSheet(SH.artistas),fetchSheet(SH.proyectos),fetchSheet(SH.finanzas),fetchSheet(SH.cursos),fetchSheet(SH.catalogo),fetchSheet(SH.tareas)
+  [allArtistas,allProyectos,allFinanzas,allCursos,allBeats,allTareas,allSuscripciones]=await Promise.all([
+    fetchSheet(SH.artistas),fetchSheet(SH.proyectos),fetchSheet(SH.finanzas),fetchSheet(SH.cursos),fetchSheet(SH.catalogo),fetchSheet(SH.tareas),fetchSheet(SH.suscripciones).catch(()=>[])
   ]);
   renderDashboard();renderArtistas();
   if(userRole==='darol'){renderProyectosDarol();renderDarolDashboard();}else renderProyectos();
-  renderFinanzas();renderCursosAdmin();renderCatalogo();renderTareas();
+  renderFinanzas();renderCursosAdmin();renderCatalogo();renderTareas();renderSuscripciones();
   populateArtistSelects();populateProyectoSelects();populateYearFilters();updateBadges();
 }
 
@@ -1358,38 +1449,114 @@ function renderDashboard(){
 function renderArtistas(){
   const q=(document.getElementById('searchArtistas').value||'').toLowerCase();
   const tipo=document.getElementById('filterTipoArt').value;
+  const catFilter=document.getElementById('filterCatArt')?.value||'';
+
   const list=allArtistas.filter(a=>{
     const m=!q||(a['Nombre']||'').toLowerCase().includes(q)||(a['AKA']||'').toLowerCase().includes(q);
     const t=!tipo||(a['Tipo']||'')===tipo;
-    return m&&t;
+    const c=!catFilter||(a['Categoria']||'')===catFilter;
+    return m&&t&&c;
   });
+
   if(!list.length){document.getElementById('artistasContainer').innerHTML='<div class="empty-state">// No se encontraron artistas</div>';return;}
-  document.getElementById('artistasContainer').innerHTML=`<div class="artists-grid">${list.map(a=>{
+
+  // Calcular LTV por artista
+  function artistaLTV(a){
+    const ids=[a['ArtistaID'],a['AKA'],a['Nombre']].filter(Boolean);
+    const fin=allFinanzas.filter(f=>ids.includes(f['Cliente'])&&(f['Tipo']||'').toLowerCase()==='ingreso');
+    const cobrado=fin.filter(f=>/pagado/i.test(f['Estado']||'')).reduce((s,f)=>s+(parseFloat(f['Monto'])||0),0);
+    const pendiente=fin.filter(f=>/pendiente/i.test(f['Estado']||'')).reduce((s,f)=>s+(parseFloat(f['Monto'])||0),0);
+    const proy=allProyectos.filter(p=>ids.includes(p['Cliente']));
+    const proyActivos=proy.filter(p=>!/finalizado|cancelado/i.test(p['Estado proyecto']||''));
+    // Frecuencia: meses entre proyectos
+    const fechas=proy.map(p=>parseFecha(p['Fecha inicio']||'')).filter(Boolean).sort((a,b)=>a-b);
+    let frecMeses=null;
+    if(fechas.length>1){
+      const diffMs=fechas[fechas.length-1]-fechas[0];
+      const diffMes=diffMs/(1000*60*60*24*30);
+      frecMeses=Math.round(diffMes/(fechas.length-1)*10)/10;
+    }
+    // Último proyecto
+    const ultimo=proy.sort((a,b)=>(parseFecha(b['Fecha inicio']||'')||0)-(parseFecha(a['Fecha inicio']||'')||0))[0];
+    return{cobrado,pendiente,proyCount:proy.length,proyActivos:proyActivos.length,frecMeses,ultimo};
+  }
+
+  // Agrupar por categoría
+  const CAT_ORDER=['Convenio','Recurrente','Activo','Prospecto','Inactivo',''];
+  const CAT_LABELS={'Convenio':'// Convenio — precio especial','Recurrente':'// Recurrentes','Activo':'// Activos','Prospecto':'// Prospectos','Inactivo':'// Inactivos','':'// Sin clasificar'};
+  const CAT_COLORS={'Convenio':'var(--green)','Recurrente':'var(--purple-light)','Activo':'var(--yellow)','Prospecto':'var(--muted)','Inactivo':'var(--muted2)','':'var(--muted2)'};
+
+  function artistaCard(a){
     const ini=(a['AKA']||a['Nombre']||'?').split(' ').map(w=>w[0]).join('').slice(0,2).toUpperCase();
-    const proy=allProyectos.filter(p=>p['Cliente']===a['ArtistaID']||p['Cliente']===a['AKA']||p['Cliente']===a['Nombre']);
-    const fin=allFinanzas.filter(f=>f['Cliente']===a['ArtistaID']||f['Cliente']===a['AKA']||f['Cliente']===a['Nombre']);
-    const deuda=fin.filter(f=>/pendiente/i.test(f['Estado']||'')).reduce((s,f)=>s+(parseFloat(f['Monto'])||0),0);
-    const cls=deuda>0?'has-debt':proy.length>0?'ok':'';
+    const ltv=artistaLTV(a);
     const imgSrc=a['Imagen']||'';
-    return`<div class="artist-card ${cls}">
+    const cat=a['Categoria']||'';
+    const catColor=CAT_COLORS[cat]||'var(--muted2)';
+    const isConvenio=cat==='Convenio'||cat==='Recurrente';
+    const precioConvenio=a['PrecioConvenio']?`$${parseFloat(a['PrecioConvenio']).toLocaleString()} MXN`:'';
+
+    const ltvColor=ltv.cobrado>10000?'var(--green)':ltv.cobrado>4000?'var(--yellow)':'var(--muted)';
+    const frecLabel=ltv.frecMeses===null?'—':ltv.frecMeses<=1.5?'Mensual':ltv.frecMeses<=2.5?'Bimestral':ltv.frecMeses<=6?`c/${Math.round(ltv.frecMeses)} meses`:'Esporádico';
+
+    return`<div class="artist-card">
       <div class="artist-header">
         <div class="artist-avatar">${imgSrc?`<img src="${imgSrc}" onerror="this.parentElement.textContent='${ini}'">`:'<span>'+ini+'</span>'}</div>
-        <div><div class="artist-name">${a['AKA']||a['Nombre']||'\u2014'}</div><div class="artist-aka">${a['AKA']?'// '+a['Nombre']:''}</div></div>
+        <div style="flex:1;min-width:0;">
+          <div class="artist-name">${a['AKA']||a['Nombre']||'—'}</div>
+          <div class="artist-aka">${a['AKA']?'// '+a['Nombre']:''}</div>
+          ${cat?`<div style="font-family:DM Mono,monospace;font-size:.55rem;letter-spacing:.1em;color:${catColor};margin-top:.15rem;">${cat.toUpperCase()}</div>`:''}
+        </div>
+      </div>
+      <!-- LTV strip -->
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:1px;background:var(--border);border:1px solid var(--border);margin:.8rem 0;">
+        <div style="background:var(--surface2);padding:.5rem .6rem;text-align:center;">
+          <div style="font-family:DM Mono,monospace;font-size:.5rem;color:var(--muted2);letter-spacing:.1em;text-transform:uppercase;margin-bottom:.15rem;">LTV total</div>
+          <div style="font-family:Bebas Neue,sans-serif;font-size:1rem;color:${ltvColor}">$${ltv.cobrado.toLocaleString()}</div>
+        </div>
+        <div style="background:var(--surface2);padding:.5rem .6rem;text-align:center;">
+          <div style="font-family:DM Mono,monospace;font-size:.5rem;color:var(--muted2);letter-spacing:.1em;text-transform:uppercase;margin-bottom:.15rem;">Proyectos</div>
+          <div style="font-family:Bebas Neue,sans-serif;font-size:1rem;color:var(--purple-light)">${ltv.proyCount}</div>
+        </div>
+        <div style="background:var(--surface2);padding:.5rem .6rem;text-align:center;">
+          <div style="font-family:DM Mono,monospace;font-size:.5rem;color:var(--muted2);letter-spacing:.1em;text-transform:uppercase;margin-bottom:.15rem;">Frecuencia</div>
+          <div style="font-family:Bebas Neue,sans-serif;font-size:.8rem;color:var(--text)">${frecLabel}</div>
+        </div>
       </div>
       <div class="artist-meta">
         ${a['Telefono']?`<div><span>Tel </span>${a['Telefono']}</div>`:''}
         ${a['Correo']?`<div><span>Mail </span>${a['Correo']}</div>`:''}
-        <div><span>Nivel </span>${a['Tipo']||'\u2014'}</div>
-        <div><span>Proyectos </span>${proy.length}</div>
-        ${deuda>0?`<div style="color:var(--red)"><span>Debe </span>${fmt(deuda)} MXN</div>`:''}
+        <div><span>Nivel </span>${a['Tipo']||'—'}</div>
+        ${ltv.proyActivos>0?`<div style="color:var(--yellow)"><span>En curso </span>${ltv.proyActivos} proyecto${ltv.proyActivos>1?'s':''}</div>`:''}
+        ${ltv.pendiente>0?`<div style="color:var(--red)"><span>Pendiente </span>$${ltv.pendiente.toLocaleString()} MXN</div>`:''}
+        ${isConvenio&&precioConvenio?`<div style="color:var(--green)"><span>Convenio </span>${precioConvenio}</div>`:''}
+        ${isConvenio&&a['NotasConvenio']?`<div style="color:var(--muted);font-size:.6rem;margin-top:.2rem">${a['NotasConvenio']}</div>`:''}
       </div>
-      <div class="artist-code">C\xF3digo: ${a['CodigoAcceso']||'\u2014'}</div>
+      <div class="artist-code">Código: ${a['CodigoAcceso']||'—'}</div>
       <div class="artist-actions">
         <button class="btn-xs btn-xs-edit" onclick="editArtista(${a._rowNumber})">Editar</button>
         <button class="btn-xs btn-xs-del" onclick="confirmDelete('artista',${a._rowNumber},'${(a['AKA']||a['Nombre']||'').replace(/'/g,"\\'")}')">Borrar</button>
       </div>
     </div>`;
-  }).join('')}</div>`;
+  }
+
+  let html='';
+  if(catFilter){
+    // Filtro activo: sin divisores, grilla directa
+    html=`<div class="artists-grid">${list.map(artistaCard).join('')}</div>`;
+  } else {
+    // Sin filtro: agrupar por categoría con divisores
+    CAT_ORDER.forEach(cat=>{
+      const grupo=list.filter(a=>(a['Categoria']||'')===cat);
+      if(!grupo.length) return;
+      html+=`<div style="display:flex;align-items:center;gap:1rem;margin:1.8rem 0 .8rem;${cat!==CAT_ORDER[0]?'padding-top:1rem;border-top:1px solid var(--border);':''}">
+        <span style="font-family:DM Mono,monospace;font-size:.58rem;letter-spacing:.18em;text-transform:uppercase;color:${CAT_COLORS[cat]};">${CAT_LABELS[cat]}</span>
+        <span style="font-family:DM Mono,monospace;font-size:.58rem;color:var(--muted2);opacity:.6">(${grupo.length})</span>
+      </div>
+      <div class="artists-grid">${grupo.map(artistaCard).join('')}</div>`;
+    });
+  }
+
+  document.getElementById('artistasContainer').innerHTML=html;
 }
 
 function openModal(id){
@@ -1428,6 +1595,18 @@ function editArtista(rowNum){
   document.getElementById('maCodigo').value=a['CodigoAcceso']||'';
   document.getElementById('maTipo').value=a['Tipo']||'Est\xE1ndar';
   document.getElementById('maImagen').value=a['Imagen']||'';
+  const cat=a['Categoria']||'';
+  const maCategoria=document.getElementById('maCategoria');
+  if(maCategoria) maCategoria.value=cat;
+  const precio=document.getElementById('maPrecioConvenio');
+  const notas=document.getElementById('maNotasConvenio');
+  if(precio) precio.value=a['PrecioConvenio']||'';
+  if(notas) notas.value=a['NotasConvenio']||'';
+  const convenioFields=document.getElementById('convenioFields');
+  const convenioNotasField=document.getElementById('convenioNotasField');
+  const isConv=cat==='Convenio'||cat==='Recurrente';
+  if(convenioFields) convenioFields.style.display=isConv?'':'none';
+  if(convenioNotasField) convenioNotasField.style.display=isConv?'':'none';
   // Mostrar preview de imagen si existe
   if(a['Imagen']){
     const imgUrl=getImgUrl(a['Imagen']);
@@ -1471,7 +1650,10 @@ async function guardarArtista(){
     const uploaded=await uploadToDrive(imgFile,'Artistas_Images');
     if(uploaded)imagenUrl=uploaded;
   }
-  const values=[newId,nombre,document.getElementById('maAka').value.trim(),tel,correo,codigo,tipo,imagenUrl];
+  const values=[newId,nombre,document.getElementById('maAka').value.trim(),tel,correo,codigo,tipo,imagenUrl,
+    document.getElementById('maCategoria')?.value||'',
+    document.getElementById('maPrecioConvenio')?.value||'',
+    document.getElementById('maNotasConvenio')?.value.trim()||''];
   let ok=false;
   if(rowNum){ok=await updateRow(SH.artistas,rowNum,values);}
   else{ok=await appendRow(SH.artistas,values);}
@@ -1873,7 +2055,7 @@ function limpiarNP(){
 function confirmDelete(tipo,rowNum,nombre){
   document.getElementById('confirmMsg').textContent=`\xBFEliminar "${nombre}"? Esta acci\xF3n no se puede deshacer.`;
   document.getElementById('confirmOkBtn').onclick=async()=>{
-    const sheet=tipo==='artista'?SH.artistas:tipo==='proyecto'?SH.proyectos:tipo==='curso'?SH.cursos:tipo==='beat'?SH.catalogo:tipo==='tarea'?SH.tareas:SH.finanzas;
+    const sheet=tipo==='artista'?SH.artistas:tipo==='proyecto'?SH.proyectos:tipo==='curso'?SH.cursos:tipo==='beat'?SH.catalogo:tipo==='tarea'?SH.tareas:tipo==='susc'?SH.suscripciones:SH.finanzas;
     const ok=await deleteRow(sheet,rowNum);
     if(ok){toast('\u2713 Eliminado','success');closeModal('modalConfirm');await loadAdmin();}
     else{toast('Error al eliminar \u2014 aseg\xFArate de tener OAuth activo','error');closeModal('modalConfirm');}
@@ -2346,8 +2528,145 @@ function applyRoleUI(){
 }
 
 // ════════════════════════════════════════════
-// TAREAS
+// SUSCRIPCIONES
 // ════════════════════════════════════════════
+function renderSuscripciones(){
+  const activas=allSuscripciones.filter(s=>s['Estado']==='Activa');
+  const canceladas=allSuscripciones.filter(s=>s['Estado']==='Cancelada');
+  const mensual=activas.reduce((sum,s)=>sum+(parseFloat(s['Monto'])||0),0);
+  const hoy=new Date();
+  const en7dias=new Date(hoy.getTime()+7*24*60*60*1000);
+  const porRenov=activas.filter(s=>{
+    const d=parseFecha(s['FechaRenovacion']||'');
+    return d&&d>=hoy&&d<=en7dias;
+  });
+  document.getElementById('suscActivas').textContent=activas.length||'0';
+  document.getElementById('suscMensual').textContent=mensual>0?'$'+mensual.toLocaleString():'$0';
+  document.getElementById('suscRenov').textContent=porRenov.length||'0';
+  document.getElementById('suscCanceladas').textContent=canceladas.length||'0';
+  // Badge sidebar
+  const badgeSusc=document.getElementById('badgeSusc');
+  if(badgeSusc){badgeSusc.style.display=porRenov.length>0?'inline':'none';badgeSusc.textContent=porRenov.length;}
+
+  if(!allSuscripciones.length){
+    document.getElementById('suscContainer').innerHTML='<div class="empty-state">// Sin suscripciones registradas aún. Crea la primera con + Nueva suscripción.</div>';
+    return;
+  }
+
+  const ESTADO_ORDER=['Activa','Pausada','Cancelada'];
+  const ESTADO_COLOR={Activa:'var(--green)',Pausada:'var(--yellow)',Cancelada:'var(--muted2)'};
+  let html='';
+  ESTADO_ORDER.forEach(est=>{
+    const grupo=allSuscripciones.filter(s=>s['Estado']===est);
+    if(!grupo.length) return;
+    html+=`<div style="display:flex;align-items:center;gap:1rem;margin:1.5rem 0 .7rem;${est!=='Activa'?'padding-top:.8rem;border-top:1px solid var(--border);':''}">
+      <span style="font-family:DM Mono,monospace;font-size:.58rem;letter-spacing:.18em;text-transform:uppercase;color:${ESTADO_COLOR[est]};">// ${est}s</span>
+      <span style="font-family:DM Mono,monospace;font-size:.58rem;color:var(--muted2);opacity:.6">(${grupo.length})</span>
+    </div>`;
+    const rows=grupo.map(s=>{
+      const a=getArtista(s['ArtistaID']);
+      const nombre=a?a['AKA']||a['Nombre']:s['ArtistaID']||'—';
+      const monto=parseFloat(s['Monto'])||0;
+      const rn=s._rowNumber;
+      const renovD=parseFecha(s['FechaRenovacion']||'');
+      const diasRenov=renovD?Math.round((renovD-hoy)/(1000*60*60*24)):null;
+      const renovColor=diasRenov!==null&&diasRenov<=7?'var(--red)':diasRenov!==null&&diasRenov<=14?'var(--yellow)':'var(--muted)';
+      return`<tr>
+        <td style="font-weight:600">${nombre}</td>
+        <td style="font-family:DM Mono,monospace;font-size:.68rem;color:var(--muted)">${s['Plan']||'—'}</td>
+        <td style="font-family:Bebas Neue,sans-serif;font-size:1.1rem;color:var(--green)">$${monto.toLocaleString()} <span style="font-family:DM Mono,monospace;font-size:.55rem;color:var(--muted2)">/mes</span></td>
+        <td style="font-family:DM Mono,monospace;font-size:.65rem;color:var(--muted)">${s['FechaInicio']||'—'}</td>
+        <td style="font-family:DM Mono,monospace;font-size:.65rem;color:${renovColor}">${s['FechaRenovacion']||'—'}${diasRenov!==null&&diasRenov<=7?` <span style="color:var(--red);font-size:.55rem">⚠ ${diasRenov}d</span>`:''}</td>
+        <td><span style="font-family:DM Mono,monospace;font-size:.6rem;padding:.2rem .5rem;border:1px solid ${ESTADO_COLOR[est]};color:${ESTADO_COLOR[est]}">${est}</span></td>
+        <td style="font-family:DM Mono,monospace;font-size:.62rem;color:var(--muted)">${s['Notas']||'—'}</td>
+        <td><div class="td-actions">
+          <button class="btn-xs btn-xs-edit" onclick="editSusc(${rn})">Editar</button>
+          <button class="btn-xs btn-xs-del" onclick="confirmDelete('susc',${rn},'${nombre}')">Borrar</button>
+        </div></td>
+      </tr>`;
+    }).join('');
+    const mobs=grupo.map(s=>{
+      const a=getArtista(s['ArtistaID']);
+      const nombre=a?a['AKA']||a['Nombre']:s['ArtistaID']||'—';
+      const monto=parseFloat(s['Monto'])||0;
+      const rn=s._rowNumber;
+      return`<div class="mob-card-row">
+        <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:.5rem;margin-bottom:.4rem;">
+          <div class="mob-card-title">${nombre}</div>
+          <span style="font-family:Bebas Neue,sans-serif;font-size:1rem;color:var(--green)">$${monto.toLocaleString()}/mes</span>
+        </div>
+        <div class="mob-card-meta">
+          ${s['Plan']?`<span>${s['Plan']}</span>`:''}
+          ${s['FechaRenovacion']?`<span>Renova: ${s['FechaRenovacion']}</span>`:''}
+          ${s['Notas']?`<span>${s['Notas']}</span>`:''}
+        </div>
+        <div class="mob-card-actions">
+          <button class="btn-xs btn-xs-edit" onclick="editSusc(${rn})">Editar</button>
+          <button class="btn-xs btn-xs-del" onclick="confirmDelete('susc',${rn},'${nombre}')">Borrar</button>
+        </div>
+      </div>`;
+    }).join('');
+    html+=`<table class="data-table"><thead><tr>
+      <th>Artista</th><th>Plan</th><th>Monto</th><th>Inicio</th><th>Renovación</th><th>Estado</th><th>Notas</th><th>Acciones</th>
+    </tr></thead><tbody>${rows}</tbody></table><div class="mob-card">${mobs}</div>`;
+  });
+  document.getElementById('suscContainer').innerHTML=html;
+}
+
+function abrirModalSusc(){
+  document.getElementById('modalSuscTitle').textContent='NUEVA SUSCRIPCIÓN';
+  document.getElementById('suscRowNum').value='';
+  ['suscMonto','suscNotas'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
+  document.getElementById('suscPlan').value='Básico';
+  document.getElementById('suscEstado').value='Activa';
+  // Fecha inicio = hoy, renovación = mes siguiente
+  const hoy=new Date();
+  const mesQ=new Date(hoy.getFullYear(),hoy.getMonth()+1,hoy.getDate());
+  document.getElementById('suscFechaInicio').value=hoy.toISOString().slice(0,10);
+  document.getElementById('suscFechaRenov').value=mesQ.toISOString().slice(0,10);
+  // Populate artista select
+  const sel=document.getElementById('suscArtista');
+  sel.innerHTML='<option value="">Seleccionar artista...</option>'+allArtistas.map(a=>`<option value="${a['ArtistaID']}">${a['AKA']||a['Nombre']}</option>`).join('');
+  openModal('modalSusc');
+}
+
+function editSusc(rowNum){
+  const s=allSuscripciones.find(x=>x._rowNumber===rowNum);if(!s)return;
+  abrirModalSusc();
+  document.getElementById('modalSuscTitle').textContent='EDITAR SUSCRIPCIÓN';
+  document.getElementById('suscRowNum').value=rowNum;
+  document.getElementById('suscArtista').value=s['ArtistaID']||'';
+  document.getElementById('suscPlan').value=s['Plan']||'Básico';
+  document.getElementById('suscMonto').value=s['Monto']||'';
+  document.getElementById('suscEstado').value=s['Estado']||'Activa';
+  document.getElementById('suscFechaInicio').value=s['FechaInicio']||'';
+  document.getElementById('suscFechaRenov').value=s['FechaRenovacion']||'';
+  document.getElementById('suscNotas').value=s['Notas']||'';
+}
+
+async function guardarSusc(){
+  if(!oauthToken){toast('Conecta Google primero','error');return;}
+  const rowNum=parseInt(document.getElementById('suscRowNum').value)||0;
+  const artista=document.getElementById('suscArtista').value;
+  const monto=document.getElementById('suscMonto').value;
+  if(!artista||!monto){toast('Artista y monto son requeridos','error');return;}
+  const idExist=rowNum?allSuscripciones.find(s=>s._rowNumber===rowNum):null;
+  const suscId=idExist?idExist['SuscripcionID']||'':nextId(allSuscripciones,'SuscripcionID','Susc');
+  const values=[
+    suscId, artista,
+    document.getElementById('suscPlan').value,
+    monto,
+    document.getElementById('suscFechaInicio').value,
+    document.getElementById('suscFechaRenov').value,
+    document.getElementById('suscEstado').value,
+    document.getElementById('suscNotas').value.trim()
+  ];
+  let ok=false;
+  if(rowNum) ok=await updateRow(SH.suscripciones,rowNum,values);
+  else ok=await appendRow(SH.suscripciones,values);
+  if(ok){toast('✓ Suscripción guardada','success');closeModal('modalSusc');await loadAdmin();}
+  else toast('Error al guardar','error');
+}
 function renderTareas(){
   const container=document.getElementById('tareasContainer');
   if(!container) return;
@@ -2834,6 +3153,7 @@ function showPage(name,el){
   if(name==='dashboard')renderDashboard();
   if(name==='dashboard-darol')renderDarolDashboard();
   if(name==='cursos')renderCursosAdmin();
+  if(name==='suscripciones')renderSuscripciones();
   if(name==='catalogo')renderCatalogo();
 }
 
@@ -2856,4 +3176,3 @@ function toast(msg,type=''){
 </script>
 </body>
 </html>
-
