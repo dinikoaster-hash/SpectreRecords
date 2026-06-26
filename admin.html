@@ -247,7 +247,73 @@ body::before{content:'';position:fixed;inset:0;background-image:url("data:image/
 .dash-section-title{font-family:Bebas Neue,sans-serif;font-size:1.3rem;letter-spacing:.06em;margin-bottom:1rem;}
 .dash-eyebrow{font-family:DM Mono,monospace;font-size:.58rem;letter-spacing:.18em;color:var(--muted2);margin-bottom:.25rem;}
 
-/* HAMBURGER */
+/* ── NOTIFICATION DRAWER ── */
+.notif-bell{position:fixed;top:1rem;right:1.5rem;z-index:500;background:var(--surface);border:1px solid var(--border2);width:38px;height:38px;display:flex;align-items:center;justify-content:center;cursor:none;transition:background .2s;}
+.notif-bell:hover{background:var(--surface2);}
+.notif-bell svg{width:16px;height:16px;stroke:var(--gold);fill:none;stroke-width:1.8;}
+.notif-count{position:absolute;top:-5px;right:-5px;background:var(--red);color:#fff;font-family:DM Mono,monospace;font-size:.5rem;padding:.15rem .38rem;border-radius:10px;min-width:16px;text-align:center;display:none;}
+.notif-drawer{position:fixed;top:0;right:0;bottom:0;width:360px;background:var(--surface);border-left:1px solid var(--border2);z-index:600;transform:translateX(100%);transition:transform .3s cubic-bezier(.4,0,.2,1);overflow-y:auto;display:flex;flex-direction:column;}
+.notif-drawer.open{transform:translateX(0);}
+.notif-drawer-header{display:flex;align-items:center;justify-content:space-between;padding:1.4rem 1.5rem;border-bottom:1px solid var(--border);position:sticky;top:0;background:var(--surface);z-index:1;}
+.notif-drawer-title{font-family:Bebas Neue,sans-serif;font-size:1.3rem;letter-spacing:.06em;}
+.notif-close{font-family:DM Mono,monospace;font-size:.6rem;color:var(--muted);background:none;border:1px solid var(--border2);padding:.35rem .7rem;cursor:none;}
+.notif-section{padding:.8rem 1.5rem .4rem;font-family:DM Mono,monospace;font-size:.55rem;letter-spacing:.18em;text-transform:uppercase;color:var(--muted2);}
+.notif-item{padding:.9rem 1.5rem;border-bottom:1px solid var(--border);display:flex;gap:.8rem;align-items:flex-start;transition:background .15s;}
+.notif-item:hover{background:var(--surface2);}
+.notif-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0;margin-top:4px;}
+.notif-dot-red{background:var(--red);}
+.notif-dot-yellow{background:var(--yellow);}
+.notif-dot-green{background:var(--green);}
+.notif-dot-purple{background:var(--purple-light);}
+.notif-body{flex:1;min-width:0;}
+.notif-title{font-size:.82rem;font-weight:600;margin-bottom:.2rem;line-height:1.3;}
+.notif-sub{font-family:DM Mono,monospace;font-size:.6rem;color:var(--muted);line-height:1.5;}
+.notif-empty{padding:3rem 1.5rem;text-align:center;font-family:DM Mono,monospace;font-size:.68rem;color:var(--muted2);}
+.drawer-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:590;}
+.drawer-overlay.show{display:block;}
+
+/* ── ARTIST DETAIL PANEL ── */
+.artist-panel{position:fixed;top:0;right:0;bottom:0;width:480px;background:var(--surface);border-left:1px solid var(--border2);z-index:600;transform:translateX(100%);transition:transform .3s cubic-bezier(.4,0,.2,1);overflow-y:auto;display:flex;flex-direction:column;}
+.artist-panel.open{transform:translateX(0);}
+.ap-header{padding:1.5rem;border-bottom:1px solid var(--border);position:sticky;top:0;background:var(--surface);z-index:1;display:flex;align-items:center;gap:1rem;}
+.ap-avatar{width:52px;height:52px;border-radius:50%;background:var(--purple-dim);display:flex;align-items:center;justify-content:center;font-family:Bebas Neue,sans-serif;font-size:1.2rem;color:var(--purple-light);flex-shrink:0;border:1px solid var(--border2);overflow:hidden;}
+.ap-avatar img{width:100%;height:100%;object-fit:cover;}
+.ap-name{font-family:Bebas Neue,sans-serif;font-size:1.6rem;letter-spacing:.04em;line-height:1;}
+.ap-aka{font-family:DM Mono,monospace;font-size:.62rem;color:var(--purple-light);margin-top:.15rem;}
+.ap-close{margin-left:auto;font-family:DM Mono,monospace;font-size:.6rem;color:var(--muted);background:none;border:1px solid var(--border2);padding:.35rem .7rem;cursor:none;flex-shrink:0;}
+.ap-body{padding:1.5rem;flex:1;}
+.ap-stats{display:grid;grid-template-columns:1fr 1fr 1fr;gap:1px;border:1px solid var(--border);margin-bottom:1.5rem;}
+.ap-stat{background:var(--surface2);padding:.8rem;text-align:center;}
+.ap-stat-label{font-family:DM Mono,monospace;font-size:.5rem;letter-spacing:.12em;text-transform:uppercase;color:var(--muted2);margin-bottom:.25rem;}
+.ap-stat-val{font-family:Bebas Neue,sans-serif;font-size:1.3rem;line-height:1;}
+.ap-section{margin-bottom:1.5rem;}
+.ap-section-title{font-family:DM Mono,monospace;font-size:.55rem;letter-spacing:.18em;text-transform:uppercase;color:var(--muted2);padding-bottom:.5rem;border-bottom:1px solid var(--border);margin-bottom:.8rem;}
+.ap-row{display:flex;justify-content:space-between;align-items:center;padding:.55rem 0;border-bottom:1px solid var(--border);font-size:.8rem;}
+.ap-row:last-child{border-bottom:none;}
+.ap-row-label{font-family:DM Mono,monospace;font-size:.62rem;color:var(--muted);}
+.ap-row-val{font-weight:600;text-align:right;max-width:60%;}
+.ap-proy-item{padding:.7rem 0;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:flex-start;gap:.5rem;}
+.ap-proy-item:last-child{border-bottom:none;}
+.ap-proy-name{font-size:.82rem;font-weight:600;}
+.ap-proy-meta{font-family:DM Mono,monospace;font-size:.58rem;color:var(--muted);margin-top:.15rem;}
+.ap-fin-item{padding:.6rem 0;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;}
+.ap-fin-item:last-child{border-bottom:none;}
+.ap-fin-concepto{font-family:DM Mono,monospace;font-size:.65rem;flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.ap-ltv-year{margin-bottom:1rem;}
+.ap-ltv-bar-wrap{display:flex;align-items:center;gap:.6rem;margin-top:.3rem;}
+.ap-ltv-bar-track{flex:1;background:var(--surface2);height:16px;border:1px solid var(--border);}
+.ap-ltv-bar-fill{height:100%;background:linear-gradient(90deg,var(--purple),var(--purple-light));}
+
+@media(max-width:700px){
+  .notif-drawer{width:100vw;}
+  .artist-panel{width:100vw;}
+  .notif-bell{top:.6rem;right:.7rem;}
+}
+@media(max-width:900px){
+  .notif-bell{top:.6rem;right:4.2rem;}
+  .notif-drawer{width:min(360px,100vw);}
+  .artist-panel{width:min(480px,100vw);}
+}
 .hamburger{display:none;position:fixed;top:.9rem;left:1rem;z-index:200;background:var(--surface);border:1px solid var(--border2);color:var(--gold);font-size:1.1rem;width:36px;height:36px;align-items:center;justify-content:center;cursor:none;transition:background .2s;}
 .hamburger:hover{background:var(--surface2);}
 .sidebar-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.6);backdrop-filter:blur(4px);z-index:99;}
@@ -309,6 +375,36 @@ body::before{content:'';position:fixed;inset:0;background-image:url("data:image/
 <body>
 <div class="cursor" id="cursor"></div>
 <div class="cursor-ring" id="cursorRing"></div>
+
+<!-- NOTIFICATION BELL -->
+<button class="notif-bell" onclick="toggleNotifDrawer()" id="notifBell" style="display:none" aria-label="Notificaciones">
+  <svg viewBox="0 0 24 24"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+  <span class="notif-count" id="notifCount"></span>
+</button>
+
+<!-- NOTIFICATION DRAWER -->
+<div class="drawer-overlay" id="drawerOverlay" onclick="closeNotifDrawer()"></div>
+<div class="notif-drawer" id="notifDrawer">
+  <div class="notif-drawer-header">
+    <div class="notif-drawer-title">ALERTAS</div>
+    <button class="notif-close" onclick="closeNotifDrawer()">&#x2715; Cerrar</button>
+  </div>
+  <div id="notifContent"><div class="notif-empty">// Cargando alertas...</div></div>
+</div>
+
+<!-- ARTIST DETAIL PANEL -->
+<div class="drawer-overlay" id="artistPanelOverlay" onclick="closeArtistPanel()"></div>
+<div class="artist-panel" id="artistPanel">
+  <div class="ap-header">
+    <div class="ap-avatar" id="apAvatar"></div>
+    <div style="flex:1;min-width:0;">
+      <div class="ap-name" id="apName">&#x2014;</div>
+      <div class="ap-aka" id="apAka"></div>
+    </div>
+    <button class="ap-close" onclick="closeArtistPanel()">&#x2715; Cerrar</button>
+  </div>
+  <div class="ap-body" id="apBody"></div>
+</div>
 <button class="hamburger" id="hamburger" onclick="toggleSidebar()" aria-label="Menu" style="display:none">&#9776;</button>
 <div class="sidebar-overlay" id="sidebarOverlay" onclick="closeSidebar()"></div>
 
@@ -1294,6 +1390,7 @@ async function loadAdmin(delay=0){
   renderDashboard();renderArtistas();
   if(userRole==='darol'){renderProyectosDarol();renderDarolDashboard();}else renderProyectos();
   renderFinanzas();renderCursosAdmin();renderCatalogo();renderTareas();renderSuscripciones();
+  renderNotificaciones();
   populateArtistSelects();populateProyectoSelects();populateYearFilters();updateBadges();
 }
 
@@ -1533,6 +1630,7 @@ function renderArtistas(){
       </div>
       <div class="artist-code">Código: ${a['CodigoAcceso']||'—'}</div>
       <div class="artist-actions">
+        <button class="btn-xs" style="background:rgba(201,168,76,.1);color:var(--gold)" onclick="openArtistPanel(${a._rowNumber})">Ver historial</button>
         <button class="btn-xs btn-xs-edit" onclick="editArtista(${a._rowNumber})">Editar</button>
         <button class="btn-xs btn-xs-del" onclick="confirmDelete('artista',${a._rowNumber},'${(a['AKA']||a['Nombre']||'').replace(/'/g,"\\'")}')">Borrar</button>
       </div>
@@ -2525,6 +2623,268 @@ function applyRoleUI(){
     const dashBtn=document.getElementById('navDashHeaven');
     setTimeout(()=>showPage('dashboard', dashBtn),100);
   }
+}
+
+// ════════════════════════════════════════════
+// NOTIFICACIONES
+// ════════════════════════════════════════════
+function buildNotificaciones(){
+  const alerts=[];
+  const hoy=new Date();
+
+  // 1. Pagos pendientes hace más de 5 días
+  allFinanzas.filter(f=>/pendiente/i.test(f['Estado']||'')&&(f['Tipo']||'').toLowerCase()==='ingreso').forEach(f=>{
+    const d=parseFecha(f['Fecha']||'');
+    const dias=d?Math.round((hoy-d)/(1000*60*60*24)):null;
+    const a=getArtista(f['Cliente']);
+    const nombre=a?a['AKA']||a['Nombre']:f['Cliente']||'—';
+    if(dias===null||dias>3){
+      alerts.push({tipo:'red',title:`${nombre} — pago pendiente`,sub:`${f['Concepto']||'Sin concepto'} · $${parseFloat(f['Monto']||0).toLocaleString()} MXN${dias!==null?` · hace ${dias} días`:''}`,cat:'cobros'});
+    }
+  });
+
+  // 2. Proyectos mucho tiempo en el mismo estado
+  allProyectos.filter(p=>!/finalizado|cancelado/i.test(p['Estado proyecto']||'')).forEach(p=>{
+    const d=parseFecha(p['Fecha inicio']||'');
+    const dias=d?Math.round((hoy-d)/(1000*60*60*24)):null;
+    if(dias!==null&&dias>30){
+      const a=getArtista(p['Cliente']);
+      const nombre=a?a['AKA']||a['Nombre']:p['Cliente']||'—';
+      alerts.push({tipo:'yellow',title:`${p['Nombre del proyecto']||'—'} · ${nombre}`,sub:`En estado "${p['Estado proyecto']||'activo'}" hace ${dias} días`,cat:'proyectos'});
+    }
+  });
+
+  // 3. Proyectos con fecha de entrega vencida
+  allProyectos.filter(p=>!/finalizado|cancelado/i.test(p['Estado proyecto']||'')).forEach(p=>{
+    const fe=parseFecha(p['Fecha entrega']||'');
+    if(!fe) return;
+    const dias=Math.round((hoy-fe)/(1000*60*60*24));
+    if(dias>0){
+      const a=getArtista(p['Cliente']);
+      const nombre=a?a['AKA']||a['Nombre']:p['Cliente']||'—';
+      alerts.push({tipo:'red',title:`Entrega vencida — ${p['Nombre del proyecto']||'—'}`,sub:`${nombre} · venció hace ${dias} día${dias>1?'s':''}`,cat:'proyectos'});
+    }
+  });
+
+  // 4. Suscripciones por renovar en 7 días
+  allSuscripciones.filter(s=>s['Estado']==='Activa').forEach(s=>{
+    const d=parseFecha(s['FechaRenovacion']||'');
+    if(!d) return;
+    const dias=Math.round((d-hoy)/(1000*60*60*24));
+    if(dias>=0&&dias<=7){
+      const a=getArtista(s['ArtistaID']);
+      const nombre=a?a['AKA']||a['Nombre']:s['ArtistaID']||'—';
+      alerts.push({tipo:'yellow',title:`Suscripción de ${nombre}`,sub:`Renueva en ${dias===0?'hoy':dias+' día'+(dias>1?'s':'')} · $${parseFloat(s['Monto']||0).toLocaleString()}/mes`,cat:'suscripciones'});
+    }
+  });
+
+  // 5. Artistas recurrentes sin proyecto en más de 2 meses
+  allArtistas.filter(a=>(a['Categoria']==='Recurrente'||a['Categoria']==='Convenio')).forEach(a=>{
+    const ids=[a['ArtistaID'],a['AKA'],a['Nombre']].filter(Boolean);
+    const proy=allProyectos.filter(p=>ids.includes(p['Cliente']));
+    if(!proy.length) return;
+    const fechas=proy.map(p=>parseFecha(p['Fecha inicio']||'')).filter(Boolean).sort((a,b)=>b-a);
+    const ultimo=fechas[0];
+    if(!ultimo) return;
+    const dias=Math.round((hoy-ultimo)/(1000*60*60*24));
+    if(dias>60){
+      alerts.push({tipo:'purple',title:`${a['AKA']||a['Nombre']} — sin actividad`,sub:`Cliente ${a['Categoria'].toLowerCase()} · último proyecto hace ${dias} días`,cat:'artistas'});
+    }
+  });
+
+  // Ordenar: red primero, yellow, purple
+  const PRIO={red:0,yellow:1,purple:2,green:3};
+  alerts.sort((a,b)=>(PRIO[a.tipo]||9)-(PRIO[b.tipo]||9));
+  return alerts;
+}
+
+function renderNotificaciones(){
+  const bell=document.getElementById('notifBell');
+  const count=document.getElementById('notifCount');
+  if(!bell) return;
+
+  const isDarol=userRole==='darol';
+  if(isDarol){bell.style.display='none';return;}
+  bell.style.display='flex';
+
+  const alerts=buildNotificaciones();
+  if(count){
+    const reds=alerts.filter(a=>a.tipo==='red').length;
+    count.style.display=reds>0?'block':'none';
+    count.textContent=reds>0?reds:'';
+  }
+
+  const CATS={cobros:'// Cobros pendientes',proyectos:'// Proyectos',suscripciones:'// Suscripciones',artistas:'// Artistas recurrentes'};
+  const DOT={red:'notif-dot-red',yellow:'notif-dot-yellow',purple:'notif-dot-purple',green:'notif-dot-green'};
+
+  if(!alerts.length){
+    document.getElementById('notifContent').innerHTML='<div class="notif-empty">// Todo en orden — sin alertas activas ✓</div>';
+    return;
+  }
+
+  let html='';
+  ['cobros','proyectos','suscripciones','artistas'].forEach(cat=>{
+    const grupo=alerts.filter(a=>a.cat===cat);
+    if(!grupo.length) return;
+    html+=`<div class="notif-section">${CATS[cat]} (${grupo.length})</div>`;
+    grupo.forEach(n=>{
+      html+=`<div class="notif-item">
+        <div class="notif-dot ${DOT[n.tipo]}"></div>
+        <div class="notif-body">
+          <div class="notif-title">${n.title}</div>
+          <div class="notif-sub">${n.sub}</div>
+        </div>
+      </div>`;
+    });
+  });
+  document.getElementById('notifContent').innerHTML=html;
+}
+
+function toggleNotifDrawer(){
+  const d=document.getElementById('notifDrawer');
+  const o=document.getElementById('drawerOverlay');
+  const open=d.classList.contains('open');
+  d.classList.toggle('open',!open);
+  o.classList.toggle('show',!open);
+  // close artist panel if open
+  closeArtistPanel();
+}
+function closeNotifDrawer(){
+  document.getElementById('notifDrawer').classList.remove('open');
+  document.getElementById('drawerOverlay').classList.remove('show');
+}
+
+// ════════════════════════════════════════════
+// HISTORIAL POR ARTISTA
+// ════════════════════════════════════════════
+function openArtistPanel(rowNum){
+  const a=allArtistas.find(x=>x._rowNumber===rowNum);
+  if(!a) return;
+  closeNotifDrawer();
+
+  const ids=[a['ArtistaID'],a['AKA'],a['Nombre']].filter(Boolean);
+  const ini=(a['AKA']||a['Nombre']||'?').split(' ').map(w=>w[0]).join('').slice(0,2).toUpperCase();
+  const imgSrc=a['Imagen']||'';
+
+  // Avatar
+  const apAvatar=document.getElementById('apAvatar');
+  apAvatar.innerHTML=imgSrc?`<img src="${imgSrc}" onerror="this.parentElement.textContent='${ini}'">`:`<span>${ini}</span>`;
+  document.getElementById('apName').textContent=a['AKA']||a['Nombre']||'—';
+  document.getElementById('apAka').textContent=a['AKA']?'// '+a['Nombre']:'';
+
+  // Data
+  const proy=allProyectos.filter(p=>ids.includes(p['Cliente'])).sort((a,b)=>(parseFecha(b['Fecha inicio']||'')||0)-(parseFecha(a['Fecha inicio']||'')||0));
+  const fin=allFinanzas.filter(f=>ids.includes(f['Cliente']));
+  const ingresos=fin.filter(f=>(f['Tipo']||'').toLowerCase()==='ingreso');
+  const cobrado=ingresos.filter(f=>/pagado/i.test(f['Estado']||'')).reduce((s,f)=>s+(parseFloat(f['Monto'])||0),0);
+  const pendiente=ingresos.filter(f=>/pendiente/i.test(f['Estado']||'')).reduce((s,f)=>s+(parseFloat(f['Monto'])||0),0);
+  const proyActivos=proy.filter(p=>!/finalizado|cancelado/i.test(p['Estado proyecto']||'')).length;
+
+  // LTV por año
+  const ltvByYear={};
+  ingresos.filter(f=>/pagado/i.test(f['Estado']||'')).forEach(f=>{
+    const d=parseFecha(f['Fecha']||'');
+    if(!d) return;
+    const yr=d.getFullYear();
+    ltvByYear[yr]=(ltvByYear[yr]||0)+(parseFloat(f['Monto'])||0);
+  });
+  const years=Object.keys(ltvByYear).sort();
+  const maxYear=years.length?Math.max(...Object.values(ltvByYear)):1;
+
+  // Frecuencia
+  const fechas=proy.map(p=>parseFecha(p['Fecha inicio']||'')).filter(Boolean).sort((a,b)=>a-b);
+  let frecLabel='—';
+  if(fechas.length>1){
+    const diffMes=(fechas[fechas.length-1]-fechas[0])/(1000*60*60*24*30);
+    const avg=Math.round(diffMes/(fechas.length-1)*10)/10;
+    frecLabel=avg<=1.5?'Mensual':avg<=2.5?'Bimestral':avg<=4?`c/${Math.round(avg)} meses`:`c/${Math.round(avg)} meses (esporádico)`;
+  } else if(fechas.length===1){frecLabel='1 proyecto';}
+
+  // Suscripción activa
+  const susc=allSuscripciones.find(s=>ids.includes(s['ArtistaID'])&&s['Estado']==='Activa');
+  const cat=a['Categoria']||'';
+  const catColor={Convenio:'var(--green)',Recurrente:'var(--purple-light)',Activo:'var(--yellow)',Prospecto:'var(--muted)',Inactivo:'var(--muted2)'}[cat]||'var(--muted2)';
+
+  document.getElementById('apBody').innerHTML=`
+    <!-- Stats -->
+    <div class="ap-stats">
+      <div class="ap-stat"><div class="ap-stat-label">LTV Total</div><div class="ap-stat-val" style="color:var(--green)">$${cobrado.toLocaleString()}</div></div>
+      <div class="ap-stat"><div class="ap-stat-label">Proyectos</div><div class="ap-stat-val" style="color:var(--purple-light)">${proy.length}</div></div>
+      <div class="ap-stat"><div class="ap-stat-label">Frecuencia</div><div class="ap-stat-val" style="font-size:.85rem;color:var(--text)">${frecLabel}</div></div>
+    </div>
+
+    <!-- Info general -->
+    <div class="ap-section">
+      <div class="ap-section-title">// Perfil</div>
+      ${a['Telefono']?`<div class="ap-row"><span class="ap-row-label">Teléfono</span><span class="ap-row-val">${a['Telefono']}</span></div>`:''}
+      ${a['Correo']?`<div class="ap-row"><span class="ap-row-label">Correo</span><span class="ap-row-val" style="font-size:.72rem">${a['Correo']}</span></div>`:''}
+      <div class="ap-row"><span class="ap-row-label">Nivel</span><span class="ap-row-val">${a['Tipo']||'—'}</span></div>
+      <div class="ap-row"><span class="ap-row-label">Categoría</span><span class="ap-row-val" style="color:${catColor}">${cat||'Sin clasificar'}</span></div>
+      ${pendiente>0?`<div class="ap-row"><span class="ap-row-label">Pendiente de pago</span><span class="ap-row-val" style="color:var(--red)">$${pendiente.toLocaleString()} MXN</span></div>`:''}
+      ${proyActivos>0?`<div class="ap-row"><span class="ap-row-label">En curso</span><span class="ap-row-val" style="color:var(--yellow)">${proyActivos} proyecto${proyActivos>1?'s':''}</span></div>`:''}
+      ${(cat==='Convenio'||cat==='Recurrente')&&a['PrecioConvenio']?`<div class="ap-row"><span class="ap-row-label">Precio convenio</span><span class="ap-row-val" style="color:var(--green)">$${parseFloat(a['PrecioConvenio']).toLocaleString()} MXN</span></div>`:''}
+      ${a['NotasConvenio']?`<div style="font-family:DM Mono,monospace;font-size:.6rem;color:var(--muted);padding:.5rem 0;line-height:1.6">${a['NotasConvenio']}</div>`:''}
+    </div>
+
+    ${susc?`<div class="ap-section">
+      <div class="ap-section-title">// Suscripción activa</div>
+      <div class="ap-row"><span class="ap-row-label">Plan</span><span class="ap-row-val">${susc['Plan']||'—'}</span></div>
+      <div class="ap-row"><span class="ap-row-label">Monto</span><span class="ap-row-val" style="color:var(--green)">$${parseFloat(susc['Monto']||0).toLocaleString()}/mes</span></div>
+      <div class="ap-row"><span class="ap-row-label">Renovación</span><span class="ap-row-val">${susc['FechaRenovacion']||'—'}</span></div>
+      ${susc['Notas']?`<div style="font-family:DM Mono,monospace;font-size:.6rem;color:var(--muted);padding:.4rem 0">${susc['Notas']}</div>`:''}
+    </div>`:''}
+
+    <!-- LTV por año -->
+    ${years.length?`<div class="ap-section">
+      <div class="ap-section-title">// Ingreso por año</div>
+      ${years.map(yr=>`<div class="ap-ltv-year">
+        <div style="display:flex;justify-content:space-between;align-items:center;font-family:DM Mono,monospace;font-size:.62rem;color:var(--muted);margin-bottom:.3rem;">
+          <span>${yr}</span><span style="color:var(--green);font-family:Bebas Neue,sans-serif;font-size:1rem">$${ltvByYear[yr].toLocaleString()}</span>
+        </div>
+        <div class="ap-ltv-bar-wrap">
+          <div class="ap-ltv-bar-track" style="flex:1"><div class="ap-ltv-bar-fill" style="width:${Math.round(ltvByYear[yr]/maxYear*100)}%"></div></div>
+        </div>
+      </div>`).join('')}
+    </div>`:''}
+
+    <!-- Proyectos -->
+    ${proy.length?`<div class="ap-section">
+      <div class="ap-section-title">// Proyectos (${proy.length})</div>
+      ${proy.slice(0,10).map(p=>`<div class="ap-proy-item">
+        <div>
+          <div class="ap-proy-name">${p['Nombre del proyecto']||'—'}</div>
+          <div class="ap-proy-meta">${p['Tipo de servicio']||''} ${p['Fecha inicio']?'· '+p['Fecha inicio']:''}</div>
+        </div>
+        ${getBadge(p['Estado proyecto'])}
+      </div>`).join('')}
+      ${proy.length>10?`<div style="font-family:DM Mono,monospace;font-size:.6rem;color:var(--muted2);padding:.5rem 0">+${proy.length-10} más</div>`:''}
+    </div>`:''}
+
+    <!-- Últimos pagos -->
+    ${ingresos.length?`<div class="ap-section">
+      <div class="ap-section-title">// Últimos pagos</div>
+      ${ingresos.slice(0,8).map(f=>`<div class="ap-fin-item">
+        <div class="ap-fin-concepto">${f['Concepto']||'—'}</div>
+        <div style="display:flex;align-items:center;gap:.5rem;flex-shrink:0">
+          <span style="font-family:Bebas Neue,sans-serif;font-size:1rem;color:${/pagado/i.test(f['Estado']||'')?'var(--green)':'var(--red)'}">$${parseFloat(f['Monto']||0).toLocaleString()}</span>
+          ${/pagado/i.test(f['Estado']||'')?'<span class="badge badge-paid">Pagado</span>':'<span class="badge badge-unpaid">Pendiente</span>'}
+        </div>
+      </div>`).join('')}
+    </div>`:''}
+
+    <!-- Acciones rápidas -->
+    <div style="display:flex;gap:.6rem;flex-wrap:wrap;padding-top:1rem;border-top:1px solid var(--border);">
+      <button class="btn btn-ghost" style="font-size:.62rem;padding:.6rem 1rem;" onclick="closeArtistPanel();editArtista(${a._rowNumber})">Editar perfil</button>
+    </div>
+  `;
+
+  document.getElementById('artistPanel').classList.add('open');
+  document.getElementById('artistPanelOverlay').classList.add('show');
+}
+
+function closeArtistPanel(){
+  document.getElementById('artistPanel').classList.remove('open');
+  document.getElementById('artistPanelOverlay').classList.remove('show');
 }
 
 // ════════════════════════════════════════════
