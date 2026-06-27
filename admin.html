@@ -379,7 +379,7 @@ body::before{content:'';position:fixed;inset:0;background-image:url("data:image/
 @media(max-width:800px){.cotiz-wrap{grid-template-columns:1fr;}}
 
 /* ── PIPELINE ── */
-.pipeline-board{display:grid;grid-template-columns:repeat(4,1fr);gap:1px;background:var(--border);border:1px solid var(--border);min-height:400px;}
+.pipeline-board{display:grid;grid-template-columns:repeat(5,1fr);gap:1px;background:var(--border);border:1px solid var(--border);min-height:400px;}
 .pipeline-col{background:var(--surface);display:flex;flex-direction:column;}
 .pipeline-col-header{padding:.9rem 1rem;border-bottom:1px solid var(--border);position:sticky;top:0;background:var(--surface);z-index:1;}
 .pipeline-col-title{font-family:DM Mono,monospace;font-size:.6rem;letter-spacing:.15em;text-transform:uppercase;margin-bottom:.2rem;}
@@ -391,6 +391,9 @@ body::before{content:'';position:fixed;inset:0;background-image:url("data:image/
 .pipeline-card-meta{font-family:DM Mono,monospace;font-size:.58rem;color:var(--muted);line-height:1.7;}
 .pipeline-card-actions{display:flex;gap:.3rem;margin-top:.5rem;flex-wrap:wrap;}
 .pipeline-card-nota{font-family:DM Mono,monospace;font-size:.6rem;color:var(--muted);margin-top:.3rem;padding:.4rem .5rem;background:var(--surface);border-left:2px solid var(--border2);line-height:1.5;}
+@media(max-width:1100px){
+  .pipeline-board{grid-template-columns:1fr 1fr 1fr;}
+}
 @media(max-width:900px){
   .pipeline-board{grid-template-columns:1fr 1fr;}
   .pipeline-col{min-height:200px;}
@@ -852,11 +855,18 @@ body::before{content:'';position:fixed;inset:0;background-image:url("data:image/
             <div class="cotiz-panel" style="margin-top:1px;">
               <div class="cotiz-panel-title">// Servicios</div>
               <div id="cotizServicios">
+                <div style="font-family:DM Mono,monospace;font-size:.55rem;letter-spacing:.12em;color:var(--muted2);text-transform:uppercase;margin-bottom:.5rem;padding-bottom:.4rem;border-bottom:1px solid var(--border);">// Servicios individuales</div>
                 <div class="cotiz-row"><input type="checkbox" class="cotiz-check" id="csGrab" onchange="cotizActualizar()"><label class="cotiz-label" for="csGrab">Grabación</label><input class="cotiz-price-input" id="cpGrab" type="number" value="300" oninput="cotizActualizar()"></div>
                 <div class="cotiz-row"><input type="checkbox" class="cotiz-check" id="csMezcla" onchange="cotizActualizar()"><label class="cotiz-label" for="csMezcla">Mezcla</label><input class="cotiz-price-input" id="cpMezcla" type="number" value="300" oninput="cotizActualizar()"></div>
                 <div class="cotiz-row"><input type="checkbox" class="cotiz-check" id="csMaster" onchange="cotizActualizar()"><label class="cotiz-label" for="csMaster">Masterización</label><input class="cotiz-price-input" id="cpMaster" type="number" value="200" oninput="cotizActualizar()"></div>
                 <div class="cotiz-row"><input type="checkbox" class="cotiz-check" id="csBeat" onchange="cotizActualizar()"><label class="cotiz-label" for="csBeat">Beat por encargo</label><input class="cotiz-price-input" id="cpBeat" type="number" value="500" oninput="cotizActualizar()"></div>
-                <div class="cotiz-row"><input type="checkbox" class="cotiz-check" id="csPaquete" onchange="cotizActualizar()"><label class="cotiz-label" for="csPaquete">Paquete Express<br><span style="font-family:DM Mono,monospace;font-size:.58rem;color:var(--muted2)">Grab + Mezcla + Master</span></label><input class="cotiz-price-input" id="cpPaquete" type="number" value="800" oninput="cotizActualizar()"></div>
+                <div class="cotiz-row"><input type="checkbox" class="cotiz-check" id="csVideo" onchange="cotizActualizar()"><label class="cotiz-label" for="csVideo">Video</label><input class="cotiz-price-input" id="cpVideo" type="number" value="500" oninput="cotizActualizar()"></div>
+                <div style="font-family:DM Mono,monospace;font-size:.55rem;letter-spacing:.12em;color:var(--muted2);text-transform:uppercase;margin:.8rem 0 .5rem;padding:.6rem 0 .4rem;border-top:1px solid var(--border);border-bottom:1px solid var(--border);">// Paquetes</div>
+                <div class="cotiz-row"><input type="checkbox" class="cotiz-check" id="csPaqueteExpress" onchange="cotizActualizar()"><label class="cotiz-label" for="csPaqueteExpress">Paquete Express<br><span style="font-family:DM Mono,monospace;font-size:.55rem;color:var(--muted2)">Grab + Mezcla + Master</span></label><input class="cotiz-price-input" id="cpPaqueteExpress" type="number" value="800" oninput="cotizActualizar()"></div>
+                <div class="cotiz-row"><input type="checkbox" class="cotiz-check" id="csPaqueteExpressVideo" onchange="cotizActualizar()"><label class="cotiz-label" for="csPaqueteExpressVideo">Paquete Express + Video<br><span style="font-family:DM Mono,monospace;font-size:.55rem;color:var(--muted2)">Grab + Mezcla + Master + Video</span></label><input class="cotiz-price-input" id="cpPaqueteExpressVideo" type="number" value="1300" oninput="cotizActualizar()"></div>
+                <div class="cotiz-row"><input type="checkbox" class="cotiz-check" id="csPaquetePrivada" onchange="cotizActualizar()"><label class="cotiz-label" for="csPaquetePrivada">Paquete Esencia Privada<br><span style="font-family:DM Mono,monospace;font-size:.55rem;color:var(--muted2)">Beat + Grab + Mezcla + Master</span></label><input class="cotiz-price-input" id="cpPaquetePrivada" type="number" value="1300" oninput="cotizActualizar()"></div>
+                <div class="cotiz-row"><input type="checkbox" class="cotiz-check" id="csPaqueteElevada" onchange="cotizActualizar()"><label class="cotiz-label" for="csPaqueteElevada">Paquete Experiencia Elevada<br><span style="font-family:DM Mono,monospace;font-size:.55rem;color:var(--muted2)">Beat + Grab + Mezcla + Master + Video</span></label><input class="cotiz-price-input" id="cpPaqueteElevada" type="number" value="1800" oninput="cotizActualizar()"></div>
+                <div style="font-family:DM Mono,monospace;font-size:.55rem;letter-spacing:.12em;color:var(--muted2);text-transform:uppercase;margin:.8rem 0 .5rem;padding:.6rem 0 .4rem;border-top:1px solid var(--border);border-bottom:1px solid var(--border);">// Extra</div>
                 <div class="cotiz-row"><input type="checkbox" class="cotiz-check" id="csExtra" onchange="cotizActualizar()"><label class="cotiz-label" for="csExtra">Extra / Otro</label><input class="cotiz-price-input" id="cpExtra" type="number" value="0" oninput="cotizActualizar()"></div>
               </div>
             </div>
@@ -1297,12 +1307,10 @@ body::before{content:'';position:fixed;inset:0;background-image:url("data:image/
           <select class="form-input" id="suscArtista"></select>
         </div>
         <div class="form-group"><label class="form-label">Plan</label>
-          <select class="form-input" id="suscPlan">
-            <option value="Básico">Básico — 1 canción/mes</option>
-            <option value="Estándar">Estándar — 2 canciones/mes</option>
-            <option value="Pro">Pro — ilimitado</option>
-            <option value="Personalizado">Personalizado</option>
-          </select>
+          <div style="display:flex;gap:.4rem;">
+            <select class="form-input" id="suscPlan" style="flex:1;"></select>
+            <button type="button" class="btn btn-ghost" onclick="abrirAddPlan()" style="font-size:.6rem;padding:.5rem .7rem;white-space:nowrap;">+ Nuevo</button>
+          </div>
         </div>
         <div class="form-group"><label class="form-label">Monto mensual (MXN)</label>
           <input class="form-input" id="suscMonto" type="number" placeholder="ej: 900"/></div>
@@ -1324,6 +1332,27 @@ body::before{content:'';position:fixed;inset:0;background-image:url("data:image/
     <div class="modal-footer">
       <button class="btn btn-green" onclick="guardarSusc()">Guardar &#x2192;</button>
       <button class="btn btn-ghost" onclick="closeModal('modalSusc')">Cancelar</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL: NUEVO PLAN SUSCRIPCION -->
+<div class="modal-overlay" id="modalAddPlan">
+  <div class="modal" style="max-width:340px;">
+    <div class="modal-header">
+      <div class="modal-title">NUEVO PLAN</div>
+      <button class="modal-close" onclick="closeModal('modalAddPlan')">&#x2715;</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-group">
+        <label class="form-label">Nombre del plan</label>
+        <input class="form-input" id="newPlanNombre" placeholder="ej: Convenio de vida, 3 canciones/mes..." onkeydown="if(event.key==='Enter')guardarNuevoPlan()"/>
+      </div>
+      <div id="planTagsWrap" class="personal-tags-wrap" style="margin-top:.8rem;"></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-green" onclick="guardarNuevoPlan()">Guardar &#x2192;</button>
+      <button class="btn btn-ghost" onclick="closeModal('modalAddPlan')">Cancelar</button>
     </div>
   </div>
 </div>
@@ -1388,6 +1417,53 @@ let userRole = 'heaven'; // 'heaven' | 'darol'
 let finView = 'ingresos';
 let prjView = 'activos';
 let catView = 'todos';
+
+// PLANES SUSCRIPCION CUSTOM
+const PLANES_KEY='sr_custom_planes';
+const DEFAULT_PLANES=['Convenio mensual','2 canciones/mes','Ilimitado','Personalizado'];
+function getPlanes(){
+  let custom=[];
+  try{custom=JSON.parse(localStorage.getItem(PLANES_KEY)||'[]');}catch(e){}
+  return [...DEFAULT_PLANES,...custom.filter(p=>!DEFAULT_PLANES.includes(p))];
+}
+function saveCustomPlanes(list){
+  localStorage.setItem(PLANES_KEY,JSON.stringify(list.filter(p=>!DEFAULT_PLANES.includes(p))));
+}
+function populatePlanSelect(currentVal){
+  const sel=document.getElementById('suscPlan');if(!sel)return;
+  const planes=getPlanes();
+  const cur=currentVal!==undefined?currentVal:sel.value;
+  sel.innerHTML=planes.map(p=>`<option value="${p}">${p}</option>`).join('');
+  if(cur) sel.value=cur;
+}
+function abrirAddPlan(){
+  document.getElementById('newPlanNombre').value='';
+  const custom=getPlanes().filter(p=>!DEFAULT_PLANES.includes(p));
+  const wrap=document.getElementById('planTagsWrap');
+  if(wrap) wrap.innerHTML=custom.length
+    ?'<div style="font-family:DM Mono,monospace;font-size:.55rem;color:var(--muted2);margin-bottom:.3rem;">// Planes personalizados (click para eliminar)</div>'+
+      custom.map(p=>`<span class="personal-tag" onclick="eliminarPlan('${p}')">${p} ✕</span>`).join('')
+    :'';
+  openModal('modalAddPlan');
+  setTimeout(()=>document.getElementById('newPlanNombre').focus(),100);
+}
+function guardarNuevoPlan(){
+  const nombre=document.getElementById('newPlanNombre').value.trim();
+  if(!nombre){toast('Escribe un nombre','error');return;}
+  const planes=getPlanes();
+  if(planes.map(p=>p.toLowerCase()).includes(nombre.toLowerCase())){toast('Ya existe','error');return;}
+  saveCustomPlanes([...planes,nombre]);
+  populatePlanSelect(nombre);
+  closeModal('modalAddPlan');
+  toast(`✓ Plan "${nombre}" creado`,'success');
+}
+function eliminarPlan(nombre){
+  const planes=getPlanes().filter(p=>p!==nombre);
+  saveCustomPlanes(planes);
+  populatePlanSelect();
+  abrirAddPlan();
+  toast(`✓ "${nombre}" eliminado`,'success');
+}
 
 // CATEGORÍAS CUSTOM (guardadas en localStorage)
 const CATS_KEY='sr_custom_cats';
@@ -1898,7 +1974,14 @@ function renderArtistas(){
     const frecLabel=ltv.frecMeses===null?'—':ltv.frecMeses<=1.5?'Mensual':ltv.frecMeses<=2.5?'Bimestral':ltv.frecMeses<=6?`c/${Math.round(ltv.frecMeses)} meses`:'Esporádico';
 
     return`<div class="artist-card">
-      <div class="artist-header" style="cursor:none" onclick="openArtistPanel(${a._rowNumber})">
+      <div style="display:flex;justify-content:space-between;align-items:center;gap:.4rem;margin-bottom:.6rem;">
+        <div style="font-family:DM Mono,monospace;font-size:.52rem;color:var(--muted2);letter-spacing:.06em;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1">${a['CodigoAcceso']||''}</div>
+        <div style="display:flex;gap:.3rem;flex-shrink:0;">
+          <button class="btn-xs btn-xs-edit" onclick="editArtista(${a._rowNumber})" style="padding:.25rem .5rem;font-size:.55rem;">Editar</button>
+          <button class="btn-xs btn-xs-del" onclick="confirmDelete('artista',${a._rowNumber},'${(a['AKA']||a['Nombre']||'').replace(/'/g,"\\'")}');" style="padding:.25rem .5rem;font-size:.55rem;">✕</button>
+        </div>
+      </div>
+      <div class="artist-header" style="cursor:none;margin-bottom:.7rem;" onclick="openArtistPanel(${a._rowNumber})">
         <div class="artist-avatar">${imgSrc?`<img src="${imgSrc}" onerror="this.parentElement.textContent='${ini}'">`:'<span>'+ini+'</span>'}</div>
         <div style="flex:1;min-width:0;">
           <div class="artist-name">${a['AKA']||a['Nombre']||'—'}</div>
@@ -1906,7 +1989,7 @@ function renderArtistas(){
           ${cat?`<div style="font-family:DM Mono,monospace;font-size:.55rem;letter-spacing:.1em;color:${catColor};margin-top:.15rem;">${cat.toUpperCase()}</div>`:''}
         </div>
       </div>
-      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:1px;background:var(--border);border:1px solid var(--border);margin:.8rem 0;">
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:1px;background:var(--border);border:1px solid var(--border);margin:.4rem 0 .6rem;" onclick="openArtistPanel(${a._rowNumber})" style="cursor:none;">
         <div style="background:var(--surface2);padding:.5rem .4rem;text-align:center;">
           <div style="font-family:DM Mono,monospace;font-size:.48rem;color:var(--muted2);letter-spacing:.08em;text-transform:uppercase;margin-bottom:.1rem;">LTV</div>
           <div style="font-family:Bebas Neue,sans-serif;font-size:.95rem;color:${ltvColor}">$${ltv.cobrado>=1000?Math.round(ltv.cobrado/1000)+'k':ltv.cobrado.toLocaleString()}</div>
@@ -1924,11 +2007,6 @@ function renderArtistas(){
         ${ltv.proyActivos>0?`<div style="color:var(--yellow)">● ${ltv.proyActivos} en curso</div>`:''}
         ${ltv.pendiente>0?`<div style="color:var(--red)">! $${ltv.pendiente.toLocaleString()} pendiente</div>`:''}
         ${isConvenio&&precioConvenio?`<div style="color:var(--green)">✓ Convenio ${precioConvenio}</div>`:''}
-      </div>
-      <div class="artist-actions">
-        <button class="btn-xs" style="background:rgba(201,168,76,.1);color:var(--gold);flex:1" onclick="openArtistPanel(${a._rowNumber})">Ver historial</button>
-        <button class="btn-xs btn-xs-edit" onclick="editArtista(${a._rowNumber})">Editar</button>
-        <button class="btn-xs btn-xs-del" onclick="confirmDelete('artista',${a._rowNumber},'${(a['AKA']||a['Nombre']||'').replace(/'/g,"\\'")}')">✕</button>
       </div>
     </div>`;
   }
@@ -2476,7 +2554,18 @@ function renderCursosAdmin(){
     if(tipo==='User')return'<span class="badge badge-active">Miembros</span>';
     return'<span class="badge badge-paid">Estándar</span>';
   };
-  const rows=list.map(c=>{
+
+  // Agrupar por nivel con divisores
+  const NIVEL_ORDER=[{key:'Estándar',label:'// Gratis — todos los artistas',color:'var(--green)'},{key:'User',label:'// Miembros — Core y Pro',color:'var(--purple-light)'},{key:'Pro',label:'// Pro — acceso exclusivo',color:'var(--yellow)'}];
+  let html='';
+  NIVEL_ORDER.forEach(({key,label,color})=>{
+    const grupo=list.filter(c=>(c['TipoCurso']||'Estándar')===key);
+    if(!grupo.length) return;
+    html+=`<div style="display:flex;align-items:center;gap:1rem;margin:1.5rem 0 .6rem;${key!=='Estándar'?'padding-top:.8rem;border-top:1px solid var(--border);':''}">
+      <span style="font-family:DM Mono,monospace;font-size:.58rem;letter-spacing:.18em;text-transform:uppercase;color:${color};">${label}</span>
+      <span style="font-family:DM Mono,monospace;font-size:.58rem;color:var(--muted2);opacity:.6">(${grupo.length})</span>
+    </div>`;
+    const rows=grupo.map(c=>{
     const tipoRec=c['TipoRecurso']||'Video';
     const icon=TIPO_RECURSO_ICON[tipoRec]||'📁';
     const url=c['Video']||'';
@@ -2498,8 +2587,8 @@ function renderCursosAdmin(){
         <button class="btn-xs btn-xs-del" onclick="confirmDelete('curso',${c._rowNumber},'${(c['Titulo']||'').replace(/'/g,"\\'")}')">Borrar</button>
       </div></td>
     </tr>`;
-  }).join('');
-  const mobRows=list.map(c=>{
+    }).join('');
+    const mobRows=grupo.map(c=>{
     const tipoRec=c['TipoRecurso']||'Video';
     const icon=TIPO_RECURSO_ICON[tipoRec]||'📁';
     const url=c['Video']||'';
@@ -2508,7 +2597,7 @@ function renderCursosAdmin(){
         <div style="font-size:1.2rem">${icon}</div>
         <div>
           <div class="mob-card-title">${c['Titulo']||'—'}</div>
-          <div style="font-family:DM Mono,monospace;font-size:.55rem;color:var(--muted2)">${tipoRec} · ${nivelBadge(c['TipoCurso']||'Estándar')}</div>
+          <div style="font-family:DM Mono,monospace;font-size:.55rem;color:var(--muted2)">${tipoRec}</div>
         </div>
       </div>
       ${c['Descripcion']?`<div style="font-family:DM Mono,monospace;font-size:.6rem;color:var(--muted);margin-bottom:.5rem">${c['Descripcion']}</div>`:''}
@@ -2518,8 +2607,10 @@ function renderCursosAdmin(){
         <button class="btn-xs btn-xs-del" onclick="confirmDelete('curso',${c._rowNumber},'${(c['Titulo']||'').replace(/'/g,"\\'")}')">Borrar</button>
       </div>
     </div>`;
-  }).join('');
-  container.innerHTML=`<table class="data-table"><thead><tr><th>Recurso</th><th>Nivel</th><th>Descripción</th><th>Acceso</th><th>Acciones</th></tr></thead><tbody>${rows}</tbody></table><div class="mob-card">${mobRows}</div>`;
+    }).join('');
+    html+=`<table class="data-table"><thead><tr><th>Recurso</th><th>Nivel</th><th>Descripción</th><th>Acceso</th><th>Acciones</th></tr></thead><tbody>${rows}</tbody></table><div class="mob-card">${mobRows}</div>`;
+  });
+  container.innerHTML=html||'<div class="empty-state">// No hay recursos</div>';
 }
 
 function editCurso(rowNum){
@@ -3314,7 +3405,7 @@ function abrirModalSusc(){
   document.getElementById('modalSuscTitle').textContent='NUEVA SUSCRIPCIÓN';
   document.getElementById('suscRowNum').value='';
   ['suscMonto','suscNotas'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
-  document.getElementById('suscPlan').value='Básico';
+  populatePlanSelect('Convenio mensual');
   document.getElementById('suscEstado').value='Activa';
   // Fecha inicio = hoy, renovación = mes siguiente
   const hoy=new Date();
@@ -3333,7 +3424,7 @@ function editSusc(rowNum){
   document.getElementById('modalSuscTitle').textContent='EDITAR SUSCRIPCIÓN';
   document.getElementById('suscRowNum').value=rowNum;
   document.getElementById('suscArtista').value=s['ArtistaID']||'';
-  document.getElementById('suscPlan').value=s['Plan']||'Básico';
+  populatePlanSelect(s['Plan']||'Convenio mensual');
   document.getElementById('suscMonto').value=s['Monto']||'';
   document.getElementById('suscEstado').value=s['Estado']||'Activa';
   document.getElementById('suscFechaInicio').value=s['FechaInicio']||'';
@@ -3932,8 +4023,12 @@ function cotizActualizar(){
     {id:'csMezcla',price:'cpMezcla',label:'Mezcla'},
     {id:'csMaster',price:'cpMaster',label:'Masterización'},
     {id:'csBeat',price:'cpBeat',label:'Beat por encargo'},
-    {id:'csPaquete',price:'cpPaquete',label:'Paquete Express (Grab + Mezcla + Master)'},
-    {id:'csExtra',price:'cpExtra',label:'Extra / Otro'},
+    {id:'csVideo',price:'cpVideo',label:'Video'},
+    {id:'csPaqueteExpress',price:'cpPaqueteExpress',label:'Paquete Express (Grab + Mezcla + Master)'},
+    {id:'csPaqueteExpressVideo',price:'cpPaqueteExpressVideo',label:'Paquete Express + Video'},
+    {id:'csPaquetePrivada',price:'cpPaquetePrivada',label:'Paquete Esencia Privada'},
+    {id:'csPaqueteElevada',price:'cpPaqueteElevada',label:'Paquete Experiencia Elevada'},
+    {id:'csExtra',price:'cpExtra',label:'Extra'},
   ];
 
   // Artista info
@@ -4026,6 +4121,7 @@ const PIPELINE_COLS=[
   {key:'Cotizó',label:'Cotizó',color:'var(--yellow)',eyebrow:'// Propuesta enviada'},
   {key:'Seguimiento',label:'Seguimiento',color:'var(--purple-light)',eyebrow:'// En negociación'},
   {key:'Cerrado',label:'Cerró',color:'var(--green)',eyebrow:'// Cliente ganado'},
+  {key:'No compró',label:'No compró',color:'var(--red)',eyebrow:'// Nunca cerró'},
 ];
 
 function renderPipeline(){
@@ -4038,7 +4134,8 @@ function renderPipeline(){
     <div class="stat-card"><div class="stat-label">En pipeline</div><div class="stat-value sv-purple">${prospectos.length}</div></div>
     <div class="stat-card"><div class="stat-label">Cotizados</div><div class="stat-value sv-yellow">${prospectos.filter(a=>a['EtapaPipeline']==='Cotizó').length}</div></div>
     <div class="stat-card"><div class="stat-label">En seguimiento</div><div class="stat-value sv-purple">${prospectos.filter(a=>a['EtapaPipeline']==='Seguimiento').length}</div></div>
-    <div class="stat-card"><div class="stat-label">Cerrados</div><div class="stat-value sv-green">${prospectos.filter(a=>a['EtapaPipeline']==='Cerrado').length}</div></div>`;
+    <div class="stat-card"><div class="stat-label">Cerrados</div><div class="stat-value sv-green">${prospectos.filter(a=>a['EtapaPipeline']==='Cerrado').length}</div></div>
+    <div class="stat-card"><div class="stat-label">No compraron</div><div class="stat-value sv-red">${prospectos.filter(a=>a['EtapaPipeline']==='No compró').length}</div></div>`;
 
   function card(a){
     const ini=(a['AKA']||a['Nombre']||'?').split(' ').map(w=>w[0]).join('').slice(0,2).toUpperCase();
