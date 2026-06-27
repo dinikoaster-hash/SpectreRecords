@@ -314,6 +314,77 @@ body::before{content:'';position:fixed;inset:0;background-image:url("data:image/
   .notif-drawer{width:min(360px,100vw);}
   .artist-panel{width:min(480px,100vw);}
 }
+/* ── CALENDARIO ── */
+.cal-nav{display:flex;align-items:center;gap:1rem;margin-bottom:1.5rem;flex-wrap:wrap;}
+.cal-nav-title{font-family:Bebas Neue,sans-serif;font-size:1.6rem;letter-spacing:.06em;flex:1;}
+.cal-nav-btn{font-family:DM Mono,monospace;font-size:.65rem;letter-spacing:.1em;padding:.5rem 1rem;background:var(--surface2);border:1px solid var(--border2);color:var(--muted);cursor:none;transition:all .2s;}
+.cal-nav-btn:hover{border-color:var(--gold);color:var(--gold);}
+.cal-legend{display:flex;gap:1rem;flex-wrap:wrap;margin-bottom:1rem;}
+.cal-legend-item{display:flex;align-items:center;gap:.4rem;font-family:DM Mono,monospace;font-size:.58rem;color:var(--muted);}
+.cal-legend-dot{width:8px;height:8px;border-radius:50%;}
+.cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:1px;background:var(--border);border:1px solid var(--border);}
+.cal-day-header{background:var(--surface);padding:.5rem;font-family:DM Mono,monospace;font-size:.55rem;letter-spacing:.12em;text-transform:uppercase;color:var(--muted2);text-align:center;}
+.cal-day{background:var(--surface);min-height:90px;padding:.4rem;position:relative;transition:background .15s;display:flex;flex-direction:column;gap:2px;}
+.cal-day:hover{background:var(--surface2);}
+.cal-day.today{background:var(--surface3);box-shadow:inset 0 0 0 1px var(--gold);}
+.cal-day.today .cal-day-num{color:var(--gold);font-weight:700;}
+.cal-day.other-month{opacity:.3;}
+.cal-day-num{font-family:DM Mono,monospace;font-size:.65rem;color:var(--muted);margin-bottom:.2rem;line-height:1;}
+.cal-event{font-family:DM Mono,monospace;font-size:.52rem;padding:.15rem .35rem;line-height:1.3;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.cal-event-entrega{background:rgba(248,113,113,.15);color:var(--red);border-left:2px solid var(--red);}
+.cal-event-inicio{background:rgba(168,85,247,.12);color:var(--purple-light);border-left:2px solid var(--purple-light);}
+.cal-event-susc{background:rgba(52,211,153,.12);color:var(--green);border-left:2px solid var(--green);}
+.cal-event-tarea{background:rgba(251,191,36,.1);color:var(--yellow);border-left:2px solid var(--yellow);}
+.cal-more{font-family:DM Mono,monospace;font-size:.5rem;color:var(--muted2);padding:.1rem .3rem;}
+/* Mobile: hide event labels, show dot per day */
+@media(max-width:700px){
+  .cal-day{min-height:44px;padding:.2rem;}
+  .cal-day-num{font-size:.58rem;}
+  .cal-event{display:none;}
+  .cal-day.has-events .cal-day-num::after{content:' •';color:var(--purple-light);}
+}
+
+/* ── COTIZADOR ── */
+.cotiz-wrap{display:grid;grid-template-columns:1.1fr 1fr;gap:1.5rem;align-items:start;}
+.cotiz-panel{background:var(--surface);border:1px solid var(--border);padding:1.5rem;}
+.cotiz-panel-title{font-family:DM Mono,monospace;font-size:.58rem;letter-spacing:.18em;text-transform:uppercase;color:var(--muted2);margin-bottom:1.2rem;}
+.cotiz-row{display:flex;align-items:center;gap:.6rem;padding:.55rem 0;border-bottom:1px solid var(--border);}
+.cotiz-row:last-child{border-bottom:none;}
+.cotiz-check{width:15px;height:15px;accent-color:var(--purple);cursor:none;flex-shrink:0;}
+.cotiz-label{font-size:.8rem;flex:1;}
+.cotiz-price-input{background:var(--surface2);border:1px solid var(--border2);color:var(--text);font-family:DM Mono,monospace;font-size:.78rem;padding:.38rem .55rem;width:80px;text-align:right;outline:none;}
+.cotiz-price-input:focus{border-color:var(--gold);}
+.cotiz-total-box{background:var(--surface3);border:1px solid var(--border2);padding:1.2rem 1.5rem;margin-top:1.2rem;}
+.cotiz-total-label{font-family:DM Mono,monospace;font-size:.55rem;letter-spacing:.15em;text-transform:uppercase;color:var(--muted);margin-bottom:.3rem;}
+.cotiz-total-val{font-family:Bebas Neue,sans-serif;font-size:2.4rem;color:var(--gold);}
+.cotiz-total-desc{font-family:DM Mono,monospace;font-size:.6rem;color:var(--muted);margin-top:.4rem;line-height:1.6;}
+.cotiz-result-box{background:var(--surface2);border:1px solid var(--border);padding:1.2rem;font-family:DM Mono,monospace;font-size:.68rem;color:var(--text);line-height:1.9;white-space:pre-wrap;word-break:break-word;}
+.cotiz-desc-input{width:100%;background:var(--surface2);border:1px solid var(--border2);color:var(--text);font-family:DM Mono,monospace;font-size:.72rem;padding:.6rem;outline:none;resize:vertical;min-height:52px;}
+.cotiz-tag{display:inline-block;font-family:DM Mono,monospace;font-size:.55rem;padding:.2rem .5rem;background:rgba(168,85,247,.1);border:1px solid rgba(168,85,247,.2);color:var(--purple-light);margin:.15rem;}
+@media(max-width:800px){.cotiz-wrap{grid-template-columns:1fr;}}
+
+/* ── PIPELINE ── */
+.pipeline-board{display:grid;grid-template-columns:repeat(4,1fr);gap:1px;background:var(--border);border:1px solid var(--border);min-height:400px;}
+.pipeline-col{background:var(--surface);display:flex;flex-direction:column;}
+.pipeline-col-header{padding:.9rem 1rem;border-bottom:1px solid var(--border);position:sticky;top:0;background:var(--surface);z-index:1;}
+.pipeline-col-title{font-family:DM Mono,monospace;font-size:.6rem;letter-spacing:.15em;text-transform:uppercase;margin-bottom:.2rem;}
+.pipeline-col-count{font-family:Bebas Neue,sans-serif;font-size:1.4rem;line-height:1;}
+.pipeline-col-body{flex:1;padding:.5rem;display:flex;flex-direction:column;gap:.5rem;min-height:120px;}
+.pipeline-card{background:var(--surface2);border:1px solid var(--border2);padding:.8rem;transition:border-color .2s;cursor:none;}
+.pipeline-card:hover{border-color:var(--purple);}
+.pipeline-card-name{font-weight:700;font-size:.85rem;margin-bottom:.25rem;}
+.pipeline-card-meta{font-family:DM Mono,monospace;font-size:.58rem;color:var(--muted);line-height:1.7;}
+.pipeline-card-actions{display:flex;gap:.3rem;margin-top:.5rem;flex-wrap:wrap;}
+.pipeline-card-nota{font-family:DM Mono,monospace;font-size:.6rem;color:var(--muted);margin-top:.3rem;padding:.4rem .5rem;background:var(--surface);border-left:2px solid var(--border2);line-height:1.5;}
+@media(max-width:900px){
+  .pipeline-board{grid-template-columns:1fr 1fr;}
+  .pipeline-col{min-height:200px;}
+}
+@media(max-width:540px){
+  .pipeline-board{grid-template-columns:1fr;}
+  .cal-day{min-height:38px;}
+}
+
 .hamburger{display:none;position:fixed;top:.9rem;left:1rem;z-index:200;background:var(--surface);border:1px solid var(--border2);color:var(--gold);font-size:1.1rem;width:36px;height:36px;align-items:center;justify-content:center;cursor:none;transition:background .2s;}
 .hamburger:hover{background:var(--surface2);}
 .sidebar-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.6);backdrop-filter:blur(4px);z-index:99;}
@@ -457,6 +528,15 @@ body::before{content:'';position:fixed;inset:0;background-image:url("data:image/
         <button class="nav-item" onclick="showPage('suscripciones',this)" id="navSuscripciones">
           <span class="nav-icon">↻</span><span>Suscripciones</span>
           <span class="badge" id="badgeSusc" style="display:none"></span>
+        </button>
+        <button class="nav-item" onclick="showPage('prospectos',this)" id="navProspectos">
+          <span class="nav-icon">◈</span><span>Pipeline</span>
+        </button>
+        <button class="nav-item" onclick="showPage('calendario',this)" id="navCalendario">
+          <span class="nav-icon">◫</span><span>Calendario</span>
+        </button>
+        <button class="nav-item" onclick="showPage('cotizador',this)" id="navCotizador">
+          <span class="nav-icon">$</span><span>Cotizador</span>
         </button>
         <button class="nav-item" onclick="showPage('tareas',this)" id="navTareas">
           <span class="nav-icon">&#x2713;</span><span>Tareas</span>
@@ -694,6 +774,95 @@ body::before{content:'';position:fixed;inset:0;background-image:url("data:image/
         <div id="catalogoContainer"><div class="loading-state"><div class="spinner"></div>Cargando cat&#xE1;logo...</div></div>
         <!-- Mobile cards -->
         <div class="beat-cards-mobile" id="catalogoMobile"></div>
+      </div>
+
+      <!-- CALENDARIO -->
+      <div class="page" id="page-calendario">
+        <div class="page-header">
+          <div><div class="page-eyebrow">// Agenda</div><div class="page-title">CALENDARIO</div></div>
+        </div>
+        <div class="cal-nav">
+          <button class="cal-nav-btn" onclick="calCambiarMes(-1)">&#8592; Anterior</button>
+          <div class="cal-nav-title" id="calTitulo">—</div>
+          <button class="cal-nav-btn" onclick="calHoy()">Hoy</button>
+          <button class="cal-nav-btn" onclick="calCambiarMes(1)">Siguiente &#8594;</button>
+        </div>
+        <div class="cal-legend">
+          <div class="cal-legend-item"><div class="cal-legend-dot" style="background:var(--purple-light)"></div>Inicio proyecto</div>
+          <div class="cal-legend-item"><div class="cal-legend-dot" style="background:var(--red)"></div>Entrega</div>
+          <div class="cal-legend-item"><div class="cal-legend-dot" style="background:var(--green)"></div>Renovación suscripción</div>
+          <div class="cal-legend-item"><div class="cal-legend-dot" style="background:var(--yellow)"></div>Tarea pendiente</div>
+        </div>
+        <div id="calContainer"></div>
+      </div>
+
+      <!-- COTIZADOR -->
+      <div class="page" id="page-cotizador">
+        <div class="page-header">
+          <div><div class="page-eyebrow">// Presupuesto</div><div class="page-title">COTIZADOR</div></div>
+        </div>
+        <div class="cotiz-wrap">
+          <!-- Panel izquierdo: servicios -->
+          <div>
+            <div class="cotiz-panel">
+              <div class="cotiz-panel-title">// Artista</div>
+              <select class="form-input" id="cotizArtista" onchange="cotizActualizar()" style="margin-bottom:1rem;">
+                <option value="">Seleccionar artista...</option>
+              </select>
+              <div id="cotizArtistaInfo" style="font-family:DM Mono,monospace;font-size:.62rem;color:var(--muted);line-height:1.7;margin-bottom:.5rem;display:none;"></div>
+            </div>
+            <div class="cotiz-panel" style="margin-top:1px;">
+              <div class="cotiz-panel-title">// Servicios</div>
+              <div id="cotizServicios">
+                <div class="cotiz-row"><input type="checkbox" class="cotiz-check" id="csGrab" onchange="cotizActualizar()"><label class="cotiz-label" for="csGrab">Grabación</label><input class="cotiz-price-input" id="cpGrab" type="number" value="300" oninput="cotizActualizar()"></div>
+                <div class="cotiz-row"><input type="checkbox" class="cotiz-check" id="csMezcla" onchange="cotizActualizar()"><label class="cotiz-label" for="csMezcla">Mezcla</label><input class="cotiz-price-input" id="cpMezcla" type="number" value="300" oninput="cotizActualizar()"></div>
+                <div class="cotiz-row"><input type="checkbox" class="cotiz-check" id="csMaster" onchange="cotizActualizar()"><label class="cotiz-label" for="csMaster">Masterización</label><input class="cotiz-price-input" id="cpMaster" type="number" value="200" oninput="cotizActualizar()"></div>
+                <div class="cotiz-row"><input type="checkbox" class="cotiz-check" id="csBeat" onchange="cotizActualizar()"><label class="cotiz-label" for="csBeat">Beat por encargo</label><input class="cotiz-price-input" id="cpBeat" type="number" value="500" oninput="cotizActualizar()"></div>
+                <div class="cotiz-row"><input type="checkbox" class="cotiz-check" id="csPaquete" onchange="cotizActualizar()"><label class="cotiz-label" for="csPaquete">Paquete Express<br><span style="font-family:DM Mono,monospace;font-size:.58rem;color:var(--muted2)">Grab + Mezcla + Master</span></label><input class="cotiz-price-input" id="cpPaquete" type="number" value="800" oninput="cotizActualizar()"></div>
+                <div class="cotiz-row"><input type="checkbox" class="cotiz-check" id="csExtra" onchange="cotizActualizar()"><label class="cotiz-label" for="csExtra">Extra / Otro</label><input class="cotiz-price-input" id="cpExtra" type="number" value="0" oninput="cotizActualizar()"></div>
+              </div>
+            </div>
+            <div class="cotiz-panel" style="margin-top:1px;">
+              <div class="cotiz-panel-title">// Notas para el cliente (opcional)</div>
+              <textarea class="cotiz-desc-input" id="cotizNotas" placeholder="ej: incluye 2 revisiones, entrega en 3 días..." oninput="cotizActualizar()"></textarea>
+            </div>
+          </div>
+          <!-- Panel derecho: resultado -->
+          <div>
+            <div class="cotiz-panel">
+              <div class="cotiz-panel-title">// Resumen</div>
+              <div class="cotiz-total-box">
+                <div class="cotiz-total-label">Total estimado</div>
+                <div class="cotiz-total-val" id="cotizTotal">$0</div>
+                <div class="cotiz-total-desc" id="cotizTotalDesc"></div>
+              </div>
+              <div style="margin-top:1rem;">
+                <div class="cotiz-panel-title">// Mensaje generado</div>
+                <div class="cotiz-result-box" id="cotizMensaje">// Selecciona servicios para generar el mensaje...</div>
+              </div>
+              <div style="display:flex;gap:.6rem;margin-top:1rem;flex-wrap:wrap;">
+                <button class="btn btn-green" onclick="cotizWhatsApp()" style="flex:1">&#128205; Enviar por WhatsApp</button>
+                <button class="btn btn-ghost" onclick="cotizCopiar()" style="font-size:.65rem">Copiar</button>
+              </div>
+            </div>
+            <div class="cotiz-panel" style="margin-top:1px;" id="cotizHistorialBox" style="display:none">
+              <div class="cotiz-panel-title">// Historial del artista</div>
+              <div id="cotizHistorial" style="font-family:DM Mono,monospace;font-size:.62rem;color:var(--muted);line-height:2;"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- PIPELINE DE PROSPECTOS -->
+      <div class="page" id="page-prospectos">
+        <div class="page-header">
+          <div><div class="page-eyebrow">// CRM</div><div class="page-title">PIPELINE</div></div>
+          <div style="display:flex;gap:.6rem">
+            <button class="btn btn-ghost" onclick="loadAdmin()" style="font-size:.65rem;padding:.6rem 1.2rem;">&#x27F3; Actualizar</button>
+          </div>
+        </div>
+        <div id="pipelineStats" class="stats-grid" style="margin-bottom:1.5rem;"></div>
+        <div id="pipelineBoard"></div>
       </div>
 
       <!-- SUSCRIPCIONES -->
@@ -1390,7 +1559,7 @@ async function loadAdmin(delay=0){
   renderDashboard();renderArtistas();
   if(userRole==='darol'){renderProyectosDarol();renderDarolDashboard();}else renderProyectos();
   renderFinanzas();renderCursosAdmin();renderCatalogo();renderTareas();renderSuscripciones();
-  renderNotificaciones();
+  renderNotificaciones();renderPipeline();
   populateArtistSelects();populateProyectoSelects();populateYearFilters();updateBadges();
 }
 
@@ -3501,6 +3670,274 @@ function renderDarolDashboard(){
     :'<div class="empty-state">// Todo al corriente — sin cobros pendientes 🎉</div>';
 }
 
+// ════════════════════════════════════════════
+// CALENDARIO
+// ════════════════════════════════════════════
+let calYear=new Date().getFullYear(), calMonth=new Date().getMonth();
+const MESES_FULL=['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
+const DIAS=['Lun','Mar','Mié','Jue','Vie','Sáb','Dom'];
+
+function renderCalendario(){
+  document.getElementById('calTitulo').textContent=`${MESES_FULL[calMonth]} ${calYear}`;
+  const hoy=new Date(); hoy.setHours(0,0,0,0);
+  const primero=new Date(calYear,calMonth,1);
+  const ultimo=new Date(calYear,calMonth+1,0);
+  // Lunes=0 … Domingo=6
+  let startDow=(primero.getDay()+6)%7;
+  const totalCeldas=Math.ceil((startDow+ultimo.getDate())/7)*7;
+
+  // Recolectar eventos del mes
+  const eventos={};
+  function addEv(fecha,tipo,texto){
+    const d=parseFecha(fecha);
+    if(!d) return;
+    if(d.getFullYear()!==calYear||d.getMonth()!==calMonth) return;
+    const k=d.getDate();
+    if(!eventos[k]) eventos[k]=[];
+    eventos[k].push({tipo,texto});
+  }
+
+  allProyectos.forEach(p=>{
+    const a=getArtista(p['Cliente']);
+    const nombre=a?a['AKA']||a['Nombre']:p['Cliente']||'—';
+    const proj=p['Nombre del proyecto']||'—';
+    addEv(p['Fecha inicio'],'inicio',`${nombre} — ${proj}`);
+    if(p['Fecha entrega']&&!/finalizado|cancelado/i.test(p['Estado proyecto']||''))
+      addEv(p['Fecha entrega'],'entrega',`↳ Entrega ${proj}`);
+  });
+  allSuscripciones.filter(s=>s['Estado']==='Activa').forEach(s=>{
+    const a=getArtista(s['ArtistaID']);
+    const nombre=a?a['AKA']||a['Nombre']:s['ArtistaID']||'—';
+    addEv(s['FechaRenovacion'],'susc',`⟳ ${nombre} susc.`);
+  });
+  allTareas.filter(t=>t['Estado']==='Pendiente'&&t['FechaVence']).forEach(t=>{
+    addEv(t['FechaVence'],'tarea',t['Titulo']||'Tarea');
+  });
+
+  const TIPO_CLASS={inicio:'cal-event-inicio',entrega:'cal-event-entrega',susc:'cal-event-susc',tarea:'cal-event-tarea'};
+
+  let html=`<div class="cal-grid">`;
+  DIAS.forEach(d=>html+=`<div class="cal-day-header">${d}</div>`);
+  for(let i=0;i<totalCeldas;i++){
+    const dayNum=i-startDow+1;
+    const isThisMonth=dayNum>=1&&dayNum<=ultimo.getDate();
+    const isToday=isThisMonth&&dayNum===hoy.getDate()&&calMonth===hoy.getMonth()&&calYear===hoy.getFullYear();
+    const evs=isThisMonth?eventos[dayNum]||[]:[];
+    const hasEv=evs.length>0;
+    html+=`<div class="cal-day${isThisMonth?'':' other-month'}${isToday?' today':''}${hasEv?' has-events':''}">`;
+    html+=`<div class="cal-day-num">${isThisMonth?dayNum:''}</div>`;
+    evs.slice(0,3).forEach(e=>{
+      html+=`<div class="cal-event ${TIPO_CLASS[e.tipo]||''}" title="${e.texto}">${e.texto}</div>`;
+    });
+    if(evs.length>3) html+=`<div class="cal-more">+${evs.length-3} más</div>`;
+    html+=`</div>`;
+  }
+  html+=`</div>`;
+  document.getElementById('calContainer').innerHTML=html;
+}
+
+function calCambiarMes(delta){
+  calMonth+=delta;
+  if(calMonth>11){calMonth=0;calYear++;}
+  if(calMonth<0){calMonth=11;calYear--;}
+  renderCalendario();
+}
+function calHoy(){
+  const hoy=new Date();
+  calYear=hoy.getFullYear();calMonth=hoy.getMonth();
+  renderCalendario();
+}
+
+// ════════════════════════════════════════════
+// COTIZADOR
+// ════════════════════════════════════════════
+function cotizInit(){
+  const sel=document.getElementById('cotizArtista');if(!sel) return;
+  sel.innerHTML='<option value="">Seleccionar artista...</option>'+
+    allArtistas.map(a=>`<option value="${a['ArtistaID']}">${a['AKA']||a['Nombre']}</option>`).join('');
+  cotizActualizar();
+}
+
+function cotizActualizar(){
+  const SERVICIOS=[
+    {id:'csGrab',price:'cpGrab',label:'Grabación'},
+    {id:'csMezcla',price:'cpMezcla',label:'Mezcla'},
+    {id:'csMaster',price:'cpMaster',label:'Masterización'},
+    {id:'csBeat',price:'cpBeat',label:'Beat por encargo'},
+    {id:'csPaquete',price:'cpPaquete',label:'Paquete Express (Grab + Mezcla + Master)'},
+    {id:'csExtra',price:'cpExtra',label:'Extra / Otro'},
+  ];
+
+  // Artista info
+  const artId=document.getElementById('cotizArtista')?.value||'';
+  const artista=artId?allArtistas.find(a=>a['ArtistaID']===artId):null;
+  const infoEl=document.getElementById('cotizArtistaInfo');
+
+  if(artista){
+    const ids=[artista['ArtistaID'],artista['AKA'],artista['Nombre']].filter(Boolean);
+    const proy=allProyectos.filter(p=>ids.includes(p['Cliente']));
+    const cobrado=allFinanzas.filter(f=>ids.includes(f['Cliente'])&&(f['Tipo']||'').toLowerCase()==='ingreso'&&/pagado/i.test(f['Estado']||'')).reduce((s,f)=>s+(parseFloat(f['Monto'])||0),0);
+    const cat=artista['Categoria']||'';
+    const isConv=cat==='Convenio'||cat==='Recurrente';
+    infoEl.style.display='block';
+    infoEl.innerHTML=`<span style="color:var(--purple-light)">// ${artista['AKA']||artista['Nombre']}</span><br>`+
+      `Proyectos: ${proy.length} · LTV: $${cobrado.toLocaleString()}<br>`+
+      (cat?`Categoría: <span style="color:var(--yellow)">${cat}</span><br>`:'') +
+      (isConv&&artista['PrecioConvenio']?`<span style="color:var(--green)">Convenio: $${parseFloat(artista['PrecioConvenio']).toLocaleString()} MXN</span>`:'');
+
+    // Historial box
+    const histBox=document.getElementById('cotizHistorialBox');
+    const histEl=document.getElementById('cotizHistorial');
+    if(histBox&&histEl){
+      histBox.style.display='';
+      const ultProy=proy.slice(-5).reverse();
+      histEl.innerHTML=ultProy.length
+        ?ultProy.map(p=>`<div style="display:flex;justify-content:space-between;padding:.3rem 0;border-bottom:1px solid var(--border)"><span>${p['Nombre del proyecto']||'—'}</span><span style="color:var(--purple-light)">${p['Tipo de servicio']||''}</span></div>`).join('')
+        :'Sin proyectos previos.';
+    }
+  } else {
+    infoEl.style.display='none';
+    const histBox=document.getElementById('cotizHistorialBox');
+    if(histBox) histBox.style.display='none';
+  }
+
+  // Calcular total
+  let total=0;const lineas=[];
+  SERVICIOS.forEach(s=>{
+    const chk=document.getElementById(s.id);
+    const priceEl=document.getElementById(s.price);
+    if(chk?.checked&&priceEl){
+      const val=parseFloat(priceEl.value)||0;
+      if(val>0){total+=val;lineas.push(`• ${s.label}: $${val.toLocaleString()}`);}
+    }
+  });
+
+  document.getElementById('cotizTotal').textContent=`$${total.toLocaleString()} MXN`;
+
+  // Convenio badge
+  const isConvenio=artista&&(artista['Categoria']==='Convenio'||artista['Categoria']==='Recurrente');
+  const precioConv=artista?parseFloat(artista['PrecioConvenio'])||0:0;
+  let descEl='';
+  if(isConvenio&&precioConv&&total>precioConv){
+    descEl=`<span style="color:var(--green)">✓ Precio convenio aplicable: $${precioConv.toLocaleString()} MXN</span>`;
+  }
+  document.getElementById('cotizTotalDesc').innerHTML=descEl;
+
+  // Mensaje WhatsApp
+  const nombreArt=artista?artista['AKA']||artista['Nombre']:'';
+  const notas=document.getElementById('cotizNotas')?.value.trim()||'';
+  const saludo=nombreArt?`Hola ${nombreArt} 👋\n\n`:'';
+  const msg=lineas.length
+    ?`${saludo}*Cotización Spectre Records*\n\n${lineas.join('\n')}\n\n*Total: $${total.toLocaleString()} MXN*${notas?'\n\n'+notas:''}`
+    :'// Selecciona servicios para generar el mensaje...';
+  document.getElementById('cotizMensaje').textContent=msg;
+}
+
+function cotizWhatsApp(){
+  const msg=document.getElementById('cotizMensaje').textContent;
+  if(msg.startsWith('//')) return toast('Selecciona al menos un servicio','error');
+  const artId=document.getElementById('cotizArtista')?.value||'';
+  const art=artId?allArtistas.find(a=>a['ArtistaID']===artId):null;
+  const tel=art?((art['Telefono']||'').replace(/\D/g,'')):'';
+  const url=tel
+    ?`https://wa.me/52${tel}?text=${encodeURIComponent(msg)}`
+    :`https://wa.me/?text=${encodeURIComponent(msg)}`;
+  window.open(url,'_blank');
+}
+
+function cotizCopiar(){
+  const msg=document.getElementById('cotizMensaje').textContent;
+  navigator.clipboard.writeText(msg).then(()=>toast('✓ Copiado al portapapeles','success'));
+}
+
+// ════════════════════════════════════════════
+// PIPELINE DE PROSPECTOS
+// ════════════════════════════════════════════
+const PIPELINE_COLS=[
+  {key:'Contactó',label:'Contactó',color:'var(--muted)',eyebrow:'// Primer contacto'},
+  {key:'Cotizó',label:'Cotizó',color:'var(--yellow)',eyebrow:'// Propuesta enviada'},
+  {key:'Seguimiento',label:'Seguimiento',color:'var(--purple-light)',eyebrow:'// En negociación'},
+  {key:'Cerrado',label:'Cerró',color:'var(--green)',eyebrow:'// Cliente ganado'},
+];
+
+function renderPipeline(){
+  // Artistas prospecto + su etapa
+  const prospectos=allArtistas.filter(a=>a['Categoria']==='Prospecto'||a['EtapaPipeline']);
+  // Stats
+  const statsEl=document.getElementById('pipelineStats');
+  const perdidos=allArtistas.filter(a=>a['Categoria']==='Inactivo'&&a['EtapaPipeline']==='Perdido').length;
+  statsEl.innerHTML=`
+    <div class="stat-card"><div class="stat-label">En pipeline</div><div class="stat-value sv-purple">${prospectos.length}</div></div>
+    <div class="stat-card"><div class="stat-label">Cotizados</div><div class="stat-value sv-yellow">${prospectos.filter(a=>a['EtapaPipeline']==='Cotizó').length}</div></div>
+    <div class="stat-card"><div class="stat-label">En seguimiento</div><div class="stat-value sv-purple">${prospectos.filter(a=>a['EtapaPipeline']==='Seguimiento').length}</div></div>
+    <div class="stat-card"><div class="stat-label">Cerrados</div><div class="stat-value sv-green">${prospectos.filter(a=>a['EtapaPipeline']==='Cerrado').length}</div></div>`;
+
+  function card(a){
+    const ini=(a['AKA']||a['Nombre']||'?').split(' ').map(w=>w[0]).join('').slice(0,2).toUpperCase();
+    const imgSrc=a['Imagen']||'';
+    const etapa=a['EtapaPipeline']||'Contactó';
+    const otrasEtapas=PIPELINE_COLS.filter(c=>c.key!==etapa);
+    return`<div class="pipeline-card">
+      <div style="display:flex;align-items:center;gap:.5rem;margin-bottom:.4rem;">
+        <div class="artist-avatar" style="width:28px;height:28px;font-size:.7rem;flex-shrink:0">${imgSrc?`<img src="${imgSrc}" onerror="this.parentElement.textContent='${ini}'">`:'<span>'+ini+'</span>'}</div>
+        <div class="pipeline-card-name">${a['AKA']||a['Nombre']||'—'}</div>
+      </div>
+      <div class="pipeline-card-meta">
+        ${a['Telefono']?`📱 ${a['Telefono']}<br>`:''}
+        ${a['NotasPipeline']?`<div class="pipeline-card-nota">${a['NotasPipeline']}</div>`:''}
+      </div>
+      <div class="pipeline-card-actions">
+        ${otrasEtapas.map(e=>`<button class="btn-xs" style="background:rgba(168,85,247,.1);color:var(--muted);font-size:.5rem" onclick="moverPipeline(${a._rowNumber},'${e.key}')">→ ${e.label}</button>`).join('')}
+        <button class="btn-xs btn-xs-edit" onclick="editArtista(${a._rowNumber})" style="font-size:.5rem">Editar</button>
+        ${a['Telefono']?`<button class="btn-xs btn-xs-save" style="font-size:.5rem" onclick="window.open('https://wa.me/52${a['Telefono'].replace(/\D/g,'')}','_blank')">WA</button>`:''}
+      </div>
+    </div>`;
+  }
+
+  let html='<div class="pipeline-board">';
+  PIPELINE_COLS.forEach(col=>{
+    const grupo=prospectos.filter(a=>(a['EtapaPipeline']||'Contactó')===col.key);
+    html+=`<div class="pipeline-col">
+      <div class="pipeline-col-header">
+        <div class="pipeline-col-title" style="color:${col.color}">${col.eyebrow}</div>
+        <div class="pipeline-col-count" style="color:${col.color}">${col.label} <span style="font-size:.9rem;opacity:.6">(${grupo.length})</span></div>
+      </div>
+      <div class="pipeline-col-body">
+        ${grupo.length?grupo.map(card).join(''):`<div style="font-family:DM Mono,monospace;font-size:.6rem;color:var(--muted2);padding:1rem;text-align:center">// Vacío</div>`}
+      </div>
+    </div>`;
+  });
+  html+='</div>';
+
+  // Perdidos colapsados al final
+  const perdidosArr=allArtistas.filter(a=>a['EtapaPipeline']==='Perdido');
+  if(perdidosArr.length){
+    html+=`<div style="margin-top:1.5rem;border-top:1px solid var(--border);padding-top:1rem;">
+      <div style="font-family:DM Mono,monospace;font-size:.58rem;letter-spacing:.15em;color:var(--muted2);margin-bottom:.8rem;">// PERDIDOS (${perdidosArr.length})</div>
+      <div style="display:flex;flex-wrap:wrap;gap:.5rem;">
+        ${perdidosArr.map(a=>`<div style="background:var(--surface);border:1px solid var(--border);padding:.4rem .8rem;font-family:DM Mono,monospace;font-size:.6rem;color:var(--muted2);display:flex;align-items:center;gap:.5rem;">
+          ${a['AKA']||a['Nombre']||'—'}
+          <button class="btn-xs" style="background:rgba(52,211,153,.1);color:var(--green);font-size:.5rem;padding:.15rem .4rem" onclick="moverPipeline(${a._rowNumber},'Seguimiento')">Reactivar</button>
+        </div>`).join('')}
+      </div>
+    </div>`;
+  }
+
+  document.getElementById('pipelineBoard').innerHTML=html;
+}
+
+async function moverPipeline(rowNum,etapa){
+  const a=allArtistas.find(x=>x._rowNumber===rowNum);if(!a) return;
+  // Guardar EtapaPipeline (columna extra — usa NotasConvenio col o agrega col pipeline)
+  // Por ahora actualizamos el registro completo con etapa en campo EtapaPipeline (col 12)
+  const values=[a['ArtistaID']||'',a['Nombre']||'',a['AKA']||'',a['Telefono']||'',a['Correo']||'',
+    a['CodigoAcceso']||'',a['Tipo']||'',a['Imagen']||'',a['Categoria']||'',
+    a['PrecioConvenio']||'',a['NotasConvenio']||'',etapa];
+  const ok=await updateRow(SH.artistas,rowNum,values);
+  if(ok){toast(`→ Movido a ${etapa}`,'success');await loadAdmin(500);}
+  else toast('Error — activa OAuth primero','error');
+}
+
 function showPage(name,el){
   document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
   document.querySelectorAll('.nav-item').forEach(b=>b.classList.remove('active'));
@@ -3515,6 +3952,9 @@ function showPage(name,el){
   if(name==='cursos')renderCursosAdmin();
   if(name==='suscripciones')renderSuscripciones();
   if(name==='catalogo')renderCatalogo();
+  if(name==='calendario')renderCalendario();
+  if(name==='cotizador'){cotizInit();cotizActualizar();}
+  if(name==='prospectos')renderPipeline();
 }
 
 // SIDEBAR MOBILE
