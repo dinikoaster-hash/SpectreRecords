@@ -48,28 +48,43 @@ body::before{content:'';position:fixed;inset:0;background-image:url("data:image/
 .admin-layout{display:flex;min-height:100vh;}
 
 /* SIDEBAR */
-.sidebar{position:fixed;left:0;top:0;bottom:0;width:var(--sidebar-w);background:var(--surface);border-right:1px solid var(--border);display:flex;flex-direction:column;z-index:100;overflow-y:auto;}
-.sidebar-logo{padding:1.5rem 1.5rem 1.2rem;border-bottom:1px solid var(--border);}
-.sidebar-logo img{height:26px;width:auto;filter:brightness(.9);}
-.sidebar-nav{flex:1;padding:.8rem 0;}
-.nav-item{display:flex;align-items:center;gap:.7rem;padding:.8rem 1.5rem;font-family:DM Mono,monospace;font-size:.68rem;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);cursor:none;border:none;background:none;width:100%;text-align:left;border-left:2px solid transparent;transition:all .2s;position:relative;}
+.sidebar{position:fixed;left:0;top:0;bottom:0;width:var(--sidebar-w);background:var(--surface);border-right:1px solid var(--border);display:flex;flex-direction:column;z-index:100;overflow-y:auto;overflow-x:hidden;transition:width .25s cubic-bezier(.4,0,.2,1);}
+.sidebar.collapsed{width:56px;}
+.sidebar-logo{padding:1.2rem 1.2rem 1rem;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;min-height:56px;}
+.sidebar-logo img{height:24px;width:auto;filter:brightness(.9);transition:opacity .2s;}
+.sidebar.collapsed .sidebar-logo img{opacity:0;width:0;}
+.sidebar-collapse-btn{background:none;border:1px solid var(--border2);color:var(--muted);font-size:.9rem;width:24px;height:24px;display:flex;align-items:center;justify-content:center;cursor:none;transition:all .2s;flex-shrink:0;line-height:1;}
+.sidebar-collapse-btn:hover{border-color:var(--gold);color:var(--gold);}
+.sidebar.collapsed .sidebar-collapse-btn{transform:rotate(180deg);}
+.sidebar-nav{flex:1;padding:.6rem 0;overflow-y:auto;overflow-x:hidden;}
+.nav-item{display:flex;align-items:center;gap:.7rem;padding:.75rem 1.2rem;font-family:DM Mono,monospace;font-size:.65rem;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);cursor:none;border:none;background:none;width:100%;text-align:left;border-left:2px solid transparent;transition:all .2s;position:relative;white-space:nowrap;}
 .nav-item:hover{color:var(--text);background:rgba(255,255,255,.02);}
 .nav-item.active{color:var(--gold);background:rgba(201,168,76,.05);border-left-color:var(--gold);}
-.nav-icon{font-size:.9rem;width:16px;text-align:center;}
-.nav-badge{margin-left:auto;background:var(--red);color:#fff;font-size:.5rem;padding:.15rem .4rem;border-radius:8px;font-family:DM Mono,monospace;}
+.nav-icon{font-size:.85rem;width:18px;text-align:center;flex-shrink:0;}
+.nav-label{transition:opacity .2s;overflow:hidden;}
+.sidebar.collapsed .nav-label{opacity:0;width:0;overflow:hidden;}
+.nav-badge{margin-left:auto;background:var(--red);color:#fff;font-size:.5rem;padding:.15rem .4rem;border-radius:8px;font-family:DM Mono,monospace;flex-shrink:0;}
 .nav-badge.purple{background:var(--purple);}
-.sidebar-bottom{padding:1.2rem 1.5rem;border-top:1px solid var(--border);display:flex;flex-direction:column;gap:.6rem;}
-.oauth-pill{font-family:DM Mono,monospace;font-size:.58rem;letter-spacing:.1em;padding:.35rem .8rem;text-align:center;cursor:none;border:none;width:100%;transition:opacity .2s;}
+.sidebar.collapsed .nav-badge{position:absolute;top:6px;right:4px;margin:0;}
+.sidebar-bottom{padding:.8rem 1rem;border-top:1px solid var(--border);display:flex;flex-direction:column;gap:.4rem;overflow:hidden;}
+.sidebar-links{display:flex;flex-direction:column;gap:.2rem;margin-top:.2rem;}
+.sidebar-link{font-family:DM Mono,monospace;font-size:.6rem;letter-spacing:.06em;color:var(--muted2);text-decoration:none;padding:.4rem .5rem;transition:color .2s,background .2s;display:flex;align-items:center;gap:.5rem;border-radius:2px;}
+.sidebar-link:hover{color:var(--text);background:rgba(255,255,255,.03);}
+.sidebar-link span{font-size:.75rem;width:14px;text-align:center;flex-shrink:0;}
+.logout-link{font-family:DM Mono,monospace;font-size:.6rem;letter-spacing:.06em;text-transform:none;color:var(--muted2);background:none;border:none;cursor:none;padding:.4rem .5rem;text-align:left;width:100%;transition:color .2s;display:flex;align-items:center;gap:.5rem;}
+.logout-link:hover{color:var(--red);}
+.logout-link span{font-size:.75rem;width:14px;text-align:center;}
+.sidebar.collapsed .sidebar-bottom .sidebar-links,.sidebar.collapsed .sidebar-bottom .oauth-pill span{display:none;}
+.sidebar.collapsed .sidebar-bottom{padding:.6rem .4rem;}
+.sidebar.collapsed .oauth-pill{font-size:.5rem;padding:.3rem .2rem;letter-spacing:0;text-align:center;}
+
+/* MAIN */
+.main-content{margin-left:var(--sidebar-w);flex:1;padding:2.5rem;max-width:calc(100vw - var(--sidebar-w));transition:margin-left .25s cubic-bezier(.4,0,.2,1),max-width .25s cubic-bezier(.4,0,.2,1);}
+.sidebar.collapsed~.main-content,.main-content.sidebar-collapsed{margin-left:56px;max-width:calc(100vw - 56px);}
+.oauth-pill{font-family:DM Mono,monospace;font-size:.58rem;letter-spacing:.1em;padding:.4rem .8rem;text-align:center;cursor:none;border:none;width:100%;transition:opacity .2s;}
 .oauth-pill.off{background:rgba(201,168,76,.1);color:var(--gold);border:1px solid rgba(201,168,76,.3);}
 .oauth-pill.on{background:rgba(52,211,153,.1);color:var(--green);border:1px solid rgba(52,211,153,.3);}
 .oauth-pill:hover{opacity:.8;}
-.sidebar-link{font-family:DM Mono,monospace;font-size:.6rem;letter-spacing:.08em;text-transform:uppercase;color:var(--muted2);text-decoration:none;padding:.3rem 0;transition:color .2s;text-align:center;}
-.sidebar-link:hover{color:var(--muted);}
-.logout-link{color:var(--muted2);font-family:DM Mono,monospace;font-size:.6rem;letter-spacing:.08em;text-transform:uppercase;background:none;border:none;cursor:none;padding:.3rem 0;text-align:center;width:100%;transition:color .2s;}
-.logout-link:hover{color:var(--red);}
-
-/* MAIN */
-.main-content{margin-left:var(--sidebar-w);flex:1;padding:2.5rem;max-width:calc(100vw - var(--sidebar-w));}
 .page{display:none;}
 .page.active{display:block;}
 .page-header{display:flex;align-items:flex-end;justify-content:space-between;margin-bottom:2rem;padding-bottom:1.5rem;border-bottom:1px solid var(--border);flex-wrap:wrap;gap:1rem;}
@@ -385,7 +400,7 @@ body::before{content:'';position:fixed;inset:0;background-image:url("data:image/
   .cal-day{min-height:38px;}
 }
 
-.hamburger{display:none;position:fixed;top:.9rem;left:1rem;z-index:200;background:var(--surface);border:1px solid var(--border2);color:var(--gold);font-size:1.1rem;width:36px;height:36px;align-items:center;justify-content:center;cursor:none;transition:background .2s;}
+.hamburger{display:none;position:fixed;top:.7rem;left:.7rem;z-index:200;background:var(--surface);border:1px solid var(--border2);color:var(--gold);font-size:1.1rem;width:38px;height:38px;align-items:center;justify-content:center;cursor:none;transition:background .2s;}
 .hamburger:hover{background:var(--surface2);}
 .sidebar-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.6);backdrop-filter:blur(4px);z-index:99;}
 .sidebar-overlay.show{display:block;}
@@ -394,8 +409,11 @@ body::before{content:'';position:fixed;inset:0;background-image:url("data:image/
   .hamburger{display:flex;}
   .sidebar{transform:translateX(-100%);transition:transform .25s ease;width:var(--sidebar-w);z-index:150;}
   .sidebar.open{transform:translateX(0);}
+  .sidebar.collapsed{width:var(--sidebar-w);}
+  .sidebar-collapse-btn{display:none;}
   .admin-layout{display:block;}
   .main-content{margin-left:0 !important;width:100% !important;max-width:100vw !important;padding:1rem;padding-top:4.5rem;overflow-x:hidden;}
+  .main-content.sidebar-collapsed{margin-left:0 !important;max-width:100vw !important;}
   .login-box{padding:2rem 1.5rem;max-width:100%;}
   .page-header{flex-direction:column;align-items:flex-start;gap:.8rem;margin-bottom:1.2rem;}
   .page-title{font-size:1.8rem;}
@@ -422,19 +440,36 @@ body::before{content:'';position:fixed;inset:0;background-image:url("data:image/
   #cursosAdminContainer .data-table td{display:flex;justify-content:space-between;align-items:center;padding:.3rem 0;border:none;font-size:.8rem;}
   #cursosAdminContainer .data-table td:first-child{font-family:DM Mono,monospace;font-size:.6rem;color:var(--muted2);}
   #cursosAdminContainer .data-table td:last-child{margin-top:.5rem;padding-top:.5rem;border-top:1px solid var(--border);}
-  .artists-grid{grid-template-columns:1fr;}
+  .artists-grid{grid-template-columns:1fr 1fr;}
   [id^="toggle"]{font-size:.6rem !important;padding:.65rem 1rem !important;}
   #page-nuevo > div{max-width:100%;}
   #dashProyectos .table-wrap,#dashPendientes .table-wrap{overflow-x:auto;}
   #darolProyectos .table-wrap,#darolPendientes .table-wrap{overflow-x:auto;}
-  /* Catalog mobile: hide desktop table, show cards */
   #catalogoContainer .data-table{display:none;}
   .beat-cards-mobile{display:flex;}
+  .notif-bell{top:.6rem;right:4.2rem;}
+  .charts-grid{grid-template-columns:1fr !important;}
+  .bar-label{min-width:55px !important;font-size:.55rem !important;}
+  .notif-drawer{width:min(360px,100vw);}
+  .artist-panel{width:min(480px,100vw);}
 }
-@media(max-width:480px){
-  .main-content{padding:.8rem;padding-top:4.5rem;}
-  .stat-value{font-size:1.4rem;}
-  .page-title{font-size:1.5rem;}
+@media(max-width:540px){
+  .artists-grid{grid-template-columns:1fr;}
+  .main-content{padding:.7rem;padding-top:4.2rem;}
+  .stat-value{font-size:1.3rem;}
+  .page-title{font-size:1.4rem;}
+  .pipeline-board{grid-template-columns:1fr;}
+  .notif-bell{top:.6rem;right:.7rem;}
+  .cal-day{min-height:36px;}
+  .ap-stats{grid-template-columns:1fr 1fr;}
+  .charts-grid{grid-template-columns:1fr !important;}
+  #finanzasContainer > div[style*="display:flex"]{flex-direction:column !important;}
+  .notif-drawer{width:100vw;}
+  .artist-panel{width:100vw;}
+}
+@media(max-width:380px){
+  .stats-grid{grid-template-columns:1fr;}
+  .artists-grid{grid-template-columns:1fr;}
 }
 @media(hover:none),(pointer:coarse){
   .cursor,.cursor-ring{display:none;}
@@ -497,61 +532,64 @@ body::before{content:'';position:fixed;inset:0;background-image:url("data:image/
 <!-- ADMIN -->
 <div id="adminScreen">
   <div class="admin-layout">
-    <aside class="sidebar">
+    <aside class="sidebar" id="sidebar">
       <div class="sidebar-logo">
         <img src="assets/logo_sr.PNG" alt="Spectre Records"/>
+        <button class="sidebar-collapse-btn" id="sidebarCollapseBtn" onclick="toggleSidebarCollapse()" title="Contraer menú">‹</button>
       </div>
       <nav class="sidebar-nav">
         <button class="nav-item active" onclick="showPage('dashboard',this)" id="navDashHeaven">
-          <span class="nav-icon">&#x25C8;</span><span>Dashboard</span>
+          <span class="nav-icon">&#x25C8;</span><span class="nav-label">Dashboard</span>
         </button>
         <button class="nav-item" onclick="showPage('dashboard-darol',this)" id="navDashDarol" style="display:none">
-          <span class="nav-icon">&#x25C8;</span><span>Mi Panel</span>
+          <span class="nav-icon">&#x25C8;</span><span class="nav-label">Mi Panel</span>
         </button>
         <button class="nav-item" onclick="showPage('artistas',this)">
-          <span class="nav-icon">&#x266A;</span><span>Artistas</span>
+          <span class="nav-icon">&#x266A;</span><span class="nav-label">Artistas</span>
         </button>
         <button class="nav-item" onclick="showPage('proyectos',this)">
-          <span class="nav-icon">&#x25CE;</span><span>Proyectos</span>
+          <span class="nav-icon">&#x25CE;</span><span class="nav-label">Proyectos</span>
           <span class="nav-badge purple" id="badgeEspera" style="display:none">!</span>
         </button>
         <button class="nav-item" onclick="showPage('finanzas',this)">
-          <span class="nav-icon">$</span><span>Finanzas</span>
+          <span class="nav-icon">$</span><span class="nav-label">Finanzas</span>
           <span class="nav-badge" id="badgePend" style="display:none">!</span>
         </button>
         <button class="nav-item" onclick="showPage('cursos',this)">
-          <span class="nav-icon">&#x25B6;</span><span>Cursos</span>
+          <span class="nav-icon">&#x25B6;</span><span class="nav-label">Cursos</span>
         </button>
         <button class="nav-item" onclick="showPage('catalogo',this)" id="navCatalogo">
-          <span class="nav-icon">&#x266B;</span><span>Cat&#xE1;logo</span>
+          <span class="nav-icon">&#x266B;</span><span class="nav-label">Cat&#xE1;logo</span>
         </button>
         <button class="nav-item" onclick="showPage('suscripciones',this)" id="navSuscripciones">
-          <span class="nav-icon">↻</span><span>Suscripciones</span>
-          <span class="badge" id="badgeSusc" style="display:none"></span>
+          <span class="nav-icon">↻</span><span class="nav-label">Suscripciones</span>
+          <span class="nav-badge" id="badgeSusc" style="display:none"></span>
         </button>
         <button class="nav-item" onclick="showPage('prospectos',this)" id="navProspectos">
-          <span class="nav-icon">◈</span><span>Pipeline</span>
+          <span class="nav-icon">◈</span><span class="nav-label">Pipeline</span>
         </button>
         <button class="nav-item" onclick="showPage('calendario',this)" id="navCalendario">
-          <span class="nav-icon">◫</span><span>Calendario</span>
+          <span class="nav-icon">◫</span><span class="nav-label">Calendario</span>
         </button>
         <button class="nav-item" onclick="showPage('cotizador',this)" id="navCotizador">
-          <span class="nav-icon">$</span><span>Cotizador</span>
+          <span class="nav-icon">◎</span><span class="nav-label">Cotizador</span>
         </button>
         <button class="nav-item" onclick="showPage('tareas',this)" id="navTareas">
-          <span class="nav-icon">&#x2713;</span><span>Tareas</span>
+          <span class="nav-icon">&#x2713;</span><span class="nav-label">Tareas</span>
           <span class="nav-badge purple" id="badgeTareas" style="display:none">0</span>
         </button>
         <button class="nav-item" onclick="showPage('nuevo',this)" id="navNuevo">
-          <span class="nav-icon">+</span><span>Nuevo proyecto</span>
+          <span class="nav-icon">+</span><span class="nav-label">Nuevo proyecto</span>
         </button>
       </nav>
       <div class="sidebar-bottom">
         <button class="oauth-pill off" id="oauthPill" onclick="iniciarOAuth()">Conectar Google</button>
-        <a href="portal.html" class="sidebar-link" target="_blank">Portal &#x2192;</a>
-        <a href="catalogo.html" class="sidebar-link" target="_blank">Cat&#xE1;logo &#x2192;</a>
-        <a href="index.html" class="sidebar-link" target="_blank">Index &#x2192;</a>
-        <button class="logout-link" onclick="doLogout()">Cerrar sesi&#xF3;n</button>
+        <div class="sidebar-links">
+          <a href="portal.html" class="sidebar-link" target="_blank"><span>◎</span> Portal</a>
+          <a href="catalogo.html" class="sidebar-link" target="_blank"><span>♪</span> Catálogo</a>
+          <a href="index.html" class="sidebar-link" target="_blank"><span>⌂</span> Inicio</a>
+          <button class="logout-link" onclick="doLogout()"><span>⤶</span> Cerrar sesión</button>
+        </div>
       </div>
     </aside>
 
@@ -636,7 +674,7 @@ body::before{content:'';position:fixed;inset:0;background-image:url("data:image/
           <div><div class="page-eyebrow">// Directorio</div><div class="page-title">ARTISTAS</div></div>
           <div style="display:flex;gap:.6rem;">
             <button class="btn btn-ghost" onclick="loadAdmin()" style="font-size:.65rem;padding:.6rem 1.2rem;">&#x27F3; Actualizar</button>
-            <button class="btn btn-gold" onclick="openModal('modalArtista')">+ Nuevo artista</button>
+            <button class="btn btn-gold" onclick="populateCategoriasSelect('');document.getElementById('convenioFields').style.display='none';document.getElementById('convenioNotasField').style.display='none';openModal('modalArtista')">+ Nuevo artista</button>
           </div>
         </div>
         <div class="filter-bar">
@@ -977,15 +1015,11 @@ body::before{content:'';position:fixed;inset:0;background-image:url("data:image/
             <option>Est&#xE1;ndar</option><option>Miembro</option><option>Pro</option>
           </select>
         </div>
-        <div class="form-group"><label class="form-label">Categor&#xED;a CRM</label>
-          <select class="form-input" id="maCategoria">
-            <option value="">Sin clasificar</option>
-            <option value="Activo">Activo</option>
-            <option value="Recurrente">Recurrente</option>
-            <option value="Convenio">Convenio</option>
-            <option value="Prospecto">Prospecto</option>
-            <option value="Inactivo">Inactivo</option>
-          </select>
+        <div class="form-group"><label class="form-label">Categoría CRM</label>
+          <div style="display:flex;gap:.4rem;">
+            <select class="form-input" id="maCategoria" onchange="onCatChange()" style="flex:1;"></select>
+            <button type="button" class="btn btn-ghost" onclick="abrirAddCategoria()" style="font-size:.6rem;padding:.5rem .7rem;white-space:nowrap;">+ Nueva</button>
+          </div>
         </div>
         <div class="form-group" id="convenioFields" style="display:none">
           <label class="form-label">Precio convenio (MXN)</label>
@@ -1099,24 +1133,42 @@ body::before{content:'';position:fixed;inset:0;background-image:url("data:image/
 
 <!-- MODAL: CURSO -->
 <div class="modal-overlay" id="modalCurso">
-  <div class="modal" style="max-width:560px;">
+  <div class="modal" style="max-width:580px;">
     <div class="modal-header">
-      <div class="modal-title" id="modalCursoTitle">NUEVO CURSO</div>
+      <div class="modal-title" id="modalCursoTitle">NUEVO RECURSO</div>
       <button class="modal-close" onclick="closeModal('modalCurso')">&#x2715; Cerrar</button>
     </div>
     <div class="modal-body">
       <input type="hidden" id="curRowNum"/>
       <div class="form-grid">
-        <div class="form-group full"><label class="form-label">T&#xED;tulo</label><input class="form-input" id="curTitulo" placeholder="Nombre del curso"/></div>
-        <div class="form-group"><label class="form-label">Nivel de acceso</label>
-          <select class="form-input" id="curTipo">
-            <option value="Est&#xE1;ndar">Est&#xE1;ndar &#x2014; todos lo ven</option>
-            <option value="User">Miembros &#x2014; Core y Pro</option>
-            <option value="Pro">Pro &#x2014; solo Pro</option>
+        <div class="form-group full"><label class="form-label">Título</label><input class="form-input" id="curTitulo" placeholder="Nombre del curso o recurso"/></div>
+        <div class="form-group"><label class="form-label">Tipo de recurso</label>
+          <select class="form-input" id="curTipoRecurso" onchange="cursoTipoChange()">
+            <option value="Video">🎬 Video (YouTube / Drive)</option>
+            <option value="PDF">📄 PDF / Documento</option>
+            <option value="Guía">📋 Guía / Tutorial escrito</option>
+            <option value="Audio">🎧 Audio / Muestra</option>
+            <option value="Link">🔗 Link externo</option>
+            <option value="Archivo">📁 Archivo general</option>
           </select>
         </div>
-        <div class="form-group"><label class="form-label">Link del video (YouTube o Drive)</label><input class="form-input" id="curVideo" placeholder="https://youtu.be/..."/></div>
-        <div class="form-group full"><label class="form-label">Descripci&#xF3;n</label><input class="form-input" id="curDesc" placeholder="De qu&#xE9; trata el curso..."/></div>
+        <div class="form-group"><label class="form-label">Nivel de acceso</label>
+          <select class="form-input" id="curTipo">
+            <option value="Estándar">Estándar — todos lo ven</option>
+            <option value="User">Miembros — Core y Pro</option>
+            <option value="Pro">Pro — solo Pro</option>
+          </select>
+        </div>
+        <div class="form-group full" id="curVideoGroup">
+          <label class="form-label" id="curUrlLabel">Link del video (YouTube o Drive)</label>
+          <input class="form-input" id="curVideo" placeholder="https://youtu.be/..."/>
+        </div>
+        <div class="form-group full"><label class="form-label">Descripción</label>
+          <textarea class="form-input" id="curDesc" placeholder="De qué trata..." style="min-height:60px;resize:vertical;"></textarea>
+        </div>
+        <div class="form-group full"><label class="form-label">Miniatura (URL imagen, opcional)</label>
+          <input class="form-input" id="curThumb" placeholder="https://... (opcional)"/>
+        </div>
       </div>
     </div>
     <div class="modal-footer">
@@ -1276,6 +1328,27 @@ body::before{content:'';position:fixed;inset:0;background-image:url("data:image/
   </div>
 </div>
 
+<!-- MODAL: NUEVA CATEGORÍA -->
+<div class="modal-overlay" id="modalAddCategoria">
+  <div class="modal" style="max-width:340px;">
+    <div class="modal-header">
+      <div class="modal-title">NUEVA CATEGORÍA</div>
+      <button class="modal-close" onclick="closeModal('modalAddCategoria')">&#x2715;</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-group">
+        <label class="form-label">Nombre</label>
+        <input class="form-input" id="newCatNombre" placeholder="ej: VIP, Colaborador, etc." onkeydown="if(event.key==='Enter')guardarNuevaCategoria()"/>
+      </div>
+      <div id="catTagsWrap" class="personal-tags-wrap" style="margin-top:.8rem;"></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-green" onclick="guardarNuevaCategoria()">Guardar &#x2192;</button>
+      <button class="btn btn-ghost" onclick="closeModal('modalAddCategoria')">Cancelar</button>
+    </div>
+  </div>
+</div>
+
 <!-- MODAL: NUEVA PERSONA -->
 <div class="modal-overlay" id="modalAddPersona">
   <div class="modal" style="max-width:360px;">
@@ -1316,7 +1389,67 @@ let finView = 'ingresos';
 let prjView = 'activos';
 let catView = 'todos';
 
-// PERSONAS CUSTOM (guardadas en localStorage)
+// CATEGORÍAS CUSTOM (guardadas en localStorage)
+const CATS_KEY='sr_custom_cats';
+const DEFAULT_CATS=['','Activo','Recurrente','Convenio','Prospecto','Inactivo'];
+function getCategorias(){
+  let custom=[];
+  try{custom=JSON.parse(localStorage.getItem(CATS_KEY)||'[]');}catch(e){}
+  return [...DEFAULT_CATS,...custom.filter(c=>!DEFAULT_CATS.includes(c))];
+}
+function saveCustomCats(list){
+  localStorage.setItem(CATS_KEY,JSON.stringify(list.filter(c=>!DEFAULT_CATS.includes(c))));
+}
+function populateCategoriasSelect(currentVal){
+  const sel=document.getElementById('maCategoria');if(!sel)return;
+  const cats=getCategorias();
+  sel.innerHTML=cats.map(c=>`<option value="${c}">${c||'Sin clasificar'}</option>`).join('');
+  if(currentVal!==undefined) sel.value=currentVal;
+  // Also update filter
+  const filt=document.getElementById('filterCatArt');
+  if(filt){
+    const cur=filt.value;
+    filt.innerHTML='<option value="">Todas las categorías</option>'+cats.filter(c=>c).map(c=>`<option value="${c}">${c}</option>`).join('');
+    if(cur) filt.value=cur;
+  }
+}
+function onCatChange(){
+  const cat=document.getElementById('maCategoria')?.value||'';
+  const isConv=cat==='Convenio'||cat==='Recurrente';
+  const cf=document.getElementById('convenioFields');
+  const cnf=document.getElementById('convenioNotasField');
+  if(cf)cf.style.display=isConv?'':'none';
+  if(cnf)cnf.style.display=isConv?'':'none';
+}
+function abrirAddCategoria(){
+  document.getElementById('newCatNombre').value='';
+  // Render existing custom tags
+  const custom=getCategorias().filter(c=>!DEFAULT_CATS.includes(c));
+  const wrap=document.getElementById('catTagsWrap');
+  if(wrap) wrap.innerHTML=custom.length
+    ?'<div style="font-family:DM Mono,monospace;font-size:.55rem;color:var(--muted2);margin-bottom:.3rem;">// Categorías personalizadas (click para eliminar)</div>'+
+      custom.map(c=>`<span class="personal-tag" onclick="eliminarCategoria('${c}')">${c} ✕</span>`).join('')
+    :'';
+  openModal('modalAddCategoria');
+  setTimeout(()=>document.getElementById('newCatNombre').focus(),100);
+}
+function guardarNuevaCategoria(){
+  const nombre=document.getElementById('newCatNombre').value.trim();
+  if(!nombre){toast('Escribe un nombre','error');return;}
+  const cats=getCategorias();
+  if(cats.map(c=>c.toLowerCase()).includes(nombre.toLowerCase())){toast('Ya existe','error');return;}
+  saveCustomCats([...cats,nombre]);
+  populateCategoriasSelect(nombre);
+  closeModal('modalAddCategoria');
+  toast(`✓ Categoría "${nombre}" creada`,'success');
+}
+function eliminarCategoria(nombre){
+  const cats=getCategorias().filter(c=>c!==nombre);
+  saveCustomCats(cats);
+  populateCategoriasSelect();
+  abrirAddCategoria();
+  toast(`✓ "${nombre}" eliminada`,'success');
+}
 const PERSONAS_KEY = 'sr_custom_personas';
 const DEFAULT_PERSONAS = ['Heaven','Darol'];
 function getPersonas(){
@@ -1400,6 +1533,7 @@ async function doAdminLogin(){
   document.getElementById('adminScreen').style.display='block';
   document.getElementById('hamburger').style.display='';
   applyRoleUI();
+  applySavedCollapse();
   await loadAdmin();
 }
 function doLogout(){
@@ -1760,48 +1894,41 @@ function renderArtistas(){
     const catColor=CAT_COLORS[cat]||'var(--muted2)';
     const isConvenio=cat==='Convenio'||cat==='Recurrente';
     const precioConvenio=a['PrecioConvenio']?`$${parseFloat(a['PrecioConvenio']).toLocaleString()} MXN`:'';
-
     const ltvColor=ltv.cobrado>10000?'var(--green)':ltv.cobrado>4000?'var(--yellow)':'var(--muted)';
     const frecLabel=ltv.frecMeses===null?'—':ltv.frecMeses<=1.5?'Mensual':ltv.frecMeses<=2.5?'Bimestral':ltv.frecMeses<=6?`c/${Math.round(ltv.frecMeses)} meses`:'Esporádico';
 
     return`<div class="artist-card">
-      <div class="artist-header">
+      <div class="artist-header" style="cursor:none" onclick="openArtistPanel(${a._rowNumber})">
         <div class="artist-avatar">${imgSrc?`<img src="${imgSrc}" onerror="this.parentElement.textContent='${ini}'">`:'<span>'+ini+'</span>'}</div>
         <div style="flex:1;min-width:0;">
           <div class="artist-name">${a['AKA']||a['Nombre']||'—'}</div>
-          <div class="artist-aka">${a['AKA']?'// '+a['Nombre']:''}</div>
+          ${a['AKA']?`<div class="artist-aka">// ${a['Nombre']}</div>`:''}
           ${cat?`<div style="font-family:DM Mono,monospace;font-size:.55rem;letter-spacing:.1em;color:${catColor};margin-top:.15rem;">${cat.toUpperCase()}</div>`:''}
         </div>
       </div>
-      <!-- LTV strip -->
       <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:1px;background:var(--border);border:1px solid var(--border);margin:.8rem 0;">
-        <div style="background:var(--surface2);padding:.5rem .6rem;text-align:center;">
-          <div style="font-family:DM Mono,monospace;font-size:.5rem;color:var(--muted2);letter-spacing:.1em;text-transform:uppercase;margin-bottom:.15rem;">LTV total</div>
-          <div style="font-family:Bebas Neue,sans-serif;font-size:1rem;color:${ltvColor}">$${ltv.cobrado.toLocaleString()}</div>
+        <div style="background:var(--surface2);padding:.5rem .4rem;text-align:center;">
+          <div style="font-family:DM Mono,monospace;font-size:.48rem;color:var(--muted2);letter-spacing:.08em;text-transform:uppercase;margin-bottom:.1rem;">LTV</div>
+          <div style="font-family:Bebas Neue,sans-serif;font-size:.95rem;color:${ltvColor}">$${ltv.cobrado>=1000?Math.round(ltv.cobrado/1000)+'k':ltv.cobrado.toLocaleString()}</div>
         </div>
-        <div style="background:var(--surface2);padding:.5rem .6rem;text-align:center;">
-          <div style="font-family:DM Mono,monospace;font-size:.5rem;color:var(--muted2);letter-spacing:.1em;text-transform:uppercase;margin-bottom:.15rem;">Proyectos</div>
-          <div style="font-family:Bebas Neue,sans-serif;font-size:1rem;color:var(--purple-light)">${ltv.proyCount}</div>
+        <div style="background:var(--surface2);padding:.5rem .4rem;text-align:center;">
+          <div style="font-family:DM Mono,monospace;font-size:.48rem;color:var(--muted2);letter-spacing:.08em;text-transform:uppercase;margin-bottom:.1rem;">Proyectos</div>
+          <div style="font-family:Bebas Neue,sans-serif;font-size:.95rem;color:var(--purple-light)">${ltv.proyCount}</div>
         </div>
-        <div style="background:var(--surface2);padding:.5rem .6rem;text-align:center;">
-          <div style="font-family:DM Mono,monospace;font-size:.5rem;color:var(--muted2);letter-spacing:.1em;text-transform:uppercase;margin-bottom:.15rem;">Frecuencia</div>
-          <div style="font-family:Bebas Neue,sans-serif;font-size:.8rem;color:var(--text)">${frecLabel}</div>
+        <div style="background:var(--surface2);padding:.5rem .4rem;text-align:center;">
+          <div style="font-family:DM Mono,monospace;font-size:.48rem;color:var(--muted2);letter-spacing:.08em;text-transform:uppercase;margin-bottom:.1rem;">Frec.</div>
+          <div style="font-family:Bebas Neue,sans-serif;font-size:.75rem;color:var(--text)">${frecLabel}</div>
         </div>
       </div>
       <div class="artist-meta">
-        ${a['Telefono']?`<div><span>Tel </span>${a['Telefono']}</div>`:''}
-        ${a['Correo']?`<div><span>Mail </span>${a['Correo']}</div>`:''}
-        <div><span>Nivel </span>${a['Tipo']||'—'}</div>
-        ${ltv.proyActivos>0?`<div style="color:var(--yellow)"><span>En curso </span>${ltv.proyActivos} proyecto${ltv.proyActivos>1?'s':''}</div>`:''}
-        ${ltv.pendiente>0?`<div style="color:var(--red)"><span>Pendiente </span>$${ltv.pendiente.toLocaleString()} MXN</div>`:''}
-        ${isConvenio&&precioConvenio?`<div style="color:var(--green)"><span>Convenio </span>${precioConvenio}</div>`:''}
-        ${isConvenio&&a['NotasConvenio']?`<div style="color:var(--muted);font-size:.6rem;margin-top:.2rem">${a['NotasConvenio']}</div>`:''}
+        ${ltv.proyActivos>0?`<div style="color:var(--yellow)">● ${ltv.proyActivos} en curso</div>`:''}
+        ${ltv.pendiente>0?`<div style="color:var(--red)">! $${ltv.pendiente.toLocaleString()} pendiente</div>`:''}
+        ${isConvenio&&precioConvenio?`<div style="color:var(--green)">✓ Convenio ${precioConvenio}</div>`:''}
       </div>
-      <div class="artist-code">Código: ${a['CodigoAcceso']||'—'}</div>
       <div class="artist-actions">
-        <button class="btn-xs" style="background:rgba(201,168,76,.1);color:var(--gold)" onclick="openArtistPanel(${a._rowNumber})">Ver historial</button>
+        <button class="btn-xs" style="background:rgba(201,168,76,.1);color:var(--gold);flex:1" onclick="openArtistPanel(${a._rowNumber})">Ver historial</button>
         <button class="btn-xs btn-xs-edit" onclick="editArtista(${a._rowNumber})">Editar</button>
-        <button class="btn-xs btn-xs-del" onclick="confirmDelete('artista',${a._rowNumber},'${(a['AKA']||a['Nombre']||'').replace(/'/g,"\\'")}')">Borrar</button>
+        <button class="btn-xs btn-xs-del" onclick="confirmDelete('artista',${a._rowNumber},'${(a['AKA']||a['Nombre']||'').replace(/'/g,"\\'")}')">✕</button>
       </div>
     </div>`;
   }
@@ -1863,17 +1990,8 @@ function editArtista(rowNum){
   document.getElementById('maTipo').value=a['Tipo']||'Est\xE1ndar';
   document.getElementById('maImagen').value=a['Imagen']||'';
   const cat=a['Categoria']||'';
-  const maCategoria=document.getElementById('maCategoria');
-  if(maCategoria) maCategoria.value=cat;
-  const precio=document.getElementById('maPrecioConvenio');
-  const notas=document.getElementById('maNotasConvenio');
-  if(precio) precio.value=a['PrecioConvenio']||'';
-  if(notas) notas.value=a['NotasConvenio']||'';
-  const convenioFields=document.getElementById('convenioFields');
-  const convenioNotasField=document.getElementById('convenioNotasField');
-  const isConv=cat==='Convenio'||cat==='Recurrente';
-  if(convenioFields) convenioFields.style.display=isConv?'':'none';
-  if(convenioNotasField) convenioNotasField.style.display=isConv?'':'none';
+  populateCategoriasSelect(cat);
+  onCatChange();
   // Mostrar preview de imagen si existe
   if(a['Imagen']){
     const imgUrl=getImgUrl(a['Imagen']);
@@ -2289,6 +2407,7 @@ function populateArtistSelects(){
     if(cur)sel.value=cur;
   });
   populatePersonaSelects();
+  populateCategoriasSelect();
 }
 
 async function guardarProyecto(){
@@ -2331,6 +2450,17 @@ function confirmDelete(tipo,rowNum,nombre){
 }
 
 // CURSOS
+const TIPO_RECURSO_ICON={Video:'🎬',PDF:'📄','Guía':'📋',Audio:'🎧',Link:'🔗',Archivo:'📁'};
+const TIPO_RECURSO_PLACEHOLDER={Video:'https://youtu.be/...',PDF:'https://drive.google.com/file/d/...',Guía:'https://docs.google.com/...',Audio:'https://drive.google.com/file/d/...',Link:'https://...',Archivo:'https://drive.google.com/file/d/...'};
+
+function cursoTipoChange(){
+  const tipo=document.getElementById('curTipoRecurso')?.value||'Video';
+  const labelEl=document.getElementById('curUrlLabel');
+  const inputEl=document.getElementById('curVideo');
+  if(labelEl) labelEl.textContent=tipo==='Video'?'Link del video':'URL del recurso';
+  if(inputEl) inputEl.placeholder=TIPO_RECURSO_PLACEHOLDER[tipo]||'https://...';
+}
+
 function renderCursosAdmin(){
   const q=(document.getElementById('searchCursos')?.value||'').toLowerCase();
   const tipo=document.getElementById('filterTipoCurso')?.value||'';
@@ -2340,55 +2470,93 @@ function renderCursosAdmin(){
     return m&&t;
   });
   const container=document.getElementById('cursosAdminContainer');if(!container)return;
-  if(!list.length){container.innerHTML='<div class="empty-state">// No hay cursos registrados a\xFAn</div>';return;}
+  if(!list.length){container.innerHTML='<div class="empty-state">// No hay recursos registrados aún</div>';return;}
   const nivelBadge=(tipo)=>{
     if(tipo==='Pro')return'<span class="badge" style="background:rgba(251,191,36,.1);color:var(--yellow);border:1px solid rgba(251,191,36,.2);">Pro</span>';
     if(tipo==='User')return'<span class="badge badge-active">Miembros</span>';
-    return'<span class="badge badge-paid">Est\xE1ndar</span>';
+    return'<span class="badge badge-paid">Estándar</span>';
   };
-  container.innerHTML=`<table class="data-table"><thead><tr><th>ID</th><th>T\xEDtulo</th><th>Nivel</th><th>Video</th><th>Descripci\xF3n</th><th>Acciones</th></tr></thead><tbody>${list.map(c=>`<tr>
-    <td style="font-family:DM Mono,monospace;font-size:.65rem;color:var(--muted2)">${c['CursoID']||'\u2014'}</td>
-    <td style="font-weight:600">${c['Titulo']||'\u2014'}</td>
-    <td>${nivelBadge(c['TipoCurso']||'Est\xE1ndar')}</td>
-    <td>${c['Video']?`<a href="${c['Video']}" target="_blank" style="font-family:DM Mono,monospace;font-size:.65rem;color:var(--purple-light);text-decoration:none;">\u25B6 Ver</a>`:'<span style="color:var(--muted2)">\u2014</span>'}</td>
-    <td style="font-family:DM Mono,monospace;font-size:.68rem;color:var(--muted);max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${c['Descripcion']||'\u2014'}</td>
-    <td><div class="td-actions">
-      <button class="btn-xs btn-xs-edit" onclick="editCurso(${c._rowNumber})">Editar</button>
-      <button class="btn-xs btn-xs-del" onclick="confirmDelete('curso',${c._rowNumber},'${(c['Titulo']||'').replace(/'/g,"\\'")}')">Borrar</button>
-    </div></td>
-  </tr>`).join('')}</tbody></table>`;
+  const rows=list.map(c=>{
+    const tipoRec=c['TipoRecurso']||'Video';
+    const icon=TIPO_RECURSO_ICON[tipoRec]||'📁';
+    const url=c['Video']||'';
+    return`<tr>
+      <td>
+        <div style="display:flex;align-items:center;gap:.5rem;">
+          ${c['Thumb']?`<img src="${c['Thumb']}" style="width:36px;height:36px;object-fit:cover;border:1px solid var(--border2);flex-shrink:0;" onerror="this.style.display='none'">`:`<div style="width:36px;height:36px;background:var(--surface2);border:1px solid var(--border2);display:flex;align-items:center;justify-content:center;font-size:1rem;flex-shrink:0">${icon}</div>`}
+          <div>
+            <div style="font-weight:600;font-size:.82rem">${c['Titulo']||'—'}</div>
+            <div style="font-family:DM Mono,monospace;font-size:.55rem;color:var(--muted2)">${icon} ${tipoRec}</div>
+          </div>
+        </div>
+      </td>
+      <td>${nivelBadge(c['TipoCurso']||'Estándar')}</td>
+      <td style="font-family:DM Mono,monospace;font-size:.62rem;color:var(--muted);max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${c['Descripcion']||'—'}</td>
+      <td>${url?`<a href="${url}" target="_blank" style="font-family:DM Mono,monospace;font-size:.62rem;color:var(--purple-light);text-decoration:none;">${icon} Abrir</a>`:'<span style="color:var(--muted2)">—</span>'}</td>
+      <td><div class="td-actions">
+        <button class="btn-xs btn-xs-edit" onclick="editCurso(${c._rowNumber})">Editar</button>
+        <button class="btn-xs btn-xs-del" onclick="confirmDelete('curso',${c._rowNumber},'${(c['Titulo']||'').replace(/'/g,"\\'")}')">Borrar</button>
+      </div></td>
+    </tr>`;
+  }).join('');
+  const mobRows=list.map(c=>{
+    const tipoRec=c['TipoRecurso']||'Video';
+    const icon=TIPO_RECURSO_ICON[tipoRec]||'📁';
+    const url=c['Video']||'';
+    return`<div class="mob-card-row">
+      <div style="display:flex;align-items:center;gap:.6rem;margin-bottom:.4rem;">
+        <div style="font-size:1.2rem">${icon}</div>
+        <div>
+          <div class="mob-card-title">${c['Titulo']||'—'}</div>
+          <div style="font-family:DM Mono,monospace;font-size:.55rem;color:var(--muted2)">${tipoRec} · ${nivelBadge(c['TipoCurso']||'Estándar')}</div>
+        </div>
+      </div>
+      ${c['Descripcion']?`<div style="font-family:DM Mono,monospace;font-size:.6rem;color:var(--muted);margin-bottom:.5rem">${c['Descripcion']}</div>`:''}
+      <div class="mob-card-actions">
+        ${url?`<a href="${url}" target="_blank" class="btn-xs btn-xs-save" style="text-decoration:none">${icon} Abrir</a>`:''}
+        <button class="btn-xs btn-xs-edit" onclick="editCurso(${c._rowNumber})">Editar</button>
+        <button class="btn-xs btn-xs-del" onclick="confirmDelete('curso',${c._rowNumber},'${(c['Titulo']||'').replace(/'/g,"\\'")}')">Borrar</button>
+      </div>
+    </div>`;
+  }).join('');
+  container.innerHTML=`<table class="data-table"><thead><tr><th>Recurso</th><th>Nivel</th><th>Descripción</th><th>Acceso</th><th>Acciones</th></tr></thead><tbody>${rows}</tbody></table><div class="mob-card">${mobRows}</div>`;
 }
 
 function editCurso(rowNum){
   const c=allCursos.find(x=>x._rowNumber===rowNum);if(!c)return;
-  document.getElementById('modalCursoTitle').textContent='EDITAR CURSO';
+  document.getElementById('modalCursoTitle').textContent='EDITAR RECURSO';
   document.getElementById('curRowNum').value=rowNum;
   document.getElementById('curTitulo').value=c['Titulo']||'';
-  document.getElementById('curTipo').value=c['TipoCurso']||'Est\xE1ndar';
+  document.getElementById('curTipo').value=c['TipoCurso']||'Estándar';
+  document.getElementById('curTipoRecurso').value=c['TipoRecurso']||'Video';
   document.getElementById('curVideo').value=c['Video']||'';
   document.getElementById('curDesc').value=c['Descripcion']||'';
+  document.getElementById('curThumb').value=c['Thumb']||'';
+  cursoTipoChange();
   openModal('modalCurso');
 }
 
 async function guardarCurso(){
   const rowNum=parseInt(document.getElementById('curRowNum').value)||0;
   const titulo=document.getElementById('curTitulo').value.trim();
-  if(!titulo){toast('T\xEDtulo requerido','error');return;}
+  if(!titulo){toast('Título requerido','error');return;}
   const tipo=document.getElementById('curTipo').value;
+  const tipoRec=document.getElementById('curTipoRecurso').value;
   const video=document.getElementById('curVideo').value.trim();
   const desc=document.getElementById('curDesc').value.trim();
+  const thumb=document.getElementById('curThumb').value.trim();
   const existingC=rowNum?allCursos.find(c=>c._rowNumber===rowNum):null;
   const id=existingC?existingC['CursoID']||'':nextId(allCursos,'CursoID','Curs');
-  const values=[id,titulo,tipo,video,desc];
+  const values=[id,titulo,tipo,video,desc,tipoRec,thumb];
   let ok=false;
   if(rowNum){ok=await updateRow(SH.cursos,rowNum,values);}
   else{ok=await appendRow(SH.cursos,values);}
   if(ok){
-    toast('\u2713 Curso guardado','success');closeModal('modalCurso');
-    document.getElementById('curRowNum').value='';document.getElementById('modalCursoTitle').textContent='NUEVO CURSO';
-    ['curTitulo','curVideo','curDesc'].forEach(id=>{document.getElementById(id).value='';});
+    toast('✓ Recurso guardado','success');closeModal('modalCurso');
+    document.getElementById('curRowNum').value='';document.getElementById('modalCursoTitle').textContent='NUEVO RECURSO';
+    ['curTitulo','curVideo','curDesc','curThumb'].forEach(id=>{document.getElementById(id).value='';});
     await loadAdmin(800);
-  }else{toast('Error al guardar \u2014 activa OAuth primero','error');}
+  }else{toast('Error al guardar — activa OAuth primero','error');}
 }
 
 // ==============================================
@@ -3955,6 +4123,23 @@ function showPage(name,el){
   if(name==='calendario')renderCalendario();
   if(name==='cotizador'){cotizInit();cotizActualizar();}
   if(name==='prospectos')renderPipeline();
+}
+
+// SIDEBAR COLLAPSE (desktop only)
+const SIDEBAR_COLLAPSED_KEY='sr_sidebar_collapsed';
+function toggleSidebarCollapse(){
+  const sb=document.getElementById('sidebar');
+  const mc=document.querySelector('.main-content');
+  const collapsed=sb.classList.toggle('collapsed');
+  mc.classList.toggle('sidebar-collapsed',collapsed);
+  localStorage.setItem(SIDEBAR_COLLAPSED_KEY,collapsed?'1':'0');
+}
+function applySavedCollapse(){
+  if(window.innerWidth<=900) return; // never auto-collapse on mobile
+  if(localStorage.getItem(SIDEBAR_COLLAPSED_KEY)==='1'){
+    document.getElementById('sidebar')?.classList.add('collapsed');
+    document.querySelector('.main-content')?.classList.add('sidebar-collapsed');
+  }
 }
 
 // SIDEBAR MOBILE
