@@ -1321,7 +1321,7 @@ body::before{content:'';position:fixed;inset:0;background-image:url("data:image/
 
 <!-- MODAL: NUEVA SUSCRIPCION -->
 <div class="modal-overlay" id="modalSusc">
-  <div class="modal" style="max-width:540px;">
+  <div class="modal" style="max-width:580px;">
     <div class="modal-header">
       <div class="modal-title" id="modalSuscTitle">NUEVA SUSCRIPCIÓN</div>
       <button class="modal-close" onclick="closeModal('modalSusc')">&#x2715;</button>
@@ -1329,17 +1329,38 @@ body::before{content:'';position:fixed;inset:0;background-image:url("data:image/
     <div class="modal-body">
       <input type="hidden" id="suscRowNum"/>
       <div class="form-grid">
-        <div class="form-group"><label class="form-label">Artista</label>
+
+        <!-- Artista -->
+        <div class="form-group full"><label class="form-label">Artista</label>
           <select class="form-input" id="suscArtista"></select>
         </div>
-        <div class="form-group"><label class="form-label">Plan</label>
+
+        <!-- Plan -->
+        <div class="form-group full"><label class="form-label">Plan / Nombre</label>
           <div style="display:flex;gap:.4rem;">
             <select class="form-input" id="suscPlan" style="flex:1;"></select>
             <button type="button" class="btn btn-ghost" onclick="abrirAddPlan()" style="font-size:.6rem;padding:.5rem .7rem;white-space:nowrap;">+ Nuevo</button>
           </div>
         </div>
-        <div class="form-group"><label class="form-label">Monto mensual (MXN)</label>
-          <input class="form-input" id="suscMonto" type="number" placeholder="ej: 900"/></div>
+
+        <!-- Periodicidad + Cantidad -->
+        <div class="form-group"><label class="form-label">Periodicidad</label>
+          <select class="form-input" id="suscPeriodo" onchange="suscCalcRenov()">
+            <option value="mensual">Mensual</option>
+            <option value="bimestral">Bimestral (c/2 meses)</option>
+            <option value="trimestral">Trimestral (c/3 meses)</option>
+            <option value="semestral">Semestral (c/6 meses)</option>
+            <option value="anual">Anual</option>
+            <option value="personalizado">Personalizado</option>
+          </select>
+        </div>
+        <div class="form-group"><label class="form-label">Cantidad de periodos</label>
+          <input class="form-input" id="suscCantidad" type="number" min="1" value="1" placeholder="ej: 3" oninput="suscCalcRenov()" style="text-align:center;font-family:'Bebas Neue',sans-serif;font-size:1.4rem;letter-spacing:.05em;"/>
+        </div>
+
+        <!-- Monto y estado -->
+        <div class="form-group"><label class="form-label">Monto total (MXN)</label>
+          <input class="form-input" id="suscMonto" type="number" placeholder="ej: 2700"/></div>
         <div class="form-group"><label class="form-label">Estado</label>
           <select class="form-input" id="suscEstado">
             <option value="Activa">Activa</option>
@@ -1347,12 +1368,20 @@ body::before{content:'';position:fixed;inset:0;background-image:url("data:image/
             <option value="Cancelada">Cancelada</option>
           </select>
         </div>
-        <div class="form-group"><label class="form-label">Fecha inicio</label>
-          <input class="form-input" id="suscFechaInicio" type="date"/></div>
-        <div class="form-group"><label class="form-label">Próxima renovación</label>
-          <input class="form-input" id="suscFechaRenov" type="date"/></div>
+
+        <!-- Fechas -->
+        <div class="form-group"><label class="form-label">Fecha de inicio</label>
+          <input class="form-input" id="suscFechaInicio" type="date" oninput="suscCalcRenov()"/></div>
+        <div class="form-group"><label class="form-label">Renovación calculada</label>
+          <div style="position:relative;">
+            <input class="form-input" id="suscFechaRenov" type="date" style="background:var(--surface2);"/>
+            <div id="suscRenovLabel" style="font-family:'DM Mono',monospace;font-size:.6rem;color:var(--green);margin-top:.35rem;min-height:.9rem;letter-spacing:.04em;"></div>
+          </div>
+        </div>
+
+        <!-- Notas -->
         <div class="form-group full"><label class="form-label">Notas</label>
-          <input class="form-input" id="suscNotas" placeholder="ej: incluye mezcla, sin masterización"/></div>
+          <input class="form-input" id="suscNotas" placeholder="ej: incluye mezcla sin masterización, acuerdo especial..."/></div>
       </div>
     </div>
     <div class="modal-footer">
@@ -2201,7 +2230,8 @@ async function guardarArtista(){
   const values=[newId,nombre,document.getElementById('maAka').value.trim(),tel,correo,codigo,tipo,imagenUrl,
     document.getElementById('maCategoria')?.value||'',
     document.getElementById('maPrecioConvenio')?.value||'',
-    document.getElementById('maNotasConvenio')?.value.trim()||''];
+    document.getElementById('maNotasConvenio')?.value.trim()||'',
+    existingArtista?existingArtista['EtapaPipeline']||'':''];
   let ok=false;
   if(rowNum){ok=await updateRow(SH.artistas,rowNum,values);}
   else{ok=await appendRow(SH.artistas,values);}
@@ -2265,7 +2295,33 @@ function renderProyectos(){
       <td><div class="td-actions"><button class="btn-xs btn-xs-edit" onclick="editProyecto(${rn})">Editar</button><button class="btn-xs btn-xs-del" onclick="confirmDelete('proyecto',${rn},this.dataset.n)" data-n="${nombre.replace(/"/g,'&quot;')}">Borrar</button></div></td>
     </tr>`;
   }).join('');
-  document.getElementById('proyectosContainer').innerHTML=`<table class="data-table"><thead><tr><th>Proyecto</th><th>Artista</th><th>Servicio</th><th>Inicio</th><th>Estado</th><th>Solicitado</th><th>Cobrado</th><th>Liq.</th><th>Asignado</th><th>Archivos</th><th>Acciones</th></tr></thead><tbody>${rows}</tbody></table>`;
+  const mobRows=list.map(p=>{
+    const a=getArtista(p['Cliente']);
+    const na=a?a['AKA']||a['Nombre']:p['Cliente']||'—';
+    const rn=p._rowNumber;
+    const nombre=p['Nombre del proyecto']||'—';
+    const cobradoProy=allFinanzas.filter(f=>f['Proyecto']===p['ID']&&(f['Tipo']||'').toLowerCase()==='ingreso'&&/pagado/i.test(f['Estado']||'')).reduce((s,f)=>s+(parseFloat(f['Monto'])||0),0);
+    const solicitado=parseFloat(p['Solicitado'])||0;
+    return`<div class="mob-card-row">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:.5rem;margin-bottom:.35rem;">
+        <div class="mob-card-title">${nombre}</div>
+        ${getBadge(p['Estado proyecto'])}
+      </div>
+      <div class="mob-card-meta">
+        <span style="color:var(--purple-light)">${na}</span>
+        ${p['Tipo de servicio']?`<span>${p['Tipo de servicio']}</span>`:''}
+        ${p['Fecha inicio']?`<span>Inicio: ${p['Fecha inicio']}</span>`:''}
+        ${solicitado>0?`<span style="color:var(--purple-light)">Solicitado: $${solicitado.toLocaleString()}</span>`:''}
+        ${cobradoProy>0?`<span style="color:var(--green)">Cobrado: $${cobradoProy.toLocaleString()}</span>`:''}
+        ${p['Asignado']?`<span>→ ${p['Asignado']}${p['Asignado2']?` + ${p['Asignado2']}`:''}</span>`:''}
+      </div>
+      <div class="mob-card-actions">
+        <button class="btn-xs btn-xs-edit" onclick="editProyecto(${rn})">Editar</button>
+        <button class="btn-xs btn-xs-del" onclick="confirmDelete('proyecto',${rn},'${nombre.replace(/'/g,"\\'")}')">Borrar</button>
+      </div>
+    </div>`;
+  }).join('');
+  document.getElementById('proyectosContainer').innerHTML=`<table class="data-table"><thead><tr><th>Proyecto</th><th>Artista</th><th>Servicio</th><th>Inicio</th><th>Estado</th><th>Solicitado</th><th>Cobrado</th><th>Liq.</th><th>Asignado</th><th>Archivos</th><th>Acciones</th></tr></thead><tbody>${rows}</tbody></table><div class="mob-card">${mobRows}</div>`;
 }
 
 function editProyecto(rowNum){
@@ -3380,7 +3436,8 @@ function openArtistPanel(rowNum){
     ${susc?`<div class="ap-section">
       <div class="ap-section-title">// Suscripción activa</div>
       <div class="ap-row"><span class="ap-row-label">Plan</span><span class="ap-row-val">${susc['Plan']||'—'}</span></div>
-      <div class="ap-row"><span class="ap-row-label">Monto</span><span class="ap-row-val" style="color:var(--green)">$${parseFloat(susc['Monto']||0).toLocaleString()}/mes</span></div>
+      ${susc['Periodo']?`<div class="ap-row"><span class="ap-row-label">Periodicidad</span><span class="ap-row-val">${susc['Cantidad']||1} × ${susc['Periodo']}</span></div>`:''}
+      <div class="ap-row"><span class="ap-row-label">Monto total</span><span class="ap-row-val" style="color:var(--green)">$${parseFloat(susc['Monto']||0).toLocaleString()} MXN</span></div>
       <div class="ap-row"><span class="ap-row-label">Renovación</span><span class="ap-row-val">${susc['FechaRenovacion']||'—'}</span></div>
       ${susc['Notas']?`<div style="font-family:DM Mono,monospace;font-size:.6rem;color:var(--muted);padding:.4rem 0">${susc['Notas']}</div>`:''}
     </div>`:''}
@@ -3441,7 +3498,14 @@ function closeArtistPanel(){
 function renderSuscripciones(){
   const activas=allSuscripciones.filter(s=>s['Estado']==='Activa');
   const canceladas=allSuscripciones.filter(s=>s['Estado']==='Cancelada');
-  const mensual=activas.reduce((sum,s)=>sum+(parseFloat(s['Monto'])||0),0);
+  // Ingreso mensual = suma de montos activos dividido entre periodos en meses
+  const mensual=activas.reduce((sum,s)=>{
+    const monto=parseFloat(s['Monto'])||0;
+    const periodo=(s['Periodo']||'mensual').toLowerCase();
+    const cantidad=parseInt(s['Cantidad'])||1;
+    const meses=(PERIODO_MESES[periodo]||1)*cantidad;
+    return sum+(monto/meses);
+  },0);
   const hoy=new Date();
   const en7dias=new Date(hoy.getTime()+7*24*60*60*1000);
   const porRenov=activas.filter(s=>{
@@ -3479,10 +3543,14 @@ function renderSuscripciones(){
       const renovD=parseFecha(s['FechaRenovacion']||'');
       const diasRenov=renovD?Math.round((renovD-hoy)/(1000*60*60*24)):null;
       const renovColor=diasRenov!==null&&diasRenov<=7?'var(--red)':diasRenov!==null&&diasRenov<=14?'var(--yellow)':'var(--muted)';
+      const periodo=s['Periodo']||'';
+      const cantidad=s['Cantidad']||'1';
+      const periodoLabel=periodo?`${cantidad} × ${periodo}`:s['Plan']||'—';
       return`<tr>
         <td style="font-weight:600">${nombre}</td>
-        <td style="font-family:DM Mono,monospace;font-size:.68rem;color:var(--muted)">${s['Plan']||'—'}</td>
-        <td style="font-family:Bebas Neue,sans-serif;font-size:1.1rem;color:var(--green)">$${monto.toLocaleString()} <span style="font-family:DM Mono,monospace;font-size:.55rem;color:var(--muted2)">/mes</span></td>
+        <td style="font-family:DM Mono,monospace;font-size:.65rem;color:var(--purple-light)">${s['Plan']||'—'}</td>
+        <td style="font-family:DM Mono,monospace;font-size:.65rem;color:var(--muted)">${periodoLabel}</td>
+        <td style="font-family:Bebas Neue,sans-serif;font-size:1.1rem;color:var(--green)">$${monto.toLocaleString()} <span style="font-family:DM Mono,monospace;font-size:.55rem;color:var(--muted2)">MXN</span></td>
         <td style="font-family:DM Mono,monospace;font-size:.65rem;color:var(--muted)">${s['FechaInicio']||'—'}</td>
         <td style="font-family:DM Mono,monospace;font-size:.65rem;color:${renovColor}">${s['FechaRenovacion']||'—'}${diasRenov!==null&&diasRenov<=7?` <span style="color:var(--red);font-size:.55rem">⚠ ${diasRenov}d</span>`:''}</td>
         <td><span style="font-family:DM Mono,monospace;font-size:.6rem;padding:.2rem .5rem;border:1px solid ${ESTADO_COLOR[est]};color:${ESTADO_COLOR[est]}">${est}</span></td>
@@ -3498,13 +3566,17 @@ function renderSuscripciones(){
       const nombre=a?a['AKA']||a['Nombre']:s['ArtistaID']||'—';
       const monto=parseFloat(s['Monto'])||0;
       const rn=s._rowNumber;
+      const periodo=s['Periodo']||'';
+      const cantidad=s['Cantidad']||'1';
+      const periodoLabel=periodo?`${cantidad} × ${periodo}`:s['Plan']||'—';
       return`<div class="mob-card-row">
         <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:.5rem;margin-bottom:.4rem;">
           <div class="mob-card-title">${nombre}</div>
-          <span style="font-family:Bebas Neue,sans-serif;font-size:1rem;color:var(--green)">$${monto.toLocaleString()}/mes</span>
+          <span style="font-family:Bebas Neue,sans-serif;font-size:1rem;color:var(--green)">$${monto.toLocaleString()} MXN</span>
         </div>
         <div class="mob-card-meta">
-          ${s['Plan']?`<span>${s['Plan']}</span>`:''}
+          ${s['Plan']?`<span style="color:var(--purple-light)">${s['Plan']}</span>`:''}
+          ${periodoLabel?`<span>${periodoLabel}</span>`:''}
           ${s['FechaRenovacion']?`<span>Renova: ${s['FechaRenovacion']}</span>`:''}
           ${s['Notas']?`<span>${s['Notas']}</span>`:''}
         </div>
@@ -3515,10 +3587,36 @@ function renderSuscripciones(){
       </div>`;
     }).join('');
     html+=`<table class="data-table"><thead><tr>
-      <th>Artista</th><th>Plan</th><th>Monto</th><th>Inicio</th><th>Renovación</th><th>Estado</th><th>Notas</th><th>Acciones</th>
+      <th>Artista</th><th>Plan</th><th>Periodo</th><th>Monto</th><th>Inicio</th><th>Renovación</th><th>Estado</th><th>Notas</th><th>Acciones</th>
     </tr></thead><tbody>${rows}</tbody></table><div class="mob-card">${mobs}</div>`;
   });
   document.getElementById('suscContainer').innerHTML=html;
+}
+
+// ── SUSCRIPCIONES ──
+const PERIODO_MESES={mensual:1,bimestral:2,trimestral:3,semestral:6,anual:12,personalizado:1};
+const PERIODO_LABEL={mensual:'mes',bimestral:'bimestre',trimestral:'trimestre',semestral:'semestre',anual:'año',personalizado:'periodo'};
+
+function suscCalcRenov(){
+  const inicio=document.getElementById('suscFechaInicio')?.value;
+  const periodo=document.getElementById('suscPeriodo')?.value||'mensual';
+  const cantidad=parseInt(document.getElementById('suscCantidad')?.value)||1;
+  const renovEl=document.getElementById('suscFechaRenov');
+  const labelEl=document.getElementById('suscRenovLabel');
+  if(!inicio||!renovEl){return;}
+  const meses=PERIODO_MESES[periodo]*cantidad;
+  const d=new Date(inicio);
+  d.setMonth(d.getMonth()+meses);
+  const isoRenov=d.toISOString().slice(0,10);
+  renovEl.value=isoRenov;
+  const hoy=new Date();
+  const diasRestantes=Math.round((d-hoy)/(1000*60*60*24));
+  const periodoLabel=cantidad===1?`1 ${PERIODO_LABEL[periodo]}`:`${cantidad} ${PERIODO_LABEL[periodo]}${cantidad>1?'s':''}`;
+  if(labelEl){
+    if(diasRestantes<0) labelEl.innerHTML=`<span style="color:var(--red)">⚠ Venció hace ${Math.abs(diasRestantes)} días</span>`;
+    else if(diasRestantes<=7) labelEl.innerHTML=`<span style="color:var(--yellow)">⚠ Vence en ${diasRestantes} días</span>`;
+    else labelEl.innerHTML=`<span style="color:var(--green)">✓ ${periodoLabel} — renueva el ${isoRenov}</span>`;
+  }
 }
 
 function abrirModalSusc(){
@@ -3527,14 +3625,13 @@ function abrirModalSusc(){
   ['suscMonto','suscNotas'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
   populatePlanSelect('Mensual');
   document.getElementById('suscEstado').value='Activa';
-  // Fecha inicio = hoy, renovación = mes siguiente
+  document.getElementById('suscPeriodo').value='mensual';
+  document.getElementById('suscCantidad').value='1';
   const hoy=new Date();
-  const mesQ=new Date(hoy.getFullYear(),hoy.getMonth()+1,hoy.getDate());
   document.getElementById('suscFechaInicio').value=hoy.toISOString().slice(0,10);
-  document.getElementById('suscFechaRenov').value=mesQ.toISOString().slice(0,10);
-  // Populate artista select
   const sel=document.getElementById('suscArtista');
   sel.innerHTML='<option value="">Seleccionar artista...</option>'+allArtistas.map(a=>`<option value="${a['ArtistaID']}">${a['AKA']||a['Nombre']}</option>`).join('');
+  suscCalcRenov();
   openModal('modalSusc');
 }
 
@@ -3545,11 +3642,15 @@ function editSusc(rowNum){
   document.getElementById('suscRowNum').value=rowNum;
   document.getElementById('suscArtista').value=s['ArtistaID']||'';
   populatePlanSelect(s['Plan']||'Mensual');
+  document.getElementById('suscPeriodo').value=s['Periodo']||'mensual';
+  document.getElementById('suscCantidad').value=s['Cantidad']||'1';
   document.getElementById('suscMonto').value=s['Monto']||'';
   document.getElementById('suscEstado').value=s['Estado']||'Activa';
   document.getElementById('suscFechaInicio').value=s['FechaInicio']||'';
-  document.getElementById('suscFechaRenov').value=s['FechaRenovacion']||'';
   document.getElementById('suscNotas').value=s['Notas']||'';
+  // If stored renovation exists show it, else recalc
+  if(s['FechaRenovacion']) document.getElementById('suscFechaRenov').value=s['FechaRenovacion'];
+  suscCalcRenov();
 }
 
 async function guardarSusc(){
@@ -3557,17 +3658,22 @@ async function guardarSusc(){
   const rowNum=parseInt(document.getElementById('suscRowNum').value)||0;
   const artista=document.getElementById('suscArtista').value;
   const monto=document.getElementById('suscMonto').value;
-  if(!artista||!monto){toast('Artista y monto son requeridos','error');return;}
+  if(!artista){toast('Selecciona un artista','error');return;}
   const idExist=rowNum?allSuscripciones.find(s=>s._rowNumber===rowNum):null;
   const suscId=idExist?idExist['SuscripcionID']||'':nextId(allSuscripciones,'SuscripcionID','Susc');
+  const periodo=document.getElementById('suscPeriodo').value;
+  const cantidad=document.getElementById('suscCantidad').value||'1';
+  const renovFecha=document.getElementById('suscFechaRenov').value;
   const values=[
     suscId, artista,
     document.getElementById('suscPlan').value,
-    monto,
+    monto||'0',
     document.getElementById('suscFechaInicio').value,
-    document.getElementById('suscFechaRenov').value,
+    renovFecha,
     document.getElementById('suscEstado').value,
-    document.getElementById('suscNotas').value.trim()
+    document.getElementById('suscNotas').value.trim(),
+    periodo,
+    cantidad
   ];
   let ok=false;
   if(rowNum) ok=await updateRow(SH.suscripciones,rowNum,values);
@@ -4245,8 +4351,12 @@ const PIPELINE_COLS=[
 ];
 
 function renderPipeline(){
-  // Artistas prospecto + su etapa
-  const prospectos=allArtistas.filter(a=>a['Categoria']==='Prospecto'||a['EtapaPipeline']);
+  // Incluir artistas con EtapaPipeline activa O categoría Prospecto/SoloCotizó
+  const prospectos=allArtistas.filter(a=>
+    a['Categoria']==='Prospecto'||
+    a['Categoria']==='Solo cotizó'||
+    (a['EtapaPipeline']&&a['EtapaPipeline']!=='')
+  );
   // Stats
   const statsEl=document.getElementById('pipelineStats');
   const perdidos=allArtistas.filter(a=>a['Categoria']==='Inactivo'&&a['EtapaPipeline']==='Perdido').length;
@@ -4275,6 +4385,8 @@ function renderPipeline(){
         ${otrasEtapas.map(e=>`<button class="btn-xs" style="background:rgba(168,85,247,.1);color:var(--muted);font-size:.5rem" onclick="moverPipeline(${a._rowNumber},'${e.key}')">→ ${e.label}</button>`).join('')}
         <button class="btn-xs btn-xs-edit" onclick="editArtista(${a._rowNumber})" style="font-size:.5rem">Editar</button>
         ${a['Telefono']?`<button class="btn-xs btn-xs-save" style="font-size:.5rem" onclick="window.open('https://wa.me/52${a['Telefono'].replace(/\D/g,'')}','_blank')">WA</button>`:''}
+        ${etapa==='Cerrado'?`<button class="btn-xs" style="background:rgba(52,211,153,.15);color:var(--green);font-size:.5rem" onclick="piplineAbrirProyecto('${a['ArtistaID']}')">+ Proyecto</button>`:''}
+        ${etapa==='Cotizó'?`<button class="btn-xs" style="background:rgba(201,168,76,.12);color:var(--gold);font-size:.5rem" onclick="showPage('cotizador',document.getElementById('navCotizador'));setTimeout(()=>{document.getElementById('cotizArtista').value='${a['ArtistaID']}';cotizActualizar();},200)">Cotizar</button>`:''}
       </div>
     </div>`;
   }
@@ -4311,15 +4423,34 @@ function renderPipeline(){
   document.getElementById('pipelineBoard').innerHTML=html;
 }
 
+function piplineAbrirProyecto(artistaId){
+  showPage('proyectos',document.querySelector('.nav-item[onclick*="proyectos"]'));
+  setTimeout(()=>{
+    const btn=document.querySelector('#page-proyectos .btn-gold');
+    if(btn){btn.click();}
+    setTimeout(()=>{
+      const sel=document.getElementById('npArtista');
+      if(sel){sel.value=artistaId;}
+    },100);
+  },200);
+}
+
 async function moverPipeline(rowNum,etapa){
   const a=allArtistas.find(x=>x._rowNumber===rowNum);if(!a) return;
-  // Guardar EtapaPipeline (columna extra — usa NotasConvenio col o agrega col pipeline)
-  // Por ahora actualizamos el registro completo con etapa en campo EtapaPipeline (col 12)
-  const values=[a['ArtistaID']||'',a['Nombre']||'',a['AKA']||'',a['Telefono']||'',a['Correo']||'',
-    a['CodigoAcceso']||'',a['Tipo']||'',a['Imagen']||'',a['Categoria']||'',
-    a['PrecioConvenio']||'',a['NotasConvenio']||'',etapa];
+  // Si cierra → promover a Activo automáticamente
+  const nuevaCat=etapa==='Cerrado'?'Activo':(a['Categoria']||'Prospecto');
+  // 12 columnas: ArtistaID|Nombre|AKA|Telefono|Correo|CodigoAcceso|Tipo|Imagen|Categoria|PrecioConvenio|NotasConvenio|EtapaPipeline
+  const values=[
+    a['ArtistaID']||'',a['Nombre']||'',a['AKA']||'',a['Telefono']||'',a['Correo']||'',
+    a['CodigoAcceso']||'',a['Tipo']||'',a['Imagen']||'',nuevaCat,
+    a['PrecioConvenio']||'',a['NotasConvenio']||'',etapa
+  ];
   const ok=await updateRow(SH.artistas,rowNum,values);
-  if(ok){toast(`→ Movido a ${etapa}`,'success');await loadAdmin(500);}
+  if(ok){
+    const msg=etapa==='Cerrado'?`🎉 ¡Nuevo cliente! Movido a Activo`:`→ Movido a ${etapa}`;
+    toast(msg,'success');
+    await loadAdmin(500);
+  }
   else toast('Error — activa OAuth primero','error');
 }
 
@@ -4378,4 +4509,3 @@ function toast(msg,type=''){
 </script>
 </body>
 </html>
-
