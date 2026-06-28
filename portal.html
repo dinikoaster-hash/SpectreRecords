@@ -222,6 +222,17 @@
       transition:color .2s, border-color .2s;
     }
     .logout-btn:hover { color:var(--red); border-color:var(--red); }
+    .refresh-btn {
+      width:30px; height:30px;
+      display:flex; align-items:center; justify-content:center;
+      background:none; border:1px solid var(--border2);
+      color:var(--muted2); cursor:none;
+      transition:color .2s, border-color .2s, transform .3s;
+    }
+    .refresh-btn:hover { color:var(--purple-light); border-color:var(--purple-dim); }
+    .refresh-btn.spinning .refresh-icon { display:inline-block; animation:spin .7s linear; }
+    .refresh-icon { font-size:.95rem; line-height:1; }
+    @keyframes spin { from{transform:rotate(0deg)} to{transform:rotate(360deg)} }
     .portal-nav-catalogo {
       font-family:'DM Mono',monospace;
       font-size:.65rem;
@@ -620,6 +631,23 @@
     .curso-locked { display:flex; flex-direction:column; align-items:center; justify-content:center; aspect-ratio:16/9; background:var(--surface2); border-bottom:1px solid var(--border); gap:.75rem; }
     .curso-locked-icon { font-size:2rem; opacity:.35; }
     .curso-locked-text { font-family:'DM Mono',monospace; font-size:.65rem; letter-spacing:.15em; text-transform:uppercase; color:var(--muted2); }
+    .curso-file-preview {
+      position:relative; display:flex; flex-direction:column; align-items:center; justify-content:center;
+      aspect-ratio:16/9; background:var(--surface2); border-bottom:1px solid var(--border);
+      gap:.6rem; padding:1rem; overflow:hidden;
+    }
+    .curso-file-icon { font-size:2.4rem; opacity:.55; }
+    .curso-file-type { font-family:'DM Mono',monospace; font-size:.58rem; letter-spacing:.18em; text-transform:uppercase; color:var(--muted2); }
+    .curso-download-btn {
+      font-family:'DM Mono',monospace; font-size:.62rem; letter-spacing:.1em; text-transform:uppercase;
+      background:var(--purple); color:#fff; border:none;
+      padding:.55rem 1.2rem; cursor:none; text-decoration:none;
+      display:inline-flex; align-items:center; gap:.4rem;
+      transition:background .2s; margin-top:.3rem;
+    }
+    .curso-download-btn:hover { background:var(--purple-dim2,#9333ea); }
+    .curso-audio-player { width:100%; padding:1.2rem 1.5rem .4rem; background:var(--surface2); border-bottom:1px solid var(--border); }
+    .curso-audio-player audio { width:100%; }
     @keyframes fadeUp { from{opacity:0;transform:translateY(20px)} to{opacity:1;transform:translateY(0)} }
     @keyframes shimmer { from{transform:translateX(-100%)} to{transform:translateX(100%)} }
     @keyframes spin { to{transform:rotate(360deg)} }
@@ -777,6 +805,9 @@
     </a>
     <div class="portal-nav-right">
       <div class="portal-artist-name">// <strong id="navArtistName">—</strong></div>
+      <button class="refresh-btn" id="refreshBtn" onclick="refreshPortal()" title="Actualizar datos">
+        <span class="refresh-icon">&#x27F3;</span>
+      </button>
       <a href="catalogo.html" class="portal-nav-catalogo" target="_blank">Catálogo →</a>
       <button class="logout-btn" onclick="doLogout()">Salir</button>
     </div>
@@ -921,6 +952,7 @@ function getCfg() {
     shProyectos: localStorage.getItem('sp_shProyectos') || 'Proyectos',
     shFinanzas:  localStorage.getItem('sp_shFinanzas')  || 'Finanzas',
     shCursos:    localStorage.getItem('sp_shCursos')    || 'Cursos',
+    shSuscripciones: localStorage.getItem('sp_shSuscripciones') || 'Suscripciones',
   };
 }
 function saveConfig() {
@@ -1000,6 +1032,7 @@ let currentArtist = null;
 let allProyectos  = [];
 let allFinanzas   = [];
 let allCursos     = [];
+let allSuscripciones = [];
 let isDemoMode    = false;
 
 // ═══════════════════════════════════════
@@ -1095,7 +1128,17 @@ async function loadPortal() {
   document.getElementById('welcomeName').textContent   = (aka || nombre).toUpperCase();
   document.getElementById('welcomeAka').textContent    = aka ? `// ${nombre}` : '';
 
-  // Load data
+  await fetchAndRenderAll(id);
+
+  // Reveal
+  setTimeout(() => {
+    document.querySelectorAll('.reveal').forEach((el,i) => {
+      setTimeout(() => el.classList.add('visible'), i*80);
+    });
+  }, 100);
+}
+
+async function fetchAndRenderAll(id) {
   const cfg = getCfg();
   let proyectos = null, finanzas = null;
 
@@ -1108,7 +1151,11 @@ async function loadPortal() {
   const cursosRaw = cfg.sheetId && cfg.apiKey ? await fetchSheet(cfg.shCursos) : null;
   allCursos = (cursosRaw || []).filter(c => c['Visible'] !== 'FALSE');
 
-  // Filter by artist
+  const suscRaw = cfg.sheetId && cfg.apiKey ? await fetchSheet(cfg.shSuscripciones).catch(()=>null) : null;
+  allSuscripciones = (suscRaw || []).filter(s =>
+    id && (s['ArtistaID']||'').trim() === id.trim()
+  );
+
   // Filter strictly by ArtistaID to avoid matching wrong artist with same name
   allProyectos = (proyectos || DEMO_PROYECTOS).filter(p =>
     id && (p['Cliente']||'').trim() === id.trim()
@@ -1123,13 +1170,33 @@ async function loadPortal() {
   renderArchivos();
   renderCursos();
   renderPerfil();
+}
 
-  // Reveal
-  setTimeout(() => {
-    document.querySelectorAll('.reveal').forEach((el,i) => {
-      setTimeout(() => el.classList.add('visible'), i*80);
-    });
-  }, 100);
+async function refreshPortal() {
+  const btn = document.getElementById('refreshBtn');
+  if (!btn) return;
+  btn.classList.add('spinning');
+  btn.disabled = true;
+  const id = currentArtist ? (currentArtist['ArtistaID'] || currentArtist['ID'] || '') : '';
+  try {
+    await fetchAndRenderAll(id);
+    toastPortal('✓ Datos actualizados');
+  } catch (e) {
+    toastPortal('// No se pudo actualizar', true);
+  } finally {
+    setTimeout(() => { btn.classList.remove('spinning'); btn.disabled = false; }, 500);
+  }
+}
+
+function toastPortal(msg, isError) {
+  const t = document.createElement('div');
+  t.style.cssText = `position:fixed;bottom:1.2rem;right:1.2rem;background:var(--surface);
+    border-left:3px solid ${isError ? 'var(--red)' : 'var(--green)'};color:var(--text);
+    font-family:'DM Mono',monospace;font-size:.6rem;letter-spacing:.08em;padding:.7rem 1.1rem;
+    z-index:9999;max-width:250px;box-shadow:0 6px 24px rgba(0,0,0,.5);`;
+  t.textContent = msg;
+  document.body.appendChild(t);
+  setTimeout(() => t.remove(), 2600);
 }
 
 // ═══════════════════════════════════════
@@ -1332,6 +1399,29 @@ function renderPerfil() {
   const a  = currentArtist;
   const initials = (a['Nombre']||'?').split(' ').map(w=>w[0]).join('').slice(0,2).toUpperCase();
   const imgSrc = a['Imagen'] || '';
+
+  const susc = allSuscripciones.find(s => s['Estado']==='Activa') || allSuscripciones[0] || null;
+  let suscHtml = '';
+  if (susc) {
+    const estado = susc['Estado'] || '—';
+    const isActiva = estado === 'Activa';
+    const isPausada = estado === 'Pausada';
+    const color = isActiva ? 'var(--green)' : isPausada ? 'var(--yellow)' : 'var(--muted2)';
+    const monto = parseFloat(susc['Monto'])||0;
+    const renov = susc['FechaRenovacion'] || '';
+    suscHtml = `
+    <div class="susc-card" style="margin-top:1.2rem;border:1px solid var(--border);border-left:3px solid ${color};padding:1.1rem 1.4rem;background:var(--surface);">
+      <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:.6rem;">
+        <div>
+          <div style="font-family:'DM Mono',monospace;font-size:.56rem;letter-spacing:.18em;text-transform:uppercase;color:var(--muted2);margin-bottom:.3rem;">// Mi membresía</div>
+          <div style="font-family:'Bebas Neue',sans-serif;font-size:1.2rem;letter-spacing:.04em;color:${color};">Spectre Core — ${estado}</div>
+        </div>
+        ${monto ? `<div style="text-align:right;"><div style="font-family:'Bebas Neue',sans-serif;font-size:1.3rem;color:var(--gold,#C9A84C);">$${monto.toLocaleString()}</div><div style="font-family:'DM Mono',monospace;font-size:.55rem;color:var(--muted2);">MXN / mes</div></div>` : ''}
+      </div>
+      ${renov ? `<div style="margin-top:.7rem;font-family:'DM Mono',monospace;font-size:.62rem;color:var(--muted);">Próxima renovación: <strong style="color:var(--text);">${formatFecha(renov)}</strong></div>` : ''}
+    </div>`;
+  }
+
   c.innerHTML = `
     <div class="profile-card">
       <div class="profile-avatar">
@@ -1347,6 +1437,7 @@ function renderPerfil() {
         </div>
       </div>
     </div>
+    ${suscHtml}
     ${isDemoMode ? `<div style="margin-top:1rem;padding:1rem;border:1px solid var(--purple-dim);font-family:'DM Mono',monospace;font-size:.65rem;color:var(--purple-light);letter-spacing:.08em;line-height:1.6">
       // Modo demo activo. <a href="#" onclick="openConfig()" style="color:var(--purple-light)">Conecta tu Google Sheets</a> para ver datos reales.
     </div>` : ''}
@@ -1387,25 +1478,71 @@ function getEmbedUrl(video) {
   return video;
 }
 
+function getDriveDownloadUrl(link){
+  if(!link) return '';
+  let m = link.match(/\/d\/([^\/\?]+)/);
+  if(m) return `https://drive.google.com/uc?export=download&id=${m[1]}`;
+  m = link.match(/id=([^&]+)/);
+  if(m) return `https://drive.google.com/uc?export=download&id=${m[1]}`;
+  return link;
+}
+
 function buildCursoCard(curso, nivelArtista) {
-  const tipo   = curso['TipoCurso'] || 'Estándar';
-  const titulo = curso['Titulo'] || '—';
-  const desc   = curso['Descripcion'] || '';
-  const video  = curso['Video'] || '';
-  const puede  = canSeeCurso(tipo, nivelArtista);
-  const embed  = getEmbedUrl(video);
+  const tipo     = curso['TipoCurso'] || 'Estándar';
+  const titulo   = curso['Titulo'] || '—';
+  const desc     = curso['Descripcion'] || '';
+  const video    = curso['Video'] || '';
+  const tipoRec  = (curso['TipoRecurso'] || 'Video');
+  const thumb    = curso['Thumb'] || '';
+  const puede    = canSeeCurso(tipo, nivelArtista);
+  const embed    = getEmbedUrl(video);
 
   const t = tipo.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'');
   const badgeClass = t === 'pro' ? 'curso-badge-pro' : (t === 'user' || t === 'miembro') ? 'curso-badge-user' : 'curso-badge-pub';
   const badgeLabel = t === 'pro' ? 'Pro' : (t === 'user' || t === 'miembro') ? 'Miembro' : 'Gratis';
 
-  return `<div class="curso-card">
-    ${puede && embed
+  const tr = tipoRec.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'');
+  const ICONS = { pdf:'📄', guia:'📋', audio:'🎧', link:'🔗', archivo:'📁' };
+  const LABELS = { pdf:'Documento PDF', guia:'Guía / Tutorial', audio:'Muestra de audio', link:'Link externo', archivo:'Archivo descargable' };
+
+  let mediaHtml = '';
+
+  if(!puede){
+    mediaHtml = `<div class="curso-locked">
+        <div class="curso-locked-icon">🔒</div>
+        <div class="curso-locked-text">// Requiere nivel ${badgeLabel}</div>
+      </div>`;
+  } else if(tr === 'video' || tr === ''){
+    mediaHtml = embed
       ? `<iframe class="curso-video" src="${embed}" allowfullscreen allow="autoplay; encrypted-media" sandbox="allow-scripts allow-same-origin allow-presentation"></iframe>`
-      : `<div class="curso-locked">
-          <div class="curso-locked-icon">🔒</div>
-          <div class="curso-locked-text">// Requiere nivel ${badgeLabel}</div>
-        </div>`}
+      : `<div class="curso-file-preview"><div class="curso-file-icon">🎬</div><div class="curso-file-type">// Video no disponible</div></div>`;
+  } else if(tr === 'audio'){
+    const audioSrc = video.includes('drive.google.com') ? getDriveDownloadUrl(video) : video;
+    mediaHtml = `<div class="curso-audio-player">
+        <div class="curso-file-type" style="margin-bottom:.6rem;">${ICONS.audio} ${LABELS.audio}</div>
+        <audio controls preload="none" src="${audioSrc}"></audio>
+      </div>`;
+  } else if(tr === 'link'){
+    mediaHtml = `<div class="curso-file-preview">
+        <div class="curso-file-icon">${ICONS.link}</div>
+        <div class="curso-file-type">${LABELS.link}</div>
+        <a class="curso-download-btn" href="${video}" target="_blank" rel="noopener">Abrir link →</a>
+      </div>`;
+  } else {
+    // pdf, guia, archivo → descarga
+    const icon = ICONS[tr] || '📁';
+    const label = LABELS[tr] || 'Archivo descargable';
+    const downloadUrl = video.includes('drive.google.com') ? getDriveDownloadUrl(video) : video;
+    mediaHtml = `<div class="curso-file-preview">
+        ${thumb ? `<img src="${thumb}" alt="" style="width:100%;height:100%;object-fit:cover;position:absolute;inset:0;opacity:.25;"/>` : ''}
+        <div class="curso-file-icon" style="position:relative;z-index:1;">${icon}</div>
+        <div class="curso-file-type" style="position:relative;z-index:1;">${label}</div>
+        <a class="curso-download-btn" style="position:relative;z-index:1;" href="${downloadUrl}" target="_blank" rel="noopener" download>&#x2193; Descargar</a>
+      </div>`;
+  }
+
+  return `<div class="curso-card">
+    ${mediaHtml}
     <div class="curso-info">
       <span class="curso-badge ${badgeClass}">${badgeLabel}</span>
       <div class="curso-titulo">${titulo}</div>
@@ -1500,3 +1637,4 @@ function doLogout() {
 </script>
 </body>
 </html>
+
