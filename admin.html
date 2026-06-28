@@ -509,6 +509,7 @@ body::before{content:'';position:fixed;inset:0;background-image:url("data:image/
     <div style="flex:1;min-width:0;">
       <div class="ap-name" id="apName">&#x2014;</div>
       <div class="ap-aka" id="apAka"></div>
+      <div id="apCodigo" style="font-family:DM Mono,monospace;font-size:.52rem;color:var(--muted2);margin-top:.2rem;letter-spacing:.06em;"></div>
     </div>
     <div style="display:flex;gap:.4rem;flex-shrink:0;align-items:center;">
       <button class="btn-xs btn-xs-edit" id="apEditBtn" onclick="" style="font-size:.6rem;padding:.35rem .7rem;">Editar</button>
@@ -1445,7 +1446,7 @@ let catView = 'todos';
 
 // PLANES SUSCRIPCION CUSTOM
 const PLANES_KEY='sr_custom_planes';
-const DEFAULT_PLANES=['Convenio mensual','2 canciones/mes','Ilimitado','Personalizado'];
+const DEFAULT_PLANES=['Mensual','Gratuito','Personalizado'];
 function getPlanes(){
   let custom=[];
   try{custom=JSON.parse(localStorage.getItem(PLANES_KEY)||'[]');}catch(e){}
@@ -1543,7 +1544,7 @@ function eliminarServicio(nombre){
 
 // CATEGORÍAS CUSTOM (guardadas en localStorage)
 const CATS_KEY='sr_custom_cats';
-const DEFAULT_CATS=['','Activo','Recurrente','Convenio','Prospecto','Inactivo'];
+const DEFAULT_CATS=['','Activo','Recurrente','Convenio','Prospecto','Solo cotizó','Recuperar','Inactivo','Rechazado'];
 function getCategorias(){
   let custom=[];
   try{custom=JSON.parse(localStorage.getItem(CATS_KEY)||'[]');}catch(e){}
@@ -2034,9 +2035,9 @@ function renderArtistas(){
   }
 
   // Agrupar por categoría
-  const CAT_ORDER=['Convenio','Recurrente','Activo','Prospecto','Inactivo',''];
-  const CAT_LABELS={'Convenio':'// Convenio — precio especial','Recurrente':'// Recurrentes','Activo':'// Activos','Prospecto':'// Prospectos','Inactivo':'// Inactivos','':'// Sin clasificar'};
-  const CAT_COLORS={'Convenio':'var(--green)','Recurrente':'var(--purple-light)','Activo':'var(--yellow)','Prospecto':'var(--muted)','Inactivo':'var(--muted2)','':'var(--muted2)'};
+  const CAT_ORDER=['Convenio','Recurrente','Activo','Solo cotizó','Prospecto','Recuperar','Inactivo','Rechazado',''];
+  const CAT_LABELS={'Convenio':'// Convenio — precio especial','Recurrente':'// Recurrentes','Activo':'// Activos','Solo cotizó':'// Solo cotizaron — nunca han comprado','Prospecto':'// Prospectos','Recuperar':'// Recuperar — posibles clientes perdidos','Inactivo':'// Inactivos','Rechazado':'// Rechazados — no trabajar con ellos','':'// Sin clasificar'};
+  const CAT_COLORS={'Convenio':'var(--green)','Recurrente':'var(--purple-light)','Activo':'var(--yellow)','Solo cotizó':'var(--muted)','Prospecto':'var(--muted)','Recuperar':'#fb923c','Inactivo':'var(--muted2)','Rechazado':'var(--red)','':'var(--muted2)'};
 
   function artistaCard(a){
     const ini=(a['AKA']||a['Nombre']||'?').split(' ').map(w=>w[0]).join('').slice(0,2).toUpperCase();
@@ -2049,23 +2050,16 @@ function renderArtistas(){
     const ltvColor=ltv.cobrado>10000?'var(--green)':ltv.cobrado>4000?'var(--yellow)':'var(--muted)';
     const frecLabel=ltv.frecMeses===null?'—':ltv.frecMeses<=1.5?'Mensual':ltv.frecMeses<=2.5?'Bimestral':ltv.frecMeses<=6?`c/${Math.round(ltv.frecMeses)} meses`:'Esporádico';
 
-    return`<div class="artist-card">
-      <div style="display:flex;justify-content:space-between;align-items:center;gap:.4rem;margin-bottom:.6rem;">
-        <div style="font-family:DM Mono,monospace;font-size:.52rem;color:var(--muted2);letter-spacing:.06em;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1">${a['CodigoAcceso']||''}</div>
-        <div style="display:flex;gap:.3rem;flex-shrink:0;">
-          <button class="btn-xs btn-xs-edit" onclick="editArtista(${a._rowNumber})" style="padding:.25rem .5rem;font-size:.55rem;">Editar</button>
-          <button class="btn-xs btn-xs-del" onclick="confirmDelete('artista',${a._rowNumber},'${(a['AKA']||a['Nombre']||'').replace(/'/g,"\\'")}');" style="padding:.25rem .5rem;font-size:.55rem;">✕</button>
-        </div>
-      </div>
-      <div class="artist-header" style="cursor:none;margin-bottom:.7rem;" onclick="openArtistPanel(${a._rowNumber})">
+    return`<div class="artist-card" onclick="openArtistPanel(${a._rowNumber})" style="cursor:none;">
+      <div style="font-family:DM Mono,monospace;font-size:.5rem;color:var(--muted2);letter-spacing:.06em;margin-bottom:.5rem;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${a['CodigoAcceso']||'\u00a0'}</div>
+      <div class="artist-header" style="margin-bottom:.7rem;">
         <div class="artist-avatar">${imgSrc?`<img src="${imgSrc}" onerror="this.parentElement.textContent='${ini}'">`:'<span>'+ini+'</span>'}</div>
         <div style="flex:1;min-width:0;">
           <div class="artist-name">${a['AKA']||a['Nombre']||'—'}</div>
           ${a['AKA']?`<div class="artist-aka">// ${a['Nombre']}</div>`:''}
-          ${cat?`<div style="font-family:DM Mono,monospace;font-size:.55rem;letter-spacing:.1em;color:${catColor};margin-top:.15rem;">${cat.toUpperCase()}</div>`:''}
         </div>
       </div>
-      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:1px;background:var(--border);border:1px solid var(--border);margin:.4rem 0 .6rem;" onclick="openArtistPanel(${a._rowNumber})" style="cursor:none;">
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:1px;background:var(--border);border:1px solid var(--border);margin-bottom:.6rem;">
         <div style="background:var(--surface2);padding:.5rem .4rem;text-align:center;">
           <div style="font-family:DM Mono,monospace;font-size:.48rem;color:var(--muted2);letter-spacing:.08em;text-transform:uppercase;margin-bottom:.1rem;">LTV</div>
           <div style="font-family:Bebas Neue,sans-serif;font-size:.95rem;color:${ltvColor}">$${ltv.cobrado>=1000?Math.round(ltv.cobrado/1000)+'k':ltv.cobrado.toLocaleString()}</div>
@@ -2087,20 +2081,36 @@ function renderArtistas(){
     </div>`;
   }
 
+  // Track collapsed groups in localStorage
+  const COLLAPSED_KEY='sr_cat_collapsed';
+  function getCollapsed(){try{return JSON.parse(localStorage.getItem(COLLAPSED_KEY)||'[]');}catch(e){return[];}}
+  function toggleCatCollapse(key){
+    const col=getCollapsed();
+    const idx=col.indexOf(key);
+    if(idx>-1)col.splice(idx,1);else col.push(key);
+    localStorage.setItem(COLLAPSED_KEY,JSON.stringify(col));
+    renderArtistas();
+  }
+
   let html='';
   if(catFilter){
-    // Filtro activo: sin divisores, grilla directa
-    html=`<div class="artists-grid">${list.map(artistaCard).join('')}</div>`;
+    const sorted=[...list].sort((a,b)=>(a['AKA']||a['Nombre']||'').localeCompare(b['AKA']||b['Nombre']||''));
+    html=`<div class="artists-grid">${sorted.map(artistaCard).join('')}</div>`;
   } else {
-    // Sin filtro: agrupar por categoría con divisores
+    const collapsed=getCollapsed();
     CAT_ORDER.forEach(cat=>{
-      const grupo=list.filter(a=>(a['Categoria']||'')===cat);
+      const grupo=[...list.filter(a=>(a['Categoria']||'')===cat)].sort((a,b)=>(a['AKA']||a['Nombre']||'').localeCompare(b['AKA']||b['Nombre']||''));
       if(!grupo.length) return;
-      html+=`<div style="display:flex;align-items:center;gap:1rem;margin:1.8rem 0 .8rem;${cat!==CAT_ORDER[0]?'padding-top:1rem;border-top:1px solid var(--border);':''}">
-        <span style="font-family:DM Mono,monospace;font-size:.58rem;letter-spacing:.18em;text-transform:uppercase;color:${CAT_COLORS[cat]};">${CAT_LABELS[cat]}</span>
-        <span style="font-family:DM Mono,monospace;font-size:.58rem;color:var(--muted2);opacity:.6">(${grupo.length})</span>
-      </div>
-      <div class="artists-grid">${grupo.map(artistaCard).join('')}</div>`;
+      const isCollapsed=collapsed.includes(cat===''?'__none__':cat);
+      const toggleKey=cat===''?'__none__':cat;
+      html+=`<div style="${cat!==CAT_ORDER[0]?'padding-top:1rem;border-top:1px solid var(--border);':''}margin:1.2rem 0 ${isCollapsed?'0':'.8rem'};">
+        <button onclick="toggleCatCollapse('${toggleKey}')" style="display:flex;align-items:center;gap:.8rem;background:none;border:none;width:100%;text-align:left;cursor:none;padding:.2rem 0;">
+          <span style="font-family:DM Mono,monospace;font-size:.58rem;letter-spacing:.18em;text-transform:uppercase;color:${CAT_COLORS[cat]};">${CAT_LABELS[cat]}</span>
+          <span style="font-family:DM Mono,monospace;font-size:.55rem;color:var(--muted2);opacity:.7">(${grupo.length})</span>
+          <span style="font-family:DM Mono,monospace;font-size:.65rem;color:var(--muted2);margin-left:auto;transition:transform .2s;${isCollapsed?'':'transform:rotate(90deg)'}">${isCollapsed?'▶':'▶'}</span>
+        </button>
+        ${isCollapsed?'':`<div class="artists-grid" style="margin-top:.6rem">${grupo.map(artistaCard).join('')}</div>`}
+      </div>`;
     });
   }
 
@@ -3276,6 +3286,8 @@ function openArtistPanel(rowNum){
   apAvatar.innerHTML=imgSrc?`<img src="${imgSrc}" onerror="this.parentElement.textContent='${ini}'">`:`<span>${ini}</span>`;
   document.getElementById('apName').textContent=a['AKA']||a['Nombre']||'—';
   document.getElementById('apAka').textContent=a['AKA']?'// '+a['Nombre']:'';
+  const apCod=document.getElementById('apCodigo');
+  if(apCod) apCod.textContent=a['CodigoAcceso']?'// '+a['CodigoAcceso']:'';
   // Header action buttons
   const apEdit=document.getElementById('apEditBtn');
   const apDel=document.getElementById('apDelBtn');
@@ -3485,7 +3497,7 @@ function abrirModalSusc(){
   document.getElementById('modalSuscTitle').textContent='NUEVA SUSCRIPCIÓN';
   document.getElementById('suscRowNum').value='';
   ['suscMonto','suscNotas'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
-  populatePlanSelect('Convenio mensual');
+  populatePlanSelect('Mensual');
   document.getElementById('suscEstado').value='Activa';
   // Fecha inicio = hoy, renovación = mes siguiente
   const hoy=new Date();
@@ -3504,7 +3516,7 @@ function editSusc(rowNum){
   document.getElementById('modalSuscTitle').textContent='EDITAR SUSCRIPCIÓN';
   document.getElementById('suscRowNum').value=rowNum;
   document.getElementById('suscArtista').value=s['ArtistaID']||'';
-  populatePlanSelect(s['Plan']||'Convenio mensual');
+  populatePlanSelect(s['Plan']||'Mensual');
   document.getElementById('suscMonto').value=s['Monto']||'';
   document.getElementById('suscEstado').value=s['Estado']||'Activa';
   document.getElementById('suscFechaInicio').value=s['FechaInicio']||'';
