@@ -510,7 +510,11 @@ body::before{content:'';position:fixed;inset:0;background-image:url("data:image/
       <div class="ap-name" id="apName">&#x2014;</div>
       <div class="ap-aka" id="apAka"></div>
     </div>
-    <button class="ap-close" onclick="closeArtistPanel()">&#x2715; Cerrar</button>
+    <div style="display:flex;gap:.4rem;flex-shrink:0;align-items:center;">
+      <button class="btn-xs btn-xs-edit" id="apEditBtn" onclick="" style="font-size:.6rem;padding:.35rem .7rem;">Editar</button>
+      <button class="btn-xs btn-xs-del" id="apDelBtn" onclick="" style="font-size:.6rem;padding:.35rem .5rem;">✕</button>
+      <button class="ap-close" onclick="closeArtistPanel()">&#x2715; Cerrar</button>
+    </div>
   </div>
   <div class="ap-body" id="apBody"></div>
 </div>
@@ -580,9 +584,6 @@ body::before{content:'';position:fixed;inset:0;background-image:url("data:image/
         <button class="nav-item" onclick="showPage('tareas',this)" id="navTareas">
           <span class="nav-icon">&#x2713;</span><span class="nav-label">Tareas</span>
           <span class="nav-badge purple" id="badgeTareas" style="display:none">0</span>
-        </button>
-        <button class="nav-item" onclick="showPage('nuevo',this)" id="navNuevo">
-          <span class="nav-icon">+</span><span class="nav-label">Nuevo proyecto</span>
         </button>
       </nav>
       <div class="sidebar-bottom">
@@ -856,16 +857,16 @@ body::before{content:'';position:fixed;inset:0;background-image:url("data:image/
               <div class="cotiz-panel-title">// Servicios</div>
               <div id="cotizServicios">
                 <div style="font-family:DM Mono,monospace;font-size:.55rem;letter-spacing:.12em;color:var(--muted2);text-transform:uppercase;margin-bottom:.5rem;padding-bottom:.4rem;border-bottom:1px solid var(--border);">// Servicios individuales</div>
-                <div class="cotiz-row"><input type="checkbox" class="cotiz-check" id="csGrab" onchange="cotizActualizar()"><label class="cotiz-label" for="csGrab">Grabación</label><input class="cotiz-price-input" id="cpGrab" type="number" value="300" oninput="cotizActualizar()"></div>
-                <div class="cotiz-row"><input type="checkbox" class="cotiz-check" id="csMezcla" onchange="cotizActualizar()"><label class="cotiz-label" for="csMezcla">Mezcla</label><input class="cotiz-price-input" id="cpMezcla" type="number" value="300" oninput="cotizActualizar()"></div>
-                <div class="cotiz-row"><input type="checkbox" class="cotiz-check" id="csMaster" onchange="cotizActualizar()"><label class="cotiz-label" for="csMaster">Masterización</label><input class="cotiz-price-input" id="cpMaster" type="number" value="200" oninput="cotizActualizar()"></div>
-                <div class="cotiz-row"><input type="checkbox" class="cotiz-check" id="csBeat" onchange="cotizActualizar()"><label class="cotiz-label" for="csBeat">Beat por encargo</label><input class="cotiz-price-input" id="cpBeat" type="number" value="500" oninput="cotizActualizar()"></div>
+                <div class="cotiz-row"><input type="checkbox" class="cotiz-check" id="csGrab" onchange="cotizActualizar()"><label class="cotiz-label" for="csGrab">Grabación</label><input class="cotiz-price-input" id="cpGrab" type="number" value="1500" oninput="cotizActualizar()"></div>
+                <div class="cotiz-row"><input type="checkbox" class="cotiz-check" id="csMezcla" onchange="cotizActualizar()"><label class="cotiz-label" for="csMezcla">Mezcla</label><input class="cotiz-price-input" id="cpMezcla" type="number" value="1500" oninput="cotizActualizar()"></div>
+                <div class="cotiz-row"><input type="checkbox" class="cotiz-check" id="csMaster" onchange="cotizActualizar()"><label class="cotiz-label" for="csMaster">Masterización</label><input class="cotiz-price-input" id="cpMaster" type="number" value="800" oninput="cotizActualizar()"></div>
+                <div class="cotiz-row"><input type="checkbox" class="cotiz-check" id="csBeat" onchange="cotizActualizar()"><label class="cotiz-label" for="csBeat">Beat por encargo</label><input class="cotiz-price-input" id="cpBeat" type="number" value="1500" oninput="cotizActualizar()"></div>
                 <div class="cotiz-row"><input type="checkbox" class="cotiz-check" id="csVideo" onchange="cotizActualizar()"><label class="cotiz-label" for="csVideo">Video</label><input class="cotiz-price-input" id="cpVideo" type="number" value="500" oninput="cotizActualizar()"></div>
                 <div style="font-family:DM Mono,monospace;font-size:.55rem;letter-spacing:.12em;color:var(--muted2);text-transform:uppercase;margin:.8rem 0 .5rem;padding:.6rem 0 .4rem;border-top:1px solid var(--border);border-bottom:1px solid var(--border);">// Paquetes</div>
                 <div class="cotiz-row"><input type="checkbox" class="cotiz-check" id="csPaqueteExpress" onchange="cotizActualizar()"><label class="cotiz-label" for="csPaqueteExpress">Paquete Express<br><span style="font-family:DM Mono,monospace;font-size:.55rem;color:var(--muted2)">Grab + Mezcla + Master</span></label><input class="cotiz-price-input" id="cpPaqueteExpress" type="number" value="800" oninput="cotizActualizar()"></div>
-                <div class="cotiz-row"><input type="checkbox" class="cotiz-check" id="csPaqueteExpressVideo" onchange="cotizActualizar()"><label class="cotiz-label" for="csPaqueteExpressVideo">Paquete Express + Video<br><span style="font-family:DM Mono,monospace;font-size:.55rem;color:var(--muted2)">Grab + Mezcla + Master + Video</span></label><input class="cotiz-price-input" id="cpPaqueteExpressVideo" type="number" value="1300" oninput="cotizActualizar()"></div>
-                <div class="cotiz-row"><input type="checkbox" class="cotiz-check" id="csPaquetePrivada" onchange="cotizActualizar()"><label class="cotiz-label" for="csPaquetePrivada">Paquete Esencia Privada<br><span style="font-family:DM Mono,monospace;font-size:.55rem;color:var(--muted2)">Beat + Grab + Mezcla + Master</span></label><input class="cotiz-price-input" id="cpPaquetePrivada" type="number" value="1300" oninput="cotizActualizar()"></div>
-                <div class="cotiz-row"><input type="checkbox" class="cotiz-check" id="csPaqueteElevada" onchange="cotizActualizar()"><label class="cotiz-label" for="csPaqueteElevada">Paquete Experiencia Elevada<br><span style="font-family:DM Mono,monospace;font-size:.55rem;color:var(--muted2)">Beat + Grab + Mezcla + Master + Video</span></label><input class="cotiz-price-input" id="cpPaqueteElevada" type="number" value="1800" oninput="cotizActualizar()"></div>
+                <div class="cotiz-row"><input type="checkbox" class="cotiz-check" id="csPaqueteExpressVideo" onchange="cotizActualizar()"><label class="cotiz-label" for="csPaqueteExpressVideo">Paquete Express + Video<br><span style="font-family:DM Mono,monospace;font-size:.55rem;color:var(--muted2)">Grab + Mezcla + Master + Video</span></label><input class="cotiz-price-input" id="cpPaqueteExpressVideo" type="number" value="1800" oninput="cotizActualizar()"></div>
+                <div class="cotiz-row"><input type="checkbox" class="cotiz-check" id="csPaquetePrivada" onchange="cotizActualizar()"><label class="cotiz-label" for="csPaquetePrivada">Paquete Esencia Privada<br><span style="font-family:DM Mono,monospace;font-size:.55rem;color:var(--muted2)">Beat + Grab + Mezcla + Master</span></label><input class="cotiz-price-input" id="cpPaquetePrivada" type="number" value="2500" oninput="cotizActualizar()"></div>
+                <div class="cotiz-row"><input type="checkbox" class="cotiz-check" id="csPaqueteElevada" onchange="cotizActualizar()"><label class="cotiz-label" for="csPaqueteElevada">Paquete Experiencia Elevada<br><span style="font-family:DM Mono,monospace;font-size:.55rem;color:var(--muted2)">Beat + Grab + Mezcla + Master + Video</span></label><input class="cotiz-price-input" id="cpPaqueteElevada" type="number" value="5000" oninput="cotizActualizar()"></div>
                 <div style="font-family:DM Mono,monospace;font-size:.55rem;letter-spacing:.12em;color:var(--muted2);text-transform:uppercase;margin:.8rem 0 .5rem;padding:.6rem 0 .4rem;border-top:1px solid var(--border);border-bottom:1px solid var(--border);">// Extra</div>
                 <div class="cotiz-row"><input type="checkbox" class="cotiz-check" id="csExtra" onchange="cotizActualizar()"><label class="cotiz-label" for="csExtra">Extra / Otro</label><input class="cotiz-price-input" id="cpExtra" type="number" value="0" oninput="cotizActualizar()"></div>
               </div>
@@ -953,55 +954,74 @@ body::before{content:'';position:fixed;inset:0;background-image:url("data:image/
         <div id="tareasContainer"><div class="loading-state"><div class="spinner"></div>Cargando tareas...</div></div>
       </div>
 
-      <!-- NUEVO PROYECTO -->
-      <div class="page" id="page-nuevo">
-        <div class="page-header">
-          <div><div class="page-eyebrow">// Captura r&#xE1;pida</div><div class="page-title">NUEVO PROYECTO</div></div>
-        </div>
-        <div style="max-width:720px;">
-          <div class="form-grid">
-            <div class="form-group"><label class="form-label">Nombre del proyecto</label><input class="form-input" id="npNombre" placeholder="T&#xED;tulo de la rola o EP"/></div>
-            <div class="form-group"><label class="form-label">Artista</label><select class="form-input" id="npArtista"><option value="">Seleccionar...</option></select></div>
-            <div class="form-group"><label class="form-label">Tipo de servicio</label>
-              <select class="form-input" id="npServicio">
-                <option>Paquete Esencia Privada</option><option>Paquete Experiencia Elevada</option>
-                <option>Grabaci&#xF3;n, Mezcla, Masterizaci&#xF3;n</option><option>Grabaci&#xF3;n, Mezcla</option>
-                <option>Mezcla, Masterizaci&#xF3;n</option><option>Solo Mezcla</option><option>Solo Masterizaci&#xF3;n</option>
-                <option>Beat Presencial</option><option>Beat por encargo</option><option>Miembro</option><option>Pro</option>
-              </select>
-            </div>
-            <div class="form-group"><label class="form-label">Estado inicial</label>
-              <select class="form-input" id="npEstado">
-                <option value="00 | En espera">En espera</option>
-                <option value="01 | En proceso">En proceso</option>
-                <option value="02 | En mezcla">En mezcla</option>
-                <option value="03 | En revisi&#xF3;n">En revisi&#xF3;n</option>
-                <option value="04 | Finalizado">Finalizado</option>
-                <option value="05 | Cancelado">Cancelado</option>
-              </select>
-            </div>
-            <div class="form-group"><label class="form-label">Fecha de inicio</label><input class="form-input" id="npFechaI" type="date"/></div>
-            <div class="form-group"><label class="form-label">Fecha de entrega</label><input class="form-input" id="npFechaE" type="date"/></div>
-            <div class="form-group"><label class="form-label">Monto total (MXN)</label><input class="form-input" id="npMonto" type="number" placeholder="2500"/></div>
-            <div class="form-group"><label class="form-label">Asignado a</label>
-              <select class="form-input" id="npAsignado"></select>
-            </div>
-            <div class="form-group"><label class="form-label">Colaborador (2do asignado)</label>
-              <select class="form-input" id="npAsignado2"></select>
-            </div>
-            <div class="form-group full"><label class="form-label">Bonos incluidos</label><input class="form-input" id="npBonos" placeholder="Cover Art, Reel, Gorra..."/></div>
-            <div class="form-group full"><label class="form-label">Notas</label><input class="form-input" id="npNotas" placeholder="Observaciones..."/></div>
-            <div class="form-group full"><label class="form-label">Archivo a entregar (sube a Drive)</label><input class="form-file" id="npArchivo" type="file" accept="*/*"/></div>
-          </div>
-          <div style="display:flex;gap:.8rem;margin-top:1.5rem;flex-wrap:wrap;">
-            <button class="btn btn-green" onclick="guardarProyecto()">Guardar en Sheets &#x2192;</button>
-            <button class="btn btn-ghost" onclick="limpiarNP()">Limpiar</button>
-          </div>
-          <div id="npResult" style="display:none;margin-top:1.2rem;font-family:DM Mono,monospace;font-size:.7rem;color:var(--green);padding:1rem;background:rgba(52,211,153,.05);border:1px solid rgba(52,211,153,.2);"></div>
-        </div>
-      </div>
-
     </main>
+  </div>
+</div>
+
+<!-- MODAL: NUEVO PROYECTO -->
+<div class="modal-overlay" id="modalNuevoProyecto">
+  <div class="modal" style="max-width:680px;">
+    <div class="modal-header">
+      <div class="modal-title">NUEVO PROYECTO</div>
+      <button class="modal-close" onclick="closeModal('modalNuevoProyecto')">&#x2715; Cerrar</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-grid">
+        <div class="form-group"><label class="form-label">Nombre del proyecto</label><input class="form-input" id="npNombre" placeholder="Título de la rola o EP"/></div>
+        <div class="form-group"><label class="form-label">Artista</label><select class="form-input" id="npArtista"><option value="">Seleccionar...</option></select></div>
+        <div class="form-group"><label class="form-label">Tipo de servicio</label>
+          <div style="display:flex;gap:.4rem;">
+            <select class="form-input" id="npServicio" style="flex:1;"></select>
+            <button type="button" class="btn btn-ghost" onclick="abrirAddServicio('np')" style="font-size:.6rem;padding:.5rem .7rem;white-space:nowrap;">+ Nuevo</button>
+          </div>
+        </div>
+        <div class="form-group"><label class="form-label">Estado inicial</label>
+          <select class="form-input" id="npEstado">
+            <option value="00 | En espera">En espera</option>
+            <option value="01 | En proceso">En proceso</option>
+            <option value="02 | En mezcla">En mezcla</option>
+            <option value="03 | En revisión">En revisión</option>
+            <option value="04 | Finalizado">Finalizado</option>
+            <option value="05 | Cancelado">Cancelado</option>
+          </select>
+        </div>
+        <div class="form-group"><label class="form-label">Fecha de inicio</label><input class="form-input" id="npFechaI" type="date"/></div>
+        <div class="form-group"><label class="form-label">Fecha de entrega</label><input class="form-input" id="npFechaE" type="date"/></div>
+        <div class="form-group"><label class="form-label">Monto total (MXN)</label><input class="form-input" id="npMonto" type="number" placeholder="2500"/></div>
+        <div class="form-group"><label class="form-label">Asignado a</label><select class="form-input" id="npAsignado"></select></div>
+        <div class="form-group"><label class="form-label">Colaborador (2do asignado)</label><select class="form-input" id="npAsignado2"></select></div>
+        <div class="form-group full"><label class="form-label">Bonos incluidos</label><input class="form-input" id="npBonos" placeholder="Cover Art, Reel, Gorra..."/></div>
+        <div class="form-group full"><label class="form-label">Notas</label><input class="form-input" id="npNotas" placeholder="Observaciones..."/></div>
+        <div class="form-group full"><label class="form-label">Archivo a entregar (sube a Drive)</label><input class="form-file" id="npArchivo" type="file" accept="*/*"/></div>
+      </div>
+      <div id="npResult" style="display:none;margin-top:1rem;font-family:DM Mono,monospace;font-size:.7rem;color:var(--green);padding:.8rem;background:rgba(52,211,153,.05);border:1px solid rgba(52,211,153,.2);"></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-green" onclick="guardarProyecto()">Guardar &#x2192;</button>
+      <button class="btn btn-ghost" onclick="limpiarNP()">Limpiar</button>
+      <button class="btn btn-ghost" onclick="closeModal('modalNuevoProyecto')">Cancelar</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL: NUEVO TIPO DE SERVICIO -->
+<div class="modal-overlay" id="modalAddServicio">
+  <div class="modal" style="max-width:340px;">
+    <div class="modal-header">
+      <div class="modal-title">NUEVO SERVICIO</div>
+      <button class="modal-close" onclick="closeModal('modalAddServicio')">&#x2715;</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-group">
+        <label class="form-label">Nombre del servicio</label>
+        <input class="form-input" id="newServicioNombre" placeholder="ej: Paquete Platino, Beat Vocal..." onkeydown="if(event.key==='Enter')guardarNuevoServicio()"/>
+      </div>
+      <div id="servicioTagsWrap" class="personal-tags-wrap" style="margin-top:.8rem;"></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-green" onclick="guardarNuevoServicio()">Guardar &#x2192;</button>
+      <button class="btn btn-ghost" onclick="closeModal('modalAddServicio')">Cancelar</button>
+    </div>
   </div>
 </div>
 
@@ -1069,7 +1089,12 @@ body::before{content:'';position:fixed;inset:0;background-image:url("data:image/
       <div class="form-grid">
         <div class="form-group"><label class="form-label">Nombre del proyecto</label><input class="form-input" id="mpNombre"/></div>
         <div class="form-group"><label class="form-label">Artista</label><select class="form-input" id="mpCliente"><option value="">Seleccionar artista...</option></select></div>
-        <div class="form-group"><label class="form-label">Tipo de servicio</label><input class="form-input" id="mpServicio"/></div>
+        <div class="form-group"><label class="form-label">Tipo de servicio</label>
+          <div style="display:flex;gap:.4rem;">
+            <select class="form-input" id="mpServicio" style="flex:1;"></select>
+            <button type="button" class="btn btn-ghost" onclick="abrirAddServicio('mp')" style="font-size:.6rem;padding:.5rem .7rem;white-space:nowrap;">+ Nuevo</button>
+          </div>
+        </div>
         <div class="form-group"><label class="form-label">Estado</label>
           <select class="form-input" id="mpEstado">
             <option value="00 | En espera">En espera</option>
@@ -1462,6 +1487,57 @@ function eliminarPlan(nombre){
   saveCustomPlanes(planes);
   populatePlanSelect();
   abrirAddPlan();
+  toast(`✓ "${nombre}" eliminado`,'success');
+}
+
+// TIPOS DE SERVICIO CUSTOM
+const SERVICIOS_KEY='sr_custom_servicios';
+const DEFAULT_SERVICIOS=['Paquete Esencia Privada','Paquete Experiencia Elevada','Paquete Express','Paquete Express + Video','Grabación, Mezcla, Masterización','Grabación, Mezcla','Mezcla, Masterización','Solo Mezcla','Solo Masterización','Beat Presencial','Beat por encargo','Miembro','Pro'];
+let _servicioReturnTarget='mp'; // 'mp' | 'np'
+function getServicios(){
+  let custom=[];
+  try{custom=JSON.parse(localStorage.getItem(SERVICIOS_KEY)||'[]');}catch(e){}
+  return [...DEFAULT_SERVICIOS,...custom.filter(s=>!DEFAULT_SERVICIOS.includes(s))];
+}
+function saveCustomServicios(list){
+  localStorage.setItem(SERVICIOS_KEY,JSON.stringify(list.filter(s=>!DEFAULT_SERVICIOS.includes(s))));
+}
+function populateServicioSelect(selId, currentVal){
+  const sel=document.getElementById(selId);if(!sel)return;
+  const servicios=getServicios();
+  const cur=currentVal!==undefined?currentVal:sel.value;
+  sel.innerHTML=servicios.map(s=>`<option value="${s}">${s}</option>`).join('');
+  if(cur&&servicios.includes(cur)) sel.value=cur;
+}
+function abrirAddServicio(target){
+  _servicioReturnTarget=target||'mp';
+  document.getElementById('newServicioNombre').value='';
+  const custom=getServicios().filter(s=>!DEFAULT_SERVICIOS.includes(s));
+  const wrap=document.getElementById('servicioTagsWrap');
+  if(wrap) wrap.innerHTML=custom.length
+    ?'<div style="font-family:DM Mono,monospace;font-size:.55rem;color:var(--muted2);margin-bottom:.3rem;">// Personalizados (click para eliminar)</div>'+
+      custom.map(s=>`<span class="personal-tag" onclick="eliminarServicio('${s.replace(/'/g,"\\'")}')">${s} ✕</span>`).join('')
+    :'';
+  openModal('modalAddServicio');
+  setTimeout(()=>document.getElementById('newServicioNombre').focus(),100);
+}
+function guardarNuevoServicio(){
+  const nombre=document.getElementById('newServicioNombre').value.trim();
+  if(!nombre){toast('Escribe un nombre','error');return;}
+  const servicios=getServicios();
+  if(servicios.map(s=>s.toLowerCase()).includes(nombre.toLowerCase())){toast('Ya existe','error');return;}
+  saveCustomServicios([...servicios,nombre]);
+  ['mpServicio','npServicio'].forEach(id=>populateServicioSelect(id));
+  const selId=_servicioReturnTarget==='np'?'npServicio':'mpServicio';
+  const sel=document.getElementById(selId);if(sel)sel.value=nombre;
+  closeModal('modalAddServicio');
+  toast(`✓ Servicio "${nombre}" agregado`,'success');
+}
+function eliminarServicio(nombre){
+  const servicios=getServicios().filter(s=>s!==nombre);
+  saveCustomServicios(servicios);
+  ['mpServicio','npServicio'].forEach(id=>populateServicioSelect(id));
+  abrirAddServicio(_servicioReturnTarget);
   toast(`✓ "${nombre}" eliminado`,'success');
 }
 
@@ -2187,7 +2263,7 @@ function editProyecto(rowNum){
   const p=allProyectos.find(x=>x._rowNumber===rowNum);if(!p)return;
   document.getElementById('mpRowNum').value=rowNum;
   document.getElementById('mpNombre').value=p['Nombre del proyecto']||'';
-  document.getElementById('mpServicio').value=p['Tipo de servicio']||'';
+  populateServicioSelect('mpServicio', p['Tipo de servicio']||'');
   document.getElementById('mpEstado').value=p['Estado proyecto']||'01 | En proceso';
   const toInputDate=s=>{if(!s)return'';const m=s.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);return m?m[3]+'-'+m[2].padStart(2,'0')+'-'+m[1].padStart(2,'0'):'';};
   document.getElementById('mpFechaI').value=toInputDate(p['Fecha inicio']||'');
@@ -2486,6 +2562,7 @@ function populateArtistSelects(){
   });
   populatePersonaSelects();
   populateCategoriasSelect();
+  ['mpServicio','npServicio'].forEach(id=>populateServicioSelect(id));
 }
 
 async function guardarProyecto(){
@@ -3199,6 +3276,12 @@ function openArtistPanel(rowNum){
   apAvatar.innerHTML=imgSrc?`<img src="${imgSrc}" onerror="this.parentElement.textContent='${ini}'">`:`<span>${ini}</span>`;
   document.getElementById('apName').textContent=a['AKA']||a['Nombre']||'—';
   document.getElementById('apAka').textContent=a['AKA']?'// '+a['Nombre']:'';
+  // Header action buttons
+  const apEdit=document.getElementById('apEditBtn');
+  const apDel=document.getElementById('apDelBtn');
+  const safeNombre=(a['AKA']||a['Nombre']||'').replace(/'/g,"\\'");
+  if(apEdit) apEdit.onclick=()=>{closeArtistPanel();editArtista(a._rowNumber);};
+  if(apDel) apDel.onclick=()=>{closeArtistPanel();confirmDelete('artista',a._rowNumber,safeNombre);}
 
   // Data
   const proy=allProyectos.filter(p=>ids.includes(p['Cliente'])).sort((a,b)=>(parseFecha(b['Fecha inicio']||'')||0)-(parseFecha(a['Fecha inicio']||'')||0));
@@ -3300,10 +3383,7 @@ function openArtistPanel(rowNum){
       </div>`).join('')}
     </div>`:''}
 
-    <!-- Acciones rápidas -->
-    <div style="display:flex;gap:.6rem;flex-wrap:wrap;padding-top:1rem;border-top:1px solid var(--border);">
-      <button class="btn btn-ghost" style="font-size:.62rem;padding:.6rem 1rem;" onclick="closeArtistPanel();editArtista(${a._rowNumber})">Editar perfil</button>
-    </div>
+    <!-- Acciones rápidas eliminadas — botones en el header del panel -->
   `;
 
   document.getElementById('artistPanel').classList.add('open');
@@ -3767,7 +3847,7 @@ function editProyectoDarol(rowNum){
   document.getElementById('mpRowNum').value=rowNum;
   // Fill all fields
   document.getElementById('mpNombre').value=p['Nombre del proyecto']||'';
-  document.getElementById('mpServicio').value=p['Tipo de servicio']||'';
+  populateServicioSelect('mpServicio', p['Tipo de servicio']||'');
   document.getElementById('mpEstado').value=p['Estado proyecto']||'01 | En proceso';
   const toInputDate=s=>{if(!s)return'';const m=s.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);return m?m[3]+'-'+m[2].padStart(2,'0')+'-'+m[1].padStart(2,'0'):'';};
   document.getElementById('mpFechaI').value=toInputDate(p['Fecha inicio']||'');
