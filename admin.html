@@ -1999,6 +1999,17 @@ function renderDashboard(){
 }
 
 // ARTISTAS
+// ── COLLAPSE GRUPOS ARTISTAS (global scope) ──
+const COLLAPSED_KEY='sr_cat_collapsed';
+function getCatCollapsed(){try{return JSON.parse(localStorage.getItem(COLLAPSED_KEY)||'[]');}catch(e){return[];}}
+function toggleCatCollapse(key){
+  const col=getCatCollapsed();
+  const idx=col.indexOf(key);
+  if(idx>-1)col.splice(idx,1);else col.push(key);
+  localStorage.setItem(COLLAPSED_KEY,JSON.stringify(col));
+  renderArtistas();
+}
+
 function renderArtistas(){
   const q=(document.getElementById('searchArtistas').value||'').toLowerCase();
   const tipo=document.getElementById('filterTipoArt').value;
@@ -2051,7 +2062,6 @@ function renderArtistas(){
     const frecLabel=ltv.frecMeses===null?'—':ltv.frecMeses<=1.5?'Mensual':ltv.frecMeses<=2.5?'Bimestral':ltv.frecMeses<=6?`c/${Math.round(ltv.frecMeses)} meses`:'Esporádico';
 
     return`<div class="artist-card" onclick="openArtistPanel(${a._rowNumber})" style="cursor:none;">
-      <div style="font-family:DM Mono,monospace;font-size:.5rem;color:var(--muted2);letter-spacing:.06em;margin-bottom:.5rem;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${a['CodigoAcceso']||'\u00a0'}</div>
       <div class="artist-header" style="margin-bottom:.7rem;">
         <div class="artist-avatar">${imgSrc?`<img src="${imgSrc}" onerror="this.parentElement.textContent='${ini}'">`:'<span>'+ini+'</span>'}</div>
         <div style="flex:1;min-width:0;">
@@ -2081,33 +2091,22 @@ function renderArtistas(){
     </div>`;
   }
 
-  // Track collapsed groups in localStorage
-  const COLLAPSED_KEY='sr_cat_collapsed';
-  function getCollapsed(){try{return JSON.parse(localStorage.getItem(COLLAPSED_KEY)||'[]');}catch(e){return[];}}
-  function toggleCatCollapse(key){
-    const col=getCollapsed();
-    const idx=col.indexOf(key);
-    if(idx>-1)col.splice(idx,1);else col.push(key);
-    localStorage.setItem(COLLAPSED_KEY,JSON.stringify(col));
-    renderArtistas();
-  }
-
   let html='';
   if(catFilter){
     const sorted=[...list].sort((a,b)=>(a['AKA']||a['Nombre']||'').localeCompare(b['AKA']||b['Nombre']||''));
     html=`<div class="artists-grid">${sorted.map(artistaCard).join('')}</div>`;
   } else {
-    const collapsed=getCollapsed();
+    const collapsed=getCatCollapsed();
     CAT_ORDER.forEach(cat=>{
       const grupo=[...list.filter(a=>(a['Categoria']||'')===cat)].sort((a,b)=>(a['AKA']||a['Nombre']||'').localeCompare(b['AKA']||b['Nombre']||''));
       if(!grupo.length) return;
-      const isCollapsed=collapsed.includes(cat===''?'__none__':cat);
       const toggleKey=cat===''?'__none__':cat;
+      const isCollapsed=collapsed.includes(toggleKey);
       html+=`<div style="${cat!==CAT_ORDER[0]?'padding-top:1rem;border-top:1px solid var(--border);':''}margin:1.2rem 0 ${isCollapsed?'0':'.8rem'};">
-        <button onclick="toggleCatCollapse('${toggleKey}')" style="display:flex;align-items:center;gap:.8rem;background:none;border:none;width:100%;text-align:left;cursor:none;padding:.2rem 0;">
+        <button onclick="toggleCatCollapse('${toggleKey}')" style="display:flex;align-items:center;gap:.8rem;background:none;border:none;width:100%;text-align:left;cursor:none;padding:.3rem 0;">
           <span style="font-family:DM Mono,monospace;font-size:.58rem;letter-spacing:.18em;text-transform:uppercase;color:${CAT_COLORS[cat]};">${CAT_LABELS[cat]}</span>
           <span style="font-family:DM Mono,monospace;font-size:.55rem;color:var(--muted2);opacity:.7">(${grupo.length})</span>
-          <span style="font-family:DM Mono,monospace;font-size:.65rem;color:var(--muted2);margin-left:auto;transition:transform .2s;${isCollapsed?'':'transform:rotate(90deg)'}">${isCollapsed?'▶':'▶'}</span>
+          <span style="font-family:DM Mono,monospace;font-size:.7rem;color:var(--muted2);margin-left:auto;display:inline-block;transition:transform .25s;transform:rotate(${isCollapsed?'0':'90'}deg)">▶</span>
         </button>
         ${isCollapsed?'':`<div class="artists-grid" style="margin-top:.6rem">${grupo.map(artistaCard).join('')}</div>`}
       </div>`;
@@ -3143,42 +3142,58 @@ function applyRoleUI(){
 // ════════════════════════════════════════════
 // NOTIFICACIONES
 // ════════════════════════════════════════════
+// ── NOTIFICACIONES DESCARTADAS ──
+const DISMISSED_KEY='sr_notif_dismissed';
+function getDismissed(){try{return JSON.parse(localStorage.getItem(DISMISSED_KEY)||'[]');}catch(e){return[];}}
+function dismissNotif(id){
+  const d=getDismissed();
+  if(!d.includes(id)){d.push(id);localStorage.setItem(DISMISSED_KEY,JSON.stringify(d));}
+  renderNotificaciones();
+}
+function clearDismissed(){localStorage.removeItem(DISMISSED_KEY);renderNotificaciones();}
+
 function buildNotificaciones(){
+  const dismissed=getDismissed();
   const alerts=[];
   const hoy=new Date();
 
-  // 1. Pagos pendientes hace más de 5 días
+  // 1. Pagos pendientes
   allFinanzas.filter(f=>/pendiente/i.test(f['Estado']||'')&&(f['Tipo']||'').toLowerCase()==='ingreso').forEach(f=>{
     const d=parseFecha(f['Fecha']||'');
     const dias=d?Math.round((hoy-d)/(1000*60*60*24)):null;
     const a=getArtista(f['Cliente']);
     const nombre=a?a['AKA']||a['Nombre']:f['Cliente']||'—';
+    const id=`cobro_${f['ID']||f['Concepto']||nombre}`;
+    if(dismissed.includes(id)) return;
     if(dias===null||dias>3){
-      alerts.push({tipo:'red',title:`${nombre} — pago pendiente`,sub:`${f['Concepto']||'Sin concepto'} · $${parseFloat(f['Monto']||0).toLocaleString()} MXN${dias!==null?` · hace ${dias} días`:''}`,cat:'cobros'});
+      alerts.push({id,tipo:'red',title:`${nombre} — pago pendiente`,sub:`${f['Concepto']||'Sin concepto'} · $${parseFloat(f['Monto']||0).toLocaleString()} MXN${dias!==null?` · hace ${dias} días`:''}`,cat:'cobros'});
     }
   });
 
-  // 2. Proyectos mucho tiempo en el mismo estado
+  // 2. Proyectos sin movimiento >30 días
   allProyectos.filter(p=>!/finalizado|cancelado/i.test(p['Estado proyecto']||'')).forEach(p=>{
     const d=parseFecha(p['Fecha inicio']||'');
     const dias=d?Math.round((hoy-d)/(1000*60*60*24)):null;
+    const id=`proy_inactivo_${p['ID']||p['Nombre del proyecto']}`;
+    if(dismissed.includes(id)) return;
     if(dias!==null&&dias>30){
       const a=getArtista(p['Cliente']);
       const nombre=a?a['AKA']||a['Nombre']:p['Cliente']||'—';
-      alerts.push({tipo:'yellow',title:`${p['Nombre del proyecto']||'—'} · ${nombre}`,sub:`En estado "${p['Estado proyecto']||'activo'}" hace ${dias} días`,cat:'proyectos'});
+      alerts.push({id,tipo:'yellow',title:`${p['Nombre del proyecto']||'—'} · ${nombre}`,sub:`En estado "${p['Estado proyecto']||'activo'}" hace ${dias} días`,cat:'proyectos'});
     }
   });
 
-  // 3. Proyectos con fecha de entrega vencida
+  // 3. Entregas vencidas
   allProyectos.filter(p=>!/finalizado|cancelado/i.test(p['Estado proyecto']||'')).forEach(p=>{
     const fe=parseFecha(p['Fecha entrega']||'');
     if(!fe) return;
     const dias=Math.round((hoy-fe)/(1000*60*60*24));
-    if(dias>0){
-      const a=getArtista(p['Cliente']);
-      const nombre=a?a['AKA']||a['Nombre']:p['Cliente']||'—';
-      alerts.push({tipo:'red',title:`Entrega vencida — ${p['Nombre del proyecto']||'—'}`,sub:`${nombre} · venció hace ${dias} día${dias>1?'s':''}`,cat:'proyectos'});
-    }
+    if(dias<=0) return;
+    const id=`entrega_vencida_${p['ID']||p['Nombre del proyecto']}`;
+    if(dismissed.includes(id)) return;
+    const a=getArtista(p['Cliente']);
+    const nombre=a?a['AKA']||a['Nombre']:p['Cliente']||'—';
+    alerts.push({id,tipo:'red',title:`Entrega vencida — ${p['Nombre del proyecto']||'—'}`,sub:`${nombre} · venció hace ${dias} día${dias>1?'s':''}`,cat:'proyectos'});
   });
 
   // 4. Suscripciones por renovar en 7 días
@@ -3186,28 +3201,28 @@ function buildNotificaciones(){
     const d=parseFecha(s['FechaRenovacion']||'');
     if(!d) return;
     const dias=Math.round((d-hoy)/(1000*60*60*24));
-    if(dias>=0&&dias<=7){
-      const a=getArtista(s['ArtistaID']);
-      const nombre=a?a['AKA']||a['Nombre']:s['ArtistaID']||'—';
-      alerts.push({tipo:'yellow',title:`Suscripción de ${nombre}`,sub:`Renueva en ${dias===0?'hoy':dias+' día'+(dias>1?'s':'')} · $${parseFloat(s['Monto']||0).toLocaleString()}/mes`,cat:'suscripciones'});
-    }
+    if(dias<0||dias>7) return;
+    const id=`susc_renov_${s['SuscripcionID']||s['ArtistaID']}`;
+    if(dismissed.includes(id)) return;
+    const a=getArtista(s['ArtistaID']);
+    const nombre=a?a['AKA']||a['Nombre']:s['ArtistaID']||'—';
+    alerts.push({id,tipo:'yellow',title:`Suscripción de ${nombre}`,sub:`Renueva ${dias===0?'hoy':'en '+dias+' día'+(dias>1?'s':'')} · $${parseFloat(s['Monto']||0).toLocaleString()}/mes`,cat:'suscripciones'});
   });
 
-  // 5. Artistas recurrentes sin proyecto en más de 2 meses
-  allArtistas.filter(a=>(a['Categoria']==='Recurrente'||a['Categoria']==='Convenio')).forEach(a=>{
+  // 5. Clientes activos/recurrentes/convenio sin actividad en +60 días
+  allArtistas.filter(a=>['Activo','Recurrente','Convenio'].includes(a['Categoria']||'')).forEach(a=>{
     const ids=[a['ArtistaID'],a['AKA'],a['Nombre']].filter(Boolean);
     const proy=allProyectos.filter(p=>ids.includes(p['Cliente']));
-    if(!proy.length) return;
     const fechas=proy.map(p=>parseFecha(p['Fecha inicio']||'')).filter(Boolean).sort((a,b)=>b-a);
     const ultimo=fechas[0];
     if(!ultimo) return;
     const dias=Math.round((hoy-ultimo)/(1000*60*60*24));
-    if(dias>60){
-      alerts.push({tipo:'purple',title:`${a['AKA']||a['Nombre']} — sin actividad`,sub:`Cliente ${a['Categoria'].toLowerCase()} · último proyecto hace ${dias} días`,cat:'artistas'});
-    }
+    if(dias<60) return;
+    const id=`inactivo_${a['ArtistaID']||a['AKA']}`;
+    if(dismissed.includes(id)) return;
+    alerts.push({id,tipo:'purple',title:`${a['AKA']||a['Nombre']} — sin actividad`,sub:`Cliente ${(a['Categoria']||'').toLowerCase()} · último proyecto hace ${dias} días — ¡es momento de contactar!`,cat:'artistas'});
   });
 
-  // Ordenar: red primero, yellow, purple
   const PRIO={red:0,yellow:1,purple:2,green:3};
   alerts.sort((a,b)=>(PRIO[a.tipo]||9)-(PRIO[b.tipo]||9));
   return alerts;
@@ -3223,35 +3238,48 @@ function renderNotificaciones(){
   bell.style.display='flex';
 
   const alerts=buildNotificaciones();
+  const dismissed=getDismissed();
+  const totalDismissed=dismissed.length;
+
   if(count){
     const reds=alerts.filter(a=>a.tipo==='red').length;
     count.style.display=reds>0?'block':'none';
     count.textContent=reds>0?reds:'';
   }
 
-  const CATS={cobros:'// Cobros pendientes',proyectos:'// Proyectos',suscripciones:'// Suscripciones',artistas:'// Artistas recurrentes'};
+  const CATS={cobros:'// Cobros pendientes',proyectos:'// Proyectos',suscripciones:'// Suscripciones',artistas:'// Clientes sin actividad'};
   const DOT={red:'notif-dot-red',yellow:'notif-dot-yellow',purple:'notif-dot-purple',green:'notif-dot-green'};
 
+  let html='';
+
   if(!alerts.length){
-    document.getElementById('notifContent').innerHTML='<div class="notif-empty">// Todo en orden — sin alertas activas ✓</div>';
-    return;
+    html=`<div class="notif-empty">// Todo en orden — sin alertas activas ✓</div>`;
+  } else {
+    ['cobros','proyectos','suscripciones','artistas'].forEach(cat=>{
+      const grupo=alerts.filter(a=>a.cat===cat);
+      if(!grupo.length) return;
+      html+=`<div class="notif-section">${CATS[cat]} (${grupo.length})</div>`;
+      grupo.forEach(n=>{
+        html+=`<div class="notif-item">
+          <div class="notif-dot ${DOT[n.tipo]}"></div>
+          <div class="notif-body">
+            <div class="notif-title">${n.title}</div>
+            <div class="notif-sub">${n.sub}</div>
+          </div>
+          <button onclick="dismissNotif('${n.id}')" title="Marcar como atendida" style="background:none;border:1px solid var(--border2);color:var(--muted2);font-family:DM Mono,monospace;font-size:.5rem;padding:.25rem .45rem;cursor:none;flex-shrink:0;margin-left:.5rem;transition:all .2s;" onmouseover="this.style.borderColor='var(--green)';this.style.color='var(--green)'" onmouseout="this.style.borderColor='var(--border2)';this.style.color='var(--muted2)'">✓</button>
+        </div>`;
+      });
+    });
   }
 
-  let html='';
-  ['cobros','proyectos','suscripciones','artistas'].forEach(cat=>{
-    const grupo=alerts.filter(a=>a.cat===cat);
-    if(!grupo.length) return;
-    html+=`<div class="notif-section">${CATS[cat]} (${grupo.length})</div>`;
-    grupo.forEach(n=>{
-      html+=`<div class="notif-item">
-        <div class="notif-dot ${DOT[n.tipo]}"></div>
-        <div class="notif-body">
-          <div class="notif-title">${n.title}</div>
-          <div class="notif-sub">${n.sub}</div>
-        </div>
-      </div>`;
-    });
-  });
+  if(totalDismissed>0){
+    html+=`<div style="padding:.8rem 1.5rem;border-top:1px solid var(--border);text-align:center;">
+      <button onclick="clearDismissed()" style="font-family:DM Mono,monospace;font-size:.55rem;color:var(--muted2);background:none;border:1px solid var(--border2);padding:.35rem .8rem;cursor:none;letter-spacing:.06em;transition:all .2s;" onmouseover="this.style.color='var(--red)';this.style.borderColor='var(--red)'" onmouseout="this.style.color='var(--muted2)';this.style.borderColor='var(--border2)'">
+        Restaurar ${totalDismissed} descartada${totalDismissed>1?'s':''}
+      </button>
+    </div>`;
+  }
+
   document.getElementById('notifContent').innerHTML=html;
 }
 
@@ -4350,3 +4378,4 @@ function toast(msg,type=''){
 </script>
 </body>
 </html>
+
