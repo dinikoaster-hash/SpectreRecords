@@ -564,7 +564,7 @@ body::before{content:'';position:fixed;inset:0;background-image:url("data:image/
           <span class="nav-badge" id="badgePend" style="display:none">!</span>
         </button>
         <button class="nav-item" onclick="showPage('cursos',this)">
-          <span class="nav-icon">&#x25B6;</span><span class="nav-label">Cursos</span>
+          <span class="nav-icon">&#x25B6;</span><span class="nav-label">Recursos</span>
         </button>
         <button class="nav-item" onclick="showPage('catalogo',this)" id="navCatalogo">
           <span class="nav-icon">&#x266B;</span><span class="nav-label">Cat&#xE1;logo</span>
@@ -751,17 +751,17 @@ body::before{content:'';position:fixed;inset:0;background-image:url("data:image/
         <div class="table-wrap" id="finanzasContainer"><div class="loading-state"><div class="spinner"></div>Cargando...</div></div>
       </div>
 
-      <!-- CURSOS -->
+      <!-- RECURSOS -->
       <div class="page" id="page-cursos">
         <div class="page-header">
-          <div><div class="page-eyebrow">// Biblioteca</div><div class="page-title">CURSOS</div></div>
+          <div><div class="page-eyebrow">// Biblioteca</div><div class="page-title">RECURSOS</div></div>
           <div style="display:flex;gap:.6rem;">
             <button class="btn btn-ghost" onclick="loadAdmin()" style="font-size:.65rem;padding:.6rem 1.2rem;">&#x27F3; Actualizar</button>
-            <button class="btn btn-gold" onclick="openModal('modalCurso')">+ Nuevo curso</button>
+            <button class="btn btn-gold" onclick="openModal('modalCurso')">+ Nuevo recurso</button>
           </div>
         </div>
         <div class="filter-bar">
-          <input class="filter-input" id="searchCursos" placeholder="// Buscar curso..." oninput="renderCursosAdmin()"/>
+          <input class="filter-input" id="searchCursos" placeholder="// Buscar recurso..." oninput="renderCursosAdmin()"/>
           <select class="filter-select" id="filterTipoCurso" onchange="renderCursosAdmin()">
             <option value="">Todos los niveles</option>
             <option value="Est&#xE1;ndar">Est&#xE1;ndar</option>
@@ -769,7 +769,7 @@ body::before{content:'';position:fixed;inset:0;background-image:url("data:image/
             <option value="Pro">Pro</option>
           </select>
         </div>
-        <div id="cursosAdminContainer"><div class="loading-state"><div class="spinner"></div>Cargando cursos...</div></div>
+        <div id="cursosAdminContainer"><div class="loading-state"><div class="spinner"></div>Cargando recursos...</div></div>
       </div>
 
       <!-- CAT&#xC1;LOGO -->
@@ -1199,11 +1199,24 @@ body::before{content:'';position:fixed;inset:0;background-image:url("data:image/
           <label class="form-label" id="curUrlLabel">Link del video (YouTube o Drive)</label>
           <input class="form-input" id="curVideo" placeholder="https://youtu.be/..."/>
         </div>
+        <div class="form-group full">
+          <label class="form-label">O sube el archivo directamente a Drive</label>
+          <div style="display:flex;gap:.5rem;align-items:center;flex-wrap:wrap;">
+            <input type="file" class="form-file" id="curArchivo" style="flex:1;" accept="*/*" onchange="curArchivoPreview()"/>
+            <button type="button" class="btn btn-ghost" id="curUploadBtn" onclick="curSubirDrive()" style="font-size:.6rem;padding:.5rem .9rem;display:none;white-space:nowrap;">⬆ Subir a Drive</button>
+          </div>
+          <div id="curArchivoStatus" style="font-family:DM Mono,monospace;font-size:.6rem;color:var(--green);margin-top:.3rem;min-height:.9rem;"></div>
+        </div>
         <div class="form-group full"><label class="form-label">Descripción</label>
           <textarea class="form-input" id="curDesc" placeholder="De qué trata..." style="min-height:60px;resize:vertical;"></textarea>
         </div>
         <div class="form-group full"><label class="form-label">Miniatura (URL imagen, opcional)</label>
-          <input class="form-input" id="curThumb" placeholder="https://... (opcional)"/>
+          <div style="display:flex;gap:.6rem;align-items:flex-start;">
+            <input class="form-input" id="curThumb" placeholder="https://... (opcional)" oninput="curThumbPreview()" style="flex:1;"/>
+            <div id="curThumbPreviewBox" style="width:48px;height:48px;border:1px solid var(--border2);flex-shrink:0;overflow:hidden;display:none;">
+              <img id="curThumbPreviewImg" style="width:100%;height:100%;object-fit:cover;" src="" onerror="this.parentElement.style.display='none'"/>
+            </div>
+          </div>
         </div>
       </div>
     </div>
@@ -1372,11 +1385,11 @@ body::before{content:'';position:fixed;inset:0;background-image:url("data:image/
         <!-- Fechas -->
         <div class="form-group"><label class="form-label">Fecha de inicio</label>
           <input class="form-input" id="suscFechaInicio" type="date" oninput="suscCalcRenov()"/></div>
-        <div class="form-group"><label class="form-label">Renovación calculada</label>
-          <div style="position:relative;">
-            <input class="form-input" id="suscFechaRenov" type="date" style="background:var(--surface2);"/>
-            <div id="suscRenovLabel" style="font-family:'DM Mono',monospace;font-size:.6rem;color:var(--green);margin-top:.35rem;min-height:.9rem;letter-spacing:.04em;"></div>
-          </div>
+        <div class="form-group"><label class="form-label">Próxima renovación <span style="font-family:DM Mono,monospace;font-size:.52rem;color:var(--muted2)">(auto)</span></label>
+          <input class="form-input" id="suscFechaRenov" type="date" style="background:var(--surface2);color:var(--purple-light);" readonly/>
+        </div>
+        <div class="form-group full">
+          <div id="suscRenovLabel" style="font-family:'DM Mono',monospace;font-size:.62rem;line-height:1.8;min-height:2.5rem;"></div>
         </div>
 
         <!-- Notas -->
@@ -2681,6 +2694,48 @@ function cursoTipoChange(){
   if(inputEl) inputEl.placeholder=TIPO_RECURSO_PLACEHOLDER[tipo]||'https://...';
 }
 
+function curArchivoPreview(){
+  const file=document.getElementById('curArchivo')?.files[0];
+  const btn=document.getElementById('curUploadBtn');
+  const status=document.getElementById('curArchivoStatus');
+  if(file){
+    if(btn) btn.style.display='';
+    if(status) status.textContent=`// ${file.name} (${(file.size/1024).toFixed(0)} KB) — listo para subir`;
+  } else {
+    if(btn) btn.style.display='none';
+    if(status) status.textContent='';
+  }
+}
+
+function curThumbPreview(){
+  const url=document.getElementById('curThumb')?.value.trim();
+  const box=document.getElementById('curThumbPreviewBox');
+  const img=document.getElementById('curThumbPreviewImg');
+  if(!box||!img) return;
+  if(url){box.style.display='';img.src=url;}
+  else{box.style.display='none';img.src='';}
+}
+
+async function curSubirDrive(){
+  if(!oauthToken){toast('Conecta Google primero','error');return;}
+  const file=document.getElementById('curArchivo')?.files[0];
+  if(!file){toast('Selecciona un archivo','error');return;}
+  const btn=document.getElementById('curUploadBtn');
+  const status=document.getElementById('curArchivoStatus');
+  if(btn){btn.textContent='Subiendo...';btn.disabled=true;}
+  if(status) status.innerHTML='<span style="color:var(--yellow)">// Subiendo a Drive...</span>';
+  const link=await uploadToDrive(file,'Recursos_Biblioteca');
+  if(link){
+    document.getElementById('curVideo').value=link;
+    if(status) status.innerHTML=`<span style="color:var(--green)">✓ Subido — link copiado al campo URL</span>`;
+    if(btn){btn.textContent='⬆ Subir a Drive';btn.disabled=false;}
+    toast('✓ Archivo subido a Drive','success');
+  } else {
+    if(status) status.innerHTML='<span style="color:var(--red)">✕ Error al subir — verifica OAuth</span>';
+    if(btn){btn.textContent='⬆ Subir a Drive';btn.disabled=false;}
+  }
+}
+
 function renderCursosAdmin(){
   const q=(document.getElementById('searchCursos')?.value||'').toLowerCase();
   const tipo=document.getElementById('filterTipoCurso')?.value||'';
@@ -2765,6 +2820,11 @@ function editCurso(rowNum){
   document.getElementById('curVideo').value=c['Video']||'';
   document.getElementById('curDesc').value=c['Descripcion']||'';
   document.getElementById('curThumb').value=c['Thumb']||'';
+  curThumbPreview();
+  // Clear file upload state
+  const fa=document.getElementById('curArchivo');if(fa)fa.value='';
+  const btn=document.getElementById('curUploadBtn');if(btn)btn.style.display='none';
+  const st=document.getElementById('curArchivoStatus');if(st)st.textContent='';
   cursoTipoChange();
   openModal('modalCurso');
 }
@@ -3553,6 +3613,7 @@ function renderSuscripciones(){
         <td style="font-family:Bebas Neue,sans-serif;font-size:1.1rem;color:var(--green)">$${monto.toLocaleString()} <span style="font-family:DM Mono,monospace;font-size:.55rem;color:var(--muted2)">MXN</span></td>
         <td style="font-family:DM Mono,monospace;font-size:.65rem;color:var(--muted)">${s['FechaInicio']||'—'}</td>
         <td style="font-family:DM Mono,monospace;font-size:.65rem;color:${renovColor}">${s['FechaRenovacion']||'—'}${diasRenov!==null&&diasRenov<=7?` <span style="color:var(--red);font-size:.55rem">⚠ ${diasRenov}d</span>`:''}</td>
+        <td style="font-family:DM Mono,monospace;font-size:.65rem;color:var(--muted)">${s['FechaFin']||'—'}</td>
         <td><span style="font-family:DM Mono,monospace;font-size:.6rem;padding:.2rem .5rem;border:1px solid ${ESTADO_COLOR[est]};color:${ESTADO_COLOR[est]}">${est}</span></td>
         <td style="font-family:DM Mono,monospace;font-size:.62rem;color:var(--muted)">${s['Notas']||'—'}</td>
         <td><div class="td-actions">
@@ -3587,7 +3648,7 @@ function renderSuscripciones(){
       </div>`;
     }).join('');
     html+=`<table class="data-table"><thead><tr>
-      <th>Artista</th><th>Plan</th><th>Periodo</th><th>Monto</th><th>Inicio</th><th>Renovación</th><th>Estado</th><th>Notas</th><th>Acciones</th>
+      <th>Artista</th><th>Plan</th><th>Periodo</th><th>Monto</th><th>Inicio</th><th>Próx. Renovación</th><th>Fin acuerdo</th><th>Estado</th><th>Notas</th><th>Acciones</th>
     </tr></thead><tbody>${rows}</tbody></table><div class="mob-card">${mobs}</div>`;
   });
   document.getElementById('suscContainer').innerHTML=html;
@@ -3603,20 +3664,43 @@ function suscCalcRenov(){
   const cantidad=parseInt(document.getElementById('suscCantidad')?.value)||1;
   const renovEl=document.getElementById('suscFechaRenov');
   const labelEl=document.getElementById('suscRenovLabel');
-  if(!inicio||!renovEl){return;}
-  const meses=PERIODO_MESES[periodo]*cantidad;
-  const d=new Date(inicio);
-  d.setMonth(d.getMonth()+meses);
-  const isoRenov=d.toISOString().slice(0,10);
-  renovEl.value=isoRenov;
+  if(!inicio||!renovEl) return;
+
+  const esPersonalizado=periodo==='personalizado';
+  const mesesPorPeriodo=PERIODO_MESES[periodo]||1;
+  const pLabel=PERIODO_LABEL[periodo]||'periodo';
+
+  // Próxima renovación = inicio + 1 periodo (independiente de la cantidad)
+  const dRenov=new Date(inicio);
+  dRenov.setMonth(dRenov.getMonth()+mesesPorPeriodo);
+  renovEl.value=dRenov.toISOString().slice(0,10);
+
   const hoy=new Date();
-  const diasRestantes=Math.round((d-hoy)/(1000*60*60*24));
-  const periodoLabel=cantidad===1?`1 ${PERIODO_LABEL[periodo]}`:`${cantidad} ${PERIODO_LABEL[periodo]}${cantidad>1?'s':''}`;
-  if(labelEl){
-    if(diasRestantes<0) labelEl.innerHTML=`<span style="color:var(--red)">⚠ Venció hace ${Math.abs(diasRestantes)} días</span>`;
-    else if(diasRestantes<=7) labelEl.innerHTML=`<span style="color:var(--yellow)">⚠ Vence en ${diasRestantes} días</span>`;
-    else labelEl.innerHTML=`<span style="color:var(--green)">✓ ${periodoLabel} — renueva el ${isoRenov}</span>`;
+  const diasRenov=Math.round((dRenov-hoy)/(1000*60*60*24));
+
+  if(!labelEl) return;
+
+  if(esPersonalizado){
+    labelEl.innerHTML=`<span style="color:var(--muted)">// Personalizado — sin fecha de término automática</span>`;
+    return;
   }
+
+  // Fecha de término = inicio + (cantidad × mesesPorPeriodo)
+  const dFin=new Date(inicio);
+  dFin.setMonth(dFin.getMonth()+(mesesPorPeriodo*cantidad));
+  const diasFin=Math.round((dFin-hoy)/(1000*60*60*24));
+
+  const periodoDesc=cantidad===1?`1 ${pLabel}`:`${cantidad} ${pLabel}s`;
+  const renovColor=diasRenov<0?'var(--red)':diasRenov<=7?'var(--yellow)':'var(--green)';
+  const finColor=diasFin<0?'var(--red)':'var(--muted)';
+
+  labelEl.innerHTML=`
+    <div style="display:flex;flex-direction:column;gap:.2rem;margin-top:.3rem;">
+      <span style="color:${renovColor}">↻ Próxima renovación: <b>${dRenov.toISOString().slice(0,10)}</b>${diasRenov<0?` (venció hace ${Math.abs(diasRenov)}d)`:diasRenov<=7?` (en ${diasRenov}d)`:''}
+      </span>
+      <span style="color:${finColor}">⊘ Fin del acuerdo (${periodoDesc}): <b>${dFin.toISOString().slice(0,10)}</b>${diasFin<0?` (terminó hace ${Math.abs(diasFin)}d)`:''}
+      </span>
+    </div>`;
 }
 
 function abrirModalSusc(){
@@ -3664,16 +3748,25 @@ async function guardarSusc(){
   const periodo=document.getElementById('suscPeriodo').value;
   const cantidad=document.getElementById('suscCantidad').value||'1';
   const renovFecha=document.getElementById('suscFechaRenov').value;
+  // Calcular fecha final
+  const inicioVal=document.getElementById('suscFechaInicio').value;
+  let fechaFin='';
+  if(inicioVal&&periodo!=='personalizado'){
+    const dFin=new Date(inicioVal);
+    dFin.setMonth(dFin.getMonth()+(PERIODO_MESES[periodo]||1)*parseInt(cantidad));
+    fechaFin=dFin.toISOString().slice(0,10);
+  }
   const values=[
     suscId, artista,
     document.getElementById('suscPlan').value,
     monto||'0',
-    document.getElementById('suscFechaInicio').value,
+    inicioVal,
     renovFecha,
     document.getElementById('suscEstado').value,
     document.getElementById('suscNotas').value.trim(),
     periodo,
-    cantidad
+    cantidad,
+    fechaFin
   ];
   let ok=false;
   if(rowNum) ok=await updateRow(SH.suscripciones,rowNum,values);
