@@ -853,7 +853,7 @@
       <button class="tab-btn active" onclick="switchTab('proyectos')">Proyectos</button>
       <button class="tab-btn" onclick="switchTab('finanzas')" id="tabPagosBtn">Pagos <span id="pagosNotif" style="display:none;background:var(--red);color:#fff;font-size:.55rem;padding:.15rem .45rem;border-radius:50%;margin-left:.3rem;font-family:'DM Mono',monospace;"></span></button>
       <button class="tab-btn" onclick="switchTab('archivos')">Archivos</button>
-      <button class="tab-btn" onclick="switchTab('cursos')" id="tabCursosBtn">Cursos <span id="cursosCount" style="display:none;background:var(--purple-dim);color:var(--purple-light);font-size:.55rem;padding:.15rem .45rem;border-radius:50%;margin-left:.3rem;font-family:'DM Mono',monospace;"></span></button>
+      <button class="tab-btn" onclick="switchTab('cursos')" id="tabCursosBtn">Recursos <span id="cursosCount" style="display:none;background:var(--purple-dim);color:var(--purple-light);font-size:.55rem;padding:.15rem .45rem;border-radius:50%;margin-left:.3rem;font-family:'DM Mono',monospace;"></span></button>
       <button class="tab-btn" onclick="switchTab('perfil')">Mi Perfil</button>
     </div>
 
@@ -910,11 +910,11 @@
         <div class="portal-section-header">
           <div>
             <div class="section-eyebrow">// 04</div>
-            <div class="portal-section-title">MIS CURSOS</div>
+            <div class="portal-section-title">MIS RECURSOS</div>
           </div>
         </div>
         <div id="cursosContainer">
-          <div class="loading-state"><div class="spinner"></div><div class="loading-text">Cargando cursos...</div></div>
+          <div class="loading-state"><div class="spinner"></div><div class="loading-text">Cargando recursos...</div></div>
         </div>
       </div>
     </div>
@@ -1228,11 +1228,13 @@ function renderStats() {
 // PROYECTOS
 // ═══════════════════════════════════════
 function getStatusBadge(estado) {
-  if (!estado) return '<span class="badge badge-pending">Sin estado</span>';
-  if (/finalizado/i.test(estado)) return '<span class="badge badge-done">Finalizado</span>';
-  if (/proceso/i.test(estado))    return '<span class="badge badge-active">En proceso</span>';
-  if (/mezcla/i.test(estado))     return '<span class="badge badge-pending">Mezcla</span>';
-  if (/revision/i.test(estado))   return '<span class="badge badge-pending">Revisión</span>';
+  if (!estado) return '<span class="badge" style="background:rgba(107,99,120,.15);color:var(--muted);border:1px solid rgba(107,99,120,.2);">Sin estado</span>';
+  if (/finalizado/i.test(estado)) return '<span class="badge" style="background:rgba(52,211,153,.12);color:var(--green);border:1px solid rgba(52,211,153,.25);">✓ Finalizado</span>';
+  if (/proceso/i.test(estado))    return '<span class="badge" style="background:rgba(168,85,247,.12);color:var(--purple-light);border:1px solid rgba(168,85,247,.25);">▶ En proceso</span>';
+  if (/mezcla/i.test(estado))     return '<span class="badge" style="background:rgba(99,102,241,.12);color:#818cf8;border:1px solid rgba(99,102,241,.25);">⊕ En mezcla</span>';
+  if (/revision/i.test(estado))   return '<span class="badge" style="background:rgba(251,191,36,.12);color:var(--yellow);border:1px solid rgba(251,191,36,.25);">⟳ Revisión</span>';
+  if (/espera/i.test(estado))     return '<span class="badge" style="background:rgba(251,146,60,.1);color:#fb923c;border:1px solid rgba(251,146,60,.25);">◌ En espera</span>';
+  if (/cancelado/i.test(estado))  return '<span class="badge" style="background:rgba(248,113,113,.1);color:var(--red);border:1px solid rgba(248,113,113,.2);">✕ Cancelado</span>';
   return `<span class="badge badge-pending">${estado.replace(/^\d+\s*\|\s*/,'')}</span>`;
 }
 
@@ -1409,20 +1411,53 @@ function renderPerfil() {
     const color = isActiva ? 'var(--green)' : isPausada ? 'var(--yellow)' : 'var(--muted2)';
     const monto = parseFloat(susc['Monto'])||0;
     const renov = susc['FechaRenovacion'] || '';
-    const periodo = (susc['Periodo'] || 'mensual').toLowerCase();
-    const periodoLabel = periodo === 'anual' ? 'año' : periodo === 'semanal' ? 'semana' : 'mes';
+    const fin   = susc['FechaFin'] || '';
+    const periodoRaw = (susc['Periodo'] || 'mensual').toLowerCase();
+    const cantidad = parseInt(susc['Cantidad']) || 1;
+    const PERIODO_LABEL = { mensual:'mes', bimestral:'bimestre', trimestral:'trimestre', semestral:'semestre', anual:'año', personalizado:'periodo' };
+    const periodoSingular = PERIODO_LABEL[periodoRaw] || 'mes';
+    const periodoLabel = cantidad === 1 ? `1 ${periodoSingular}` : `${cantidad} ${periodoSingular}s`;
+    const esPersonalizado = periodoRaw === 'personalizado';
+
+    // Días para renovación con color de urgencia
+    const parseAnyDate = (str) => {
+      if (!str) return null;
+      const m1 = str.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
+      if (m1) return new Date(parseInt(m1[3]), parseInt(m1[2])-1, parseInt(m1[1]));
+      const m2 = str.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+      if (m2) return new Date(parseInt(m2[1]), parseInt(m2[2])-1, parseInt(m2[3]));
+      return null;
+    };
+    const hoy = new Date();
+    const dRenov = parseAnyDate(renov);
+    const diasRenov = dRenov ? Math.round((dRenov - hoy) / (1000*60*60*24)) : null;
+    const renovColor = diasRenov===null ? 'var(--text)' : diasRenov<0 ? 'var(--red)' : diasRenov<=7 ? 'var(--yellow)' : 'var(--text)';
+    const renovUrgente = diasRenov!==null && diasRenov<=7 && diasRenov>=0
+      ? ` <span style="color:var(--yellow);font-size:.55rem;">⚠ en ${diasRenov}d</span>`
+      : (diasRenov!==null && diasRenov<0 ? ` <span style="color:var(--red);font-size:.55rem;">venció hace ${Math.abs(diasRenov)}d</span>` : '');
+
+    const dFin = parseAnyDate(fin);
+    const diasFin = dFin ? Math.round((dFin - hoy) / (1000*60*60*24)) : null;
+    const finVencido = diasFin !== null && diasFin < 0;
+
     suscHtml = `
     <div class="susc-card" style="margin-top:1.2rem;border:1px solid var(--border);border-left:3px solid ${color};padding:1.1rem 1.4rem;background:var(--surface);">
       <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:.6rem;">
         <div>
           <div style="font-family:'DM Mono',monospace;font-size:.56rem;letter-spacing:.18em;text-transform:uppercase;color:var(--muted2);margin-bottom:.3rem;">// Mi membresía</div>
           <div style="font-family:'Bebas Neue',sans-serif;font-size:1.2rem;letter-spacing:.04em;color:${color};">${susc['Plan'] || 'Membresía'} — ${estado}</div>
+          <div style="font-family:'DM Mono',monospace;font-size:.6rem;color:var(--muted);margin-top:.25rem;">${periodoLabel}${esPersonalizado ? ' · personalizado' : ''}</div>
         </div>
-        ${monto ? `<div style="text-align:right;"><div style="font-family:'Bebas Neue',sans-serif;font-size:1.3rem;color:var(--gold,#C9A84C);">$${monto.toLocaleString()}</div><div style="font-family:'DM Mono',monospace;font-size:.55rem;color:var(--muted2);">MXN / ${periodoLabel}</div></div>` : ''}
+        ${monto ? `<div style="text-align:right;"><div style="font-family:'Bebas Neue',sans-serif;font-size:1.3rem;color:var(--gold,#C9A84C);">$${monto.toLocaleString()}</div><div style="font-family:'DM Mono',monospace;font-size:.55rem;color:var(--muted2);">MXN total</div></div>` : ''}
       </div>
-      ${renov ? `<div style="margin-top:.7rem;font-family:'DM Mono',monospace;font-size:.62rem;color:var(--muted);">Próxima renovación: <strong style="color:var(--text);">${formatFecha(renov)}</strong></div>` : ''}
+      <div style="margin-top:.85rem;display:flex;flex-direction:column;gap:.4rem;font-family:'DM Mono',monospace;font-size:.62rem;color:var(--muted);">
+        ${renov ? `<div>↻ Próxima renovación: <strong style="color:${renovColor};">${formatFecha(renov)}</strong>${renovUrgente}</div>` : ''}
+        ${fin && !esPersonalizado ? `<div>⊘ Fin del acuerdo: <strong style="color:${finVencido?'var(--red)':'var(--text)'};">${formatFecha(fin)}</strong>${finVencido ? ' <span style="color:var(--red);font-size:.55rem;">vencido</span>' : ''}</div>` : ''}
+        ${esPersonalizado ? `<div style="color:var(--muted2);font-style:italic;">// Plan personalizado, sin fecha de término automática</div>` : ''}
+      </div>
     </div>`;
   }
+
 
   c.innerHTML = `
     <div class="profile-card">
@@ -1559,7 +1594,7 @@ function renderCursos() {
   const nivelArtista = currentArtist ? (currentArtist['Tipo']||'') : '';
 
   if (!allCursos.length) {
-    c.innerHTML = '<div class="empty-state">// No hay cursos disponibles aún.</div>';
+    c.innerHTML = '<div class="empty-state">// No hay recursos disponibles aún.</div>';
     return;
   }
 
