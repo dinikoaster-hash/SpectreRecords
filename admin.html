@@ -1212,8 +1212,15 @@ body::before{content:'';position:fixed;inset:0;background-image:url("data:image/
         </div>
         <div class="form-group full"><label class="form-label">Miniatura (URL imagen, opcional)</label>
           <div style="display:flex;gap:.6rem;align-items:flex-start;">
-            <input class="form-input" id="curThumb" placeholder="https://... (opcional)" oninput="curThumbPreview()" style="flex:1;"/>
-            <div id="curThumbPreviewBox" style="width:48px;height:48px;border:1px solid var(--border2);flex-shrink:0;overflow:hidden;display:none;">
+            <div style="flex:1;display:flex;flex-direction:column;gap:.4rem;">
+              <input class="form-input" id="curThumb" placeholder="https://... (opcional)" oninput="curThumbPreview()"/>
+              <div style="display:flex;gap:.4rem;align-items:center;flex-wrap:wrap;">
+                <input type="file" class="form-file" id="curThumbFile" accept="image/*" onchange="curThumbFilePreview()" style="flex:1;"/>
+                <button type="button" class="btn btn-ghost" id="curThumbUploadBtn" onclick="curSubirMiniatura()" style="font-size:.6rem;padding:.5rem .9rem;display:none;white-space:nowrap;">⬆ Subir imagen</button>
+              </div>
+              <div id="curThumbStatus" style="font-family:DM Mono,monospace;font-size:.6rem;color:var(--green);min-height:.9rem;"></div>
+            </div>
+            <div id="curThumbPreviewBox" style="width:64px;height:64px;border:1px solid var(--border2);flex-shrink:0;overflow:hidden;display:none;background:var(--surface2);">
               <img id="curThumbPreviewImg" style="width:100%;height:100%;object-fit:cover;" src="" onerror="this.parentElement.style.display='none'"/>
             </div>
           </div>
@@ -2716,6 +2723,42 @@ function curThumbPreview(){
   else{box.style.display='none';img.src='';}
 }
 
+function curThumbFilePreview(){
+  const file=document.getElementById('curThumbFile')?.files[0];
+  const btn=document.getElementById('curThumbUploadBtn');
+  const status=document.getElementById('curThumbStatus');
+  const box=document.getElementById('curThumbPreviewBox');
+  const img=document.getElementById('curThumbPreviewImg');
+  if(!file) return;
+  if(btn) btn.style.display='';
+  if(status) status.textContent=`// ${file.name} seleccionada`;
+  // Preview local antes de subir
+  const reader=new FileReader();
+  reader.onload=e=>{if(box)box.style.display='';if(img)img.src=e.target.result;};
+  reader.readAsDataURL(file);
+}
+
+async function curSubirMiniatura(){
+  if(!oauthToken){toast('Conecta Google primero','error');return;}
+  const file=document.getElementById('curThumbFile')?.files[0];
+  if(!file){toast('Selecciona una imagen','error');return;}
+  const btn=document.getElementById('curThumbUploadBtn');
+  const status=document.getElementById('curThumbStatus');
+  if(btn){btn.textContent='Subiendo...';btn.disabled=true;}
+  if(status) status.innerHTML='<span style="color:var(--yellow)">// Subiendo imagen a Drive...</span>';
+  const link=await uploadToDrive(file,'Recursos_Miniaturas');
+  if(link){
+    document.getElementById('curThumb').value=link;
+    curThumbPreview();
+    if(status) status.innerHTML='<span style="color:var(--green)">✓ Miniatura subida — link guardado</span>';
+    if(btn){btn.textContent='⬆ Subir imagen';btn.disabled=false;}
+    toast('✓ Miniatura subida a Drive','success');
+  } else {
+    if(status) status.innerHTML='<span style="color:var(--red)">✕ Error al subir</span>';
+    if(btn){btn.textContent='⬆ Subir imagen';btn.disabled=false;}
+  }
+}
+
 async function curSubirDrive(){
   if(!oauthToken){toast('Conecta Google primero','error');return;}
   const file=document.getElementById('curArchivo')?.files[0];
@@ -2825,6 +2868,10 @@ function editCurso(rowNum){
   const fa=document.getElementById('curArchivo');if(fa)fa.value='';
   const btn=document.getElementById('curUploadBtn');if(btn)btn.style.display='none';
   const st=document.getElementById('curArchivoStatus');if(st)st.textContent='';
+  const tfa=document.getElementById('curThumbFile');if(tfa)tfa.value='';
+  const tbtn=document.getElementById('curThumbUploadBtn');if(tbtn)tbtn.style.display='none';
+  const tst=document.getElementById('curThumbStatus');if(tst)tst.textContent='';
+  const tbox=document.getElementById('curThumbPreviewBox');if(tbox)tbox.style.display='none';
   cursoTipoChange();
   openModal('modalCurso');
 }
