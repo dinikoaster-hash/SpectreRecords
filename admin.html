@@ -182,8 +182,11 @@ body::before{content:'';position:fixed;inset:0;background-image:url("data:image/
 .oauth-pill.off .oauth-dot{background:var(--gold);box-shadow:0 0 6px rgba(201,168,76,.55);}
 .oauth-pill.on{background:rgba(52,211,153,.08);color:var(--green);border:1px solid rgba(52,211,153,.28);}
 .oauth-pill.on .oauth-dot{background:var(--green);box-shadow:0 0 7px rgba(52,211,153,.65);animation:oauthPulse 2.2s ease-in-out infinite;}
+.oauth-pill.error{background:rgba(248,113,113,.1);color:var(--red);border:1px solid rgba(248,113,113,.35);}
+.oauth-pill.error .oauth-dot{background:var(--red);box-shadow:0 0 7px rgba(248,113,113,.7);animation:oauthPulse 1.1s ease-in-out infinite;}
 .oauth-pill:hover{background:rgba(201,168,76,.15);transform:translateY(-1px);}
 .oauth-pill.on:hover{background:rgba(52,211,153,.15);}
+.oauth-pill.error:hover{background:rgba(248,113,113,.18);}
 @keyframes oauthPulse{0%,100%{opacity:1}50%{opacity:.35}}
 
 /* Enlaces unificados en un dropdown */
@@ -2144,6 +2147,7 @@ function doLogout(){
   oauthToken=null;
   sessionStorage.removeItem('adm_oauth_token');
   updateOAuthUI(false);
+  if(_googleCheckInterval){clearInterval(_googleCheckInterval);_googleCheckInterval=null;}
 }
 
 // OAUTH
@@ -2156,17 +2160,51 @@ function iniciarOAuth(){
         if(resp.error){toast('Error OAuth: '+resp.error,'error');return;}
         oauthToken=resp.access_token;
         sessionStorage.setItem('adm_oauth_token',oauthToken);
-        updateOAuthUI(true);
+        _avisoDesconexionMostrado=false;
+        updateOAuthUI('on');
         toast('\u2713 Google Sheets conectado \u2014 escritura activa','success');
+        iniciarMonitoreoGoogle();
       }
     });
     client.requestAccessToken();
   }catch(e){toast('OAuth no disponible a\xFAn \u2014 espera que cargue Google','error');}
 }
-function updateOAuthUI(on){
+// Estados del pill: 'on' (conectado), 'off' (nunca conectado / desconectado manualmente), 'error' (se cayó la sesión de Google)
+function updateOAuthUI(state){
   const pill=document.getElementById('oauthPill');
-  if(on){pill.innerHTML='<span class="oauth-dot"></span><span class="oauth-label">Google activo</span>';pill.className='oauth-pill on';}
+  if(state===true)state='on'; // compat con llamadas antiguas
+  if(state===false)state='off';
+  if(state==='on'){pill.innerHTML='<span class="oauth-dot"></span><span class="oauth-label">Google activo</span>';pill.className='oauth-pill on';}
+  else if(state==='error'){pill.innerHTML='<span class="oauth-dot"></span><span class="oauth-label">Google desconectado</span>';pill.className='oauth-pill error';}
   else{pill.innerHTML='<span class="oauth-dot"></span><span class="oauth-label">Conectar Google</span>';pill.className='oauth-pill off';}
+}
+// Marca la sesión de Google como caída (token inválido/expirado) y avisa en rojo
+let _avisoDesconexionMostrado=false;
+function marcarGoogleDesconectado(silencioso){
+  const habiaToken=!!oauthToken;
+  oauthToken=null;
+  sessionStorage.removeItem('adm_oauth_token');
+  updateOAuthUI('error');
+  if(habiaToken&&!silencioso&&!_avisoDesconexionMostrado){
+    _avisoDesconexionMostrado=true;
+    toast('\u26A0 Google se desconect\xF3 \u2014 vuelve a conectar','error');
+  }
+}
+// Verifica contra Google si el token sigue siendo válido (detecta desconexiones "silenciosas")
+async function verificarGoogleToken(){
+  if(!oauthToken)return;
+  try{
+    const r=await fetch(`https://oauth2.googleapis.com/tokeninfo?access_token=${oauthToken}`);
+    if(!r.ok){marcarGoogleDesconectado();}
+    else{_avisoDesconexionMostrado=false;}
+  }catch(e){/* fallo de red puntual: no marcar desconectado por esto */}
+}
+let _googleCheckInterval=null;
+function iniciarMonitoreoGoogle(){
+  if(_googleCheckInterval)clearInterval(_googleCheckInterval);
+  verificarGoogleToken();
+  _googleCheckInterval=setInterval(verificarGoogleToken,3*60*1000);
+  document.addEventListener('visibilitychange',()=>{if(!document.hidden)verificarGoogleToken();});
 }
 
 // SHEETS API - READ
@@ -2199,6 +2237,7 @@ async function appendRow(sheet,values){
       {method:'POST',headers:{'Authorization':`Bearer ${oauthToken}`,'Content-Type':'application/json'},
        body:JSON.stringify({values:[values]})}
     );
+    if(r.status===401)marcarGoogleDesconectado();
     return r.ok;
   }catch{return false;}
 }
@@ -2212,6 +2251,7 @@ async function updateRow(sheet,rowNumber,values){
       {method:'PUT',headers:{'Authorization':`Bearer ${oauthToken}`,'Content-Type':'application/json'},
        body:JSON.stringify({values:[values]})}
     );
+    if(r.status===401)marcarGoogleDesconectado();
     return r.ok;
   }catch{return false;}
 }
@@ -2228,6 +2268,7 @@ async function deleteRow(sheet,rowNumber){
       {method:'POST',headers:{'Authorization':`Bearer ${oauthToken}`,'Content-Type':'application/json'},
        body:JSON.stringify({requests:[{deleteDimension:{range:{sheetId:sheetGid,dimension:'ROWS',startIndex:rowNumber-1,endIndex:rowNumber}}}]})}
     );
+    if(r.status===401)marcarGoogleDesconectado();
     return r.ok;
   }catch{return false;}
 }
@@ -2264,6 +2305,7 @@ async function uploadToDrive(file, folderName){
     form.append('file',file);
     const r=await fetch('https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart&fields=id,webViewLink',
       {method:'POST',headers:{'Authorization':`Bearer ${oauthToken}`},body:form});
+    if(r.status===401){marcarGoogleDesconectado();return null;}
     if(!r.ok)return null;
     const d=await r.json();
     await fetch(`https://www.googleapis.com/drive/v3/files/${d.id}/permissions`,
@@ -2283,8 +2325,9 @@ async function uploadToDrive(file, folderName){
 async function loadAdmin(delay=0){
   if(!oauthToken){
     const saved=sessionStorage.getItem('adm_oauth_token');
-    if(saved){oauthToken=saved;updateOAuthUI(true);}
+    if(saved){oauthToken=saved;updateOAuthUI('on');}
   }
+  if(oauthToken)iniciarMonitoreoGoogle();
   if(delay>0)await new Promise(r=>setTimeout(r,delay));
   [allArtistas,allProyectos,allFinanzas,allCursos,allBeats,allTareas,allSuscripciones]=await Promise.all([
     fetchSheet(SH.artistas),fetchSheet(SH.proyectos),fetchSheet(SH.finanzas),fetchSheet(SH.cursos),fetchSheet(SH.catalogo),fetchSheet(SH.tareas),fetchSheet(SH.suscripciones).catch(()=>[])
@@ -2316,6 +2359,18 @@ function updateBadges(){
   }
 }
 
+// Orden de prioridad para proyectos activos: Revisión > Mezcla > Proceso > Espera > otros
+function estadoPrioridad(e){
+  e=(e||'').toLowerCase();
+  if(/revision/.test(e))return 0;
+  if(/mezcla/.test(e))return 1;
+  if(/proceso/.test(e))return 2;
+  if(/espera/.test(e))return 3;
+  return 4;
+}
+function ordenarActivosPorEstado(list){
+  return [...list].sort((a,b)=>estadoPrioridad(a['Estado proyecto'])-estadoPrioridad(b['Estado proyecto']));
+}
 function getArtista(id){
   if(!id||id.trim()==='')return null;
   return allArtistas.find(a=>a['ArtistaID']===id||a['AKA']===id||a['Nombre']===id||(a['ArtistaID']||'').toLowerCase()===(id||'').toLowerCase())||null;
@@ -2438,17 +2493,18 @@ function renderDashboard(){
 
   // ── Proyectos activos y pagos pendientes ──
   const al=allProyectos.filter(p=>!/finalizado|cancelado/i.test(p['Estado proyecto']||''));
+  const alOrdenados=ordenarActivosPorEstado(al.slice(-10).reverse());
   const dashProyCountEl=document.getElementById('dashProyectosCount');
   if(dashProyCountEl)dashProyCountEl.textContent=al.length+' activo'+(al.length===1?'':'s');
   document.getElementById('dashProyectos').innerHTML=al.length
     ?`<div class="table-wrap"><table class="data-table"><thead><tr><th>Proyecto</th><th>Artista</th><th>Servicio</th><th>Estado</th></tr></thead><tbody>
-      ${al.slice(-10).reverse().map(p=>{const a=getArtista(p['Cliente']);return`<tr class="dash-row-click" onclick="openProyectoDetail(${p._rowNumber})">
+      ${alOrdenados.map(p=>{const a=getArtista(p['Cliente']);return`<tr class="dash-row-click" onclick="openProyectoDetail(${p._rowNumber})">
         <td style="font-weight:600">${p['Nombre del proyecto']||'\u2014'}</td>
         <td style="font-family:DM Mono,monospace;font-size:.72rem;color:var(--purple-light)">${a?a['AKA']||a['Nombre']:p['Cliente']||'\u2014'}</td>
         <td style="font-family:DM Mono,monospace;font-size:.7rem;color:var(--muted)">${p['Tipo de servicio']||'\u2014'}</td>
         <td>${getBadge(p['Estado proyecto'])}</td></tr>`;}).join('')}
       </tbody></table></div>
-      <div class="mob-card">${al.slice(-10).reverse().map(p=>{const a=getArtista(p['Cliente']);return`<div class="mob-card-row dash-row-click" onclick="openProyectoDetail(${p._rowNumber})">
+      <div class="mob-card">${alOrdenados.map(p=>{const a=getArtista(p['Cliente']);return`<div class="mob-card-row dash-row-click" onclick="openProyectoDetail(${p._rowNumber})">
         <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:.5rem;margin-bottom:.3rem;"><div class="mob-card-title">${p['Nombre del proyecto']||'—'}</div>${getBadge(p['Estado proyecto'])}</div>
         <div class="mob-card-meta"><span style="color:var(--purple-light)">${a?a['AKA']||a['Nombre']:p['Cliente']||'—'}</span>${p['Tipo de servicio']?`<span>${p['Tipo de servicio']}</span>`:''}</div>
       </div>`;}).join('')}</div>`
@@ -2715,7 +2771,8 @@ function renderProyectos(){
     const na=a?(a['AKA']||a['Nombre']||''):p['Cliente']||'';
     return !q||(p['Nombre del proyecto']||'').toLowerCase().includes(q)||na.toLowerCase().includes(q);
   });
-  const list=[...allBase.filter(prjView==='activos'?isActivo:prjView==='finalizados'?isFinalizado:isCancelado)].reverse();
+  let list=[...allBase.filter(prjView==='activos'?isActivo:prjView==='finalizados'?isFinalizado:isCancelado)].reverse();
+  if(prjView==='activos')list=ordenarActivosPorEstado(list);
   if(!list.length){document.getElementById('proyectosContainer').innerHTML='<div class="empty-state">// No hay proyectos '+prjView+' en este momento</div>';return;}
   const rows=list.map(p=>{
     const a=getArtista(p['Cliente']);
@@ -4709,7 +4766,7 @@ function renderProyectosDarol(){
   function buildTable(list, emptyMsg){
     if(!list.length) return `<div class="empty-state">${emptyMsg}</div>`;
 
-    const activos    = list.filter(p=>!/finalizado|cancelado/i.test(p['Estado proyecto']||''));
+    const activos    = ordenarActivosPorEstado(list.filter(p=>!/finalizado|cancelado/i.test(p['Estado proyecto']||'')));
     const finalizados= list.filter(p=>/finalizado/i.test(p['Estado proyecto']||''));
     const cancelados = list.filter(p=>/cancelado/i.test(p['Estado proyecto']||''));
 
@@ -4923,7 +4980,7 @@ function renderDarolDashboard(){
     :'<div style="font-family:DM Mono,monospace;font-size:.65rem;color:var(--muted2)">// Sin historial de cobros</div>';
 
   // Proyectos activos
-  const activosList=misProyectos.filter(p=>!/finalizado|cancelado/i.test(p['Estado proyecto']||''));
+  const activosList=ordenarActivosPorEstado(misProyectos.filter(p=>!/finalizado|cancelado/i.test(p['Estado proyecto']||'')));
   const darolProyCountEl=document.getElementById('darolProyectosCount');
   if(darolProyCountEl)darolProyCountEl.textContent=activosList.length+' activo'+(activosList.length===1?'':'s');
   document.getElementById('darolProyectos').innerHTML=activosList.length
