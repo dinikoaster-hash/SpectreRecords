@@ -1076,6 +1076,7 @@ let currentPlayerType='html5';
 let scWidget=null,scContainer=null,scReady=false;
 let audioUnlocked=false,playerVisible=false;
 let fsOpen=false;
+let _playSeq=0; // token para descartar promesas de play() obsoletas (evita errores de carrera al cambiar de pista rápido en iOS)
 
 const audioPlayer=document.getElementById('audioPlayer');
 
@@ -1603,6 +1604,7 @@ function playBeatAtIndex(idx){
 }
 
 function _startHTML5(url,fallbackUrl){
+  const seq=++_playSeq; // marca esta petición como la más reciente
   audioPlayer.pause();
   if(audioPlayer._canplayHandler){audioPlayer.removeEventListener('canplay',audioPlayer._canplayHandler);audioPlayer._canplayHandler=null;}
   if(audioPlayer._fallbackErrorHandler){audioPlayer.removeEventListener('error',audioPlayer._fallbackErrorHandler);audioPlayer._fallbackErrorHandler=null;}
@@ -1615,16 +1617,36 @@ function _startHTML5(url,fallbackUrl){
       audioPlayer.removeEventListener('error',onErr);
       audioPlayer._fallbackErrorHandler=null;
       audioPlayer._fallbackPending=false;
-      audioPlayer.src=fallbackUrl;audioPlayer.load();
+      audioPlayer.src=fallbackUrl;audioPlayer.load(); // forzar recarga del búfer en WebKit antes de reintentar
       const p2=audioPlayer.play();
-      if(p2&&p2.catch)p2.catch(()=>{});
+      if(p2&&p2.catch)p2.catch(err2=>_handlePlayRejection(err2,seq));
     };
     audioPlayer._fallbackErrorHandler=onErr;
     audioPlayer.addEventListener('error',onErr,{once:true});
   }
-  audioPlayer.src=url;audioPlayer.load();
+  audioPlayer.src=url;
+  audioPlayer.load(); // fuerza a WebKit/iOS a preparar el búfer antes de intentar reproducir
   const p=audioPlayer.play();
-  if(p&&p.catch){p.catch(err=>{isPlaying=false;setPlayBtnState(false);const card=document.getElementById('card-idx-'+currentIndex);if(card)card.classList.remove('playing');console.warn('iOS play blocked:',err.message);});}
+  if(p&&p.catch){p.catch(err=>_handlePlayRejection(err,seq));}
+}
+// Maneja de forma centralizada el rechazo de la promesa de audioPlayer.play().
+// - AbortError: ocurre cuando el usuario cambia de pista rápido (un nuevo
+//   load()/play() interrumpe al anterior); es un rechazo esperado y no debe
+//   ensuciar la consola ni tocar la UI si ya hay una pista más nueva sonando.
+// - NotAllowedError: iOS bloqueó la reproducción por no detectar un gesto
+//   directo (o por interrupción del sistema, ej. Modo Bajo Consumo); se
+//   revierte el estado visual y se invita al usuario a tocar play de nuevo.
+// - Otros errores: se registran de forma discreta sin interrumpir el flujo.
+function _handlePlayRejection(err,seq){
+  if(seq!==_playSeq)return; // ya hay una petición de reproducción más reciente; ignorar
+  if(err&&err.name==='AbortError')return; // interrupción esperada por cambio rápido de pista
+  isPlaying=false;setPlayBtnState(false);
+  const card=document.getElementById('card-idx-'+currentIndex);if(card)card.classList.remove('playing');
+  if(err&&err.name==='NotAllowedError'){
+    toast('// Toca play para reproducir','error');
+  }else{
+    console.warn('iOS play blocked:',err&&err.message);
+  }
 }
 function _startSoundCloud(url){
   // En vez de destruir y recrear el iframe de SoundCloud en cada canción,
@@ -1665,8 +1687,13 @@ function toggleBarPlay(){
   }else{
     isPlaying=true;setPlayBtnState(true);if(card)card.classList.add('playing');
     if(currentPlayerType==='html5'){
+      const seq=++_playSeq;
+      // iOS puede descartar el búfer del <audio> en segundo plano (bloqueo de
+      // pantalla, cambio de app); si el elemento quedó sin datos cargados,
+      // se fuerza un load() antes de reintentar play() para WebKit.
+      if(audioPlayer.readyState===0&&audioPlayer.src)audioPlayer.load();
       const p=audioPlayer.play();
-      if(p&&p.catch)p.catch(()=>{isPlaying=false;setPlayBtnState(false);if(card)card.classList.remove('playing');});
+      if(p&&p.catch)p.catch(err=>_handlePlayRejection(err,seq));
     }else if(scWidget)try{scWidget.play();}catch(e){}
   }
 }
@@ -1721,6 +1748,20 @@ audioPlayer.addEventListener('pause',()=>{
   if(currentPlayerType!=='html5'||!audioPlayer.src||audioPlayer.src===window.location.href)return;
   isPlaying=false;setPlayBtnState(false);
   const card=document.getElementById('card-idx-'+currentIndex);if(card)card.classList.remove('playing');
+});
+// iOS a veces interrumpe/pausa el audio (llamada, bloqueo de pantalla, cambio
+// de app) sin disparar de forma fiable el evento 'pause' del elemento. Al
+// regresar a primer plano, resincronizamos el estado visual con el estado
+// real del <audio> para que el botón/tarjeta nunca queden desfasados.
+document.addEventListener('visibilitychange',()=>{
+  if(document.visibilityState!=='visible')return;
+  if(currentPlayerType!=='html5'||currentIndex<0)return;
+  const reallyPlaying=!audioPlayer.paused&&!audioPlayer.ended;
+  if(reallyPlaying!==isPlaying){
+    isPlaying=reallyPlaying;setPlayBtnState(reallyPlaying);
+    const card=document.getElementById('card-idx-'+currentIndex);
+    if(card)card.classList.toggle('playing',reallyPlaying);
+  }
 });
 
 /* ── SoundCloud polling ── */
