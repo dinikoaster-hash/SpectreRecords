@@ -14,6 +14,49 @@
   }catch(e){}
 })();
 </script>
+<script>
+// Anti-flash: si hay una sesión guardada y válida, decide ANTES de pintar
+// la página qué pantalla mostrar (admin, no login) y en qué vista dejar al
+// usuario (la última que visitó, no el Dashboard por defecto). Esto evita
+// el parpadeo de "aparece login o Dashboard un instante y luego cambia a
+// donde estaba" que ocurre si esa decisión se toma después, con JS normal.
+// IMPORTANTE: SESSION_KEY/SESSION_TIMEOUT_MS/LAST_PAGE_KEY deben coincidir
+// con las constantes homónimas del script principal (más abajo).
+(function(){
+  try{
+    var raw=localStorage.getItem('adm_session');
+    if(!raw)return;
+    var data=JSON.parse(raw);
+    if(!data||!data.role||!data.ts)return;
+    var SESSION_TIMEOUT_MS=15*60*1000;
+    if(Date.now()-data.ts>SESSION_TIMEOUT_MS)return; // sesión expirada: se muestra login normal
+    var isDarol=data.role==='darol';
+    var VALID_PAGES=['dashboard','dashboard-darol','artistas','proyectos','finanzas','cursos','catalogo','suscripciones','prospectos','calendario','cotizador','tareas'];
+    var DAROL_PAGES=['catalogo','finanzas','proyectos','tareas','dashboard-darol'];
+    var saved=null;
+    try{saved=localStorage.getItem('adm_last_page');}catch(e){}
+    var target=isDarol?'dashboard-darol':'dashboard';
+    if(saved && VALID_PAGES.indexOf(saved)!==-1){
+      if(isDarol){ if(DAROL_PAGES.indexOf(saved)!==-1) target=saved; }
+      else if(saved!=='dashboard-darol'){ target=saved; }
+    }
+    // El script principal (más abajo) lee esto para no repetir el cálculo
+    // y para saber que ya no debe animar/mover nada al restaurar la sesión.
+    window.__srBoot={role:data.role,page:target};
+    var css='#loginScreen{display:none!important}'
+      +'#adminScreen{display:block!important}'
+      +'#hamburger{display:block!important}'
+      +'#themeToggle{display:flex!important}'
+      +'#page-'+target+'{display:block!important}';
+    if(target!=='dashboard')css+='#page-dashboard.active{display:none!important}';
+    if(target!=='dashboard-darol')css+='#page-dashboard-darol.active{display:none!important}';
+    var st=document.createElement('style');
+    st.id='__srBootStyle';
+    st.textContent=css;
+    document.head.appendChild(st);
+  }catch(e){}
+})();
+</script>
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
 <link rel="icon" type="image/png" href="assets/logo_sr.PNG"/>
@@ -2204,6 +2247,18 @@ function getCfg(){return{adminPass:localStorage.getItem('adm_pass')||DEFAULT_PAS
 // pero cerrar sesión automáticamente tras 15 min sin actividad ──
 const SESSION_KEY='adm_session';
 const SESSION_TIMEOUT_MS=15*60*1000; // 15 minutos
+// Recuerda en qué vista estaba el usuario para restaurarla al recargar
+// (leída también, en modo "anti-flash", por el script del <head>).
+const LAST_PAGE_KEY='adm_last_page';
+const VALID_PAGES=['dashboard','dashboard-darol','artistas','proyectos','finanzas','cursos','catalogo','suscripciones','prospectos','calendario','cotizador','tareas'];
+const DAROL_PAGES=['catalogo','finanzas','proyectos','tareas','dashboard-darol'];
+function getSavedPage(isDarol){
+  let saved=null;
+  try{saved=localStorage.getItem(LAST_PAGE_KEY);}catch(e){}
+  if(!saved||!VALID_PAGES.includes(saved))return isDarol?'dashboard-darol':'dashboard';
+  if(isDarol)return DAROL_PAGES.includes(saved)?saved:'dashboard-darol';
+  return saved==='dashboard-darol'?'dashboard':saved;
+}
 let _inactivityInterval=null;
 let _lastActivityWriteTs=0;
 
@@ -2274,6 +2329,9 @@ async function restoreSessionIfValid(){
   applySavedCollapse();
   startInactivityWatch();
   await loadAdmin();
+  // Ya se restauró la vista real vía applyRoleUI(); el <style> temporal
+  // del anti-flash del <head> deja de hacer falta.
+  document.getElementById('__srBootStyle')?.remove();
   return true;
 }
 
@@ -3986,12 +4044,19 @@ function applyRoleUI(){
   const btnNuevoPago=document.getElementById('btnNuevoPago');
   if(btnNuevoPago) btnNuevoPago.style.display=isDarol?'none':'';
 
-  if(isDarol){
-    setTimeout(()=>showPage('dashboard-darol', navD),100);
-  } else {
-    const dashBtn=document.getElementById('navDashHeaven');
-    setTimeout(()=>showPage('dashboard', dashBtn),100);
-  }
+  // Navega a la última vista visitada (o al dashboard si no hay ninguna
+  // guardada / no es válida para el rol actual). Se hace en el siguiente
+  // frame para asegurar que los estilos display de arriba (nav-items
+  // ocultos/mostrados según rol) ya se aplicaron, pero SIN el retraso
+  // artificial que antes forzaba pasar por el Dashboard antes de llegar
+  // a la vista guardada (eso era lo que causaba el parpadeo al recargar).
+  const targetPage=getSavedPage(isDarol);
+  const targetBtn=document.querySelector(`.nav-item[onclick*="'${targetPage}',this"]`)
+    ||(isDarol?navD:document.getElementById('navDashHeaven'));
+  requestAnimationFrame(()=>{
+    showPage(targetPage, targetBtn);
+    positionNavIndicator(true); // instant=true: sin animación de deslizamiento al arrancar
+  });
 }
 
 // ════════════════════════════════════════════
@@ -5529,6 +5594,9 @@ function showPage(name,el){
   document.querySelectorAll('.nav-item').forEach(b=>b.classList.remove('active'));
   document.getElementById('page-'+name).classList.add('active');
   if(el)el.classList.add('active');
+  // Recuerda la última vista para restaurarla al recargar la página
+  // (ver LAST_PAGE_KEY / restoreSessionIfValid / applyRoleUI).
+  try{localStorage.setItem(LAST_PAGE_KEY,name);}catch(e){}
   closeSidebar();
   positionNavIndicator();
   if(name==='finanzas')renderFinanzas();
