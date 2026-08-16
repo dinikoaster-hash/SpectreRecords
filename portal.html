@@ -390,7 +390,12 @@
     .portal-nav-catalogo:active { transform:translateY(0); }
 
     /* Main layout */
-    .portal-main { padding:2.5rem; padding-top:1.6rem; max-width:1400px; margin:0 auto; overflow-x:hidden; }
+    /* max-width fijo en 1400px dejaba franjas enormes sin usar en monitores
+       anchos (1920px+): quedaban ~250px vacíos a cada lado. Con min(...,vw)
+       el contenido crece con la pantalla hasta un techo razonable (1800px)
+       para no volver las líneas de texto incómodamente largas en monitores
+       ultra-anchos. */
+    .portal-main { padding:2.5rem; padding-top:1.6rem; max-width:min(1800px,94vw); margin:0 auto; overflow-x:hidden; }
 
     /* ─── Dashboard hero: welcome (left) + stats dashboard (right) ─── */
     .dashboard-hero {
@@ -573,6 +578,7 @@
       text-transform:uppercase;
       padding:.3rem .7rem;
       border-radius:0;
+      flex-shrink:0;
     }
     .badge-active { background:rgba(52,211,153,.1); color:var(--green); border:1px solid rgba(52,211,153,.25); }
     .badge-done { background:rgba(168,85,247,.1); color:var(--purple-light); border:1px solid rgba(168,85,247,.25); }
@@ -590,14 +596,18 @@
       transition:background .2s;
     }
     .finance-card:hover { background:var(--surface2); }
-    .finance-card-top { display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:1rem; }
+    /* finance-card-top ahora lleva el concepto junto al badge (antes era un
+       <div></div> vacío solo para empujar el badge a la derecha, dejando
+       toda esa fila sin usar). El badge no se encoge; el concepto sí puede
+       ajustar/partir línea si es largo. */
+    .finance-card-top { display:flex; justify-content:space-between; align-items:flex-start; gap:.8rem; margin-bottom:.6rem; }
     .finance-id {
       font-family:'DM Mono',monospace;
       font-size:.6rem;
       color:var(--muted2);
       letter-spacing:.15em;
     }
-    .finance-concept { font-size:.95rem; font-weight:600; margin-bottom:.3rem; }
+    .finance-concept { font-size:.95rem; font-weight:600; flex:1; min-width:0; }
     .finance-date {
       font-family:'DM Mono',monospace;
       font-size:.65rem;
@@ -647,15 +657,25 @@
       margin:.3rem 0 .8rem;
     }
     .profile-meta {
-      display:flex; gap:2rem; flex-wrap:wrap;
+      display:flex; gap:1rem; flex-wrap:wrap; margin-top:1.2rem;
     }
+    /* Antes era texto plano en una sola línea ("Correo x  Tel y  Nivel z"):
+       en pantallas anchas dejaba todo el resto de la fila vacío. Ahora son
+       bloques tipo ficha (mismo lenguaje visual que las stat-cards de arriba)
+       que crecen para repartirse el ancho disponible. */
     .profile-meta-item {
-      font-family:'DM Mono',monospace;
-      font-size:.65rem;
-      color:var(--muted);
-      letter-spacing:.05em;
+      flex:1 1 180px; min-width:180px;
+      background:var(--surface2); border:1px solid var(--border);
+      padding:.75rem 1rem;
     }
-    .profile-meta-item strong { color:var(--text); }
+    .profile-meta-label {
+      font-family:'DM Mono',monospace; font-size:.58rem; letter-spacing:.14em;
+      text-transform:uppercase; color:var(--muted2);
+    }
+    .profile-meta-item strong {
+      display:block; margin-top:.3rem; font-size:.88rem; font-weight:600;
+      color:var(--text); overflow-wrap:break-word;
+    }
 
     /* Files section */
     .files-notice {
@@ -954,8 +974,13 @@
       .stat-card-label { font-size:.5rem; margin-bottom:.3rem; }
       .stat-card-sub { margin-top:.15rem; }
 
-      /* Body: stack, no side gap */
-      .portal-body { flex-direction:column; gap:0; }
+      /* Body: stack, no side gap.
+         align-items:stretch (no flex-start) es clave: el flex-start heredado
+         del layout de escritorio (donde solo afecta el alto) se convierte en
+         un problema de ANCHO al pasar a columna — hacía que todo el contenido
+         (tarjetas de archivos, pagos, etc.) se encogiera a su ancho mínimo en
+         vez de ocupar el ancho completo de la pantalla. */
+      .portal-body { flex-direction:column; gap:0; align-items:stretch; }
 
       /* Tabs → fixed bottom app nav, like a mobile app */
       .tabs {
@@ -1877,12 +1902,11 @@ function renderFinanzas() {
     return `
       <div class="finance-card" style="${!isPaid?'border:1px solid rgba(248,113,113,.25);':''}">
         <div class="finance-card-top">
-          <div></div>
+          <div class="finance-concept">${f['Concepto']||'—'}</div>
           ${isPaid
             ? '<span class="badge badge-paid">Pagado</span>'
             : '<span class="badge badge-unpaid">Pendiente</span>'}
         </div>
-        <div class="finance-concept">${f['Concepto']||'—'}</div>
         <div class="finance-date">${formatFecha(f['Fecha'])}</div>
         <div class="finance-amount ${isIncome?'income':'expense'}">
           ${isIncome?'+':'-'}$${monto.toLocaleString()} MXN
@@ -2012,9 +2036,9 @@ function renderPerfil() {
         <div class="profile-name">${a['Nombre']||'—'}</div>
         ${a['AKA'] ? `<div class="profile-aka">// ${a['AKA']}</div>` : ''}
         <div class="profile-meta">
-          ${a['Correo']    ? `<div class="profile-meta-item">Correo &nbsp;<strong>${a['Correo']}</strong></div>`    : ''}
-          ${a['Telefono']  ? `<div class="profile-meta-item">Tel &nbsp;<strong>${a['Telefono']}</strong></div>`     : ''}
-          ${a['Tipo']      ? `<div class="profile-meta-item">Nivel &nbsp;<strong>${a['Tipo']}</strong></div>`        : ''}
+          ${a['Correo']    ? `<div class="profile-meta-item"><div class="profile-meta-label">Correo</div><strong>${a['Correo']}</strong></div>`    : ''}
+          ${a['Telefono']  ? `<div class="profile-meta-item"><div class="profile-meta-label">Tel</div><strong>${a['Telefono']}</strong></div>`     : ''}
+          ${a['Tipo']      ? `<div class="profile-meta-item"><div class="profile-meta-label">Nivel</div><strong>${a['Tipo']}</strong></div>`        : ''}
         </div>
       </div>
     </div>
