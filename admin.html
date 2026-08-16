@@ -169,9 +169,12 @@ body::before{content:'';position:fixed;inset:0;background-image:url("data:image/
 #loginScreen{min-height:100vh;display:flex;align-items:center;justify-content:center;position:relative;overflow:hidden;}
 .login-bg{position:absolute;inset:0;background:radial-gradient(ellipse 55% 65% at 50% 45%,rgba(201,168,76,.12) 0%,transparent 70%),radial-gradient(ellipse 40% 40% at 80% 90%,rgba(201,168,76,.06) 0%,transparent 70%);}
 .login-grid{position:absolute;inset:0;background-image:linear-gradient(rgba(201,168,76,.025) 1px,transparent 1px),linear-gradient(90deg,rgba(201,168,76,.025) 1px,transparent 1px);background-size:50px 50px;mask-image:radial-gradient(ellipse 70% 70% at 50% 50%,black 0%,transparent 100%);}
-.login-box{position:relative;z-index:2;width:100%;max-width:430px;padding:3.6rem 3rem 3.2rem;border:1px solid var(--border2);border-radius:var(--r-lg);background:var(--glass-bg);backdrop-filter:blur(24px) saturate(140%);box-shadow:var(--shadow-lg);animation:fadeUp .6s var(--ease-out) both;}
+/* [FIX] Proporciones alineadas al login del Portal del Artista: un poco
+   menos ancho (max-width 430px→400px) y más alto (más padding vertical,
+   sobre todo arriba/abajo) en vez del cuadro más achatado que había antes. */
+.login-box{position:relative;z-index:2;width:100%;max-width:400px;padding:4.4rem 2.75rem 4rem;border:1px solid var(--border2);border-radius:var(--r-lg);background:var(--glass-bg);backdrop-filter:blur(24px) saturate(140%);box-shadow:var(--shadow-lg);animation:fadeUp .6s var(--ease-out) both;}
 .login-logo-img{display:block;margin:0 auto 1.4rem;height:82px;width:auto;filter:drop-shadow(0 0 18px rgba(201,168,76,.35));}
-.login-sub{font-family:DM Mono,monospace;font-size:.6rem;letter-spacing:.25em;text-transform:uppercase;color:var(--muted);text-align:center;margin-bottom:2.8rem;}
+.login-sub{font-family:DM Mono,monospace;font-size:.6rem;letter-spacing:.25em;text-transform:uppercase;color:var(--muted);text-align:center;margin-bottom:3.2rem;}
 .admin-badge{display:block;margin:0 auto 2rem;width:fit-content;background:rgba(201,168,76,.1);border:1px solid rgba(201,168,76,.3);border-radius:var(--r-pill);color:var(--gold);font-family:DM Mono,monospace;font-size:.6rem;letter-spacing:.2em;text-transform:uppercase;padding:.4rem 1rem;}
 .login-label{font-family:DM Mono,monospace;font-size:.62rem;letter-spacing:.2em;text-transform:uppercase;color:var(--muted);display:block;margin-bottom:.5rem;}
 .login-input{width:100%;background:var(--surface2);border:1px solid var(--border2);border-radius:var(--r-sm);color:var(--text);font-family:DM Mono,monospace;font-size:1.1rem;letter-spacing:.3em;text-align:center;padding:1.3rem 1rem;outline:none;transition:border-color var(--dur-base) var(--ease),box-shadow var(--dur-base) var(--ease);margin-bottom:2rem;}
@@ -380,8 +383,15 @@ body::before{content:'';position:fixed;inset:0;background-image:url("data:image/
 .btn-ghost:hover{border-color:var(--muted);color:var(--text);background:var(--hover-tint3);}
 
 /* ARTIST CARDS */
-.artists-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:1px;border:1px solid var(--border);border-radius:var(--r-md);overflow:hidden;box-shadow:var(--shadow-sm);background:var(--border);}
-@media(min-width:901px){.artists-grid{grid-template-columns:repeat(5,minmax(0,1fr));}}
+/* [FIX] Antes forzaba un número fijo de columnas (5 en escritorio, 2 en
+   tablet, 1 en celular) usando fracciones "1fr" sin piso mínimo real: en
+   pantallas anchas dentro de cada rango eso estiraba las tarjetas mucho
+   más de lo necesario (ej. 360px+ por tarjeta en vez de ~200px), y en
+   celular una sola tarjeta ocupaba TODO el ancho. Ahora es siempre
+   "auto-fill" con un mínimo/máximo acotado: la tarjeta nunca crece más
+   de lo compacto, y el navegador decide cuántas caben según el ancho
+   real disponible en cada momento (responsive de verdad, no por saltos). */
+.artists-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,220px));gap:1px;border:1px solid var(--border);border-radius:var(--r-md);overflow:hidden;box-shadow:var(--shadow-sm);background:var(--border);}
 .artist-card{background:var(--surface);padding:1.4rem;position:relative;overflow:hidden;transition:background var(--dur-slow) var(--ease);}
 .artist-card::before{content:'';position:absolute;left:0;top:0;bottom:0;width:2px;background:var(--border);}
 .artist-card.has-debt::before{background:var(--red);}
@@ -742,7 +752,7 @@ body::before{content:'';position:fixed;inset:0;background-image:url("data:image/
   #cursosAdminContainer .data-table td{display:flex;justify-content:space-between;align-items:center;padding:.3rem 0;border:none;font-size:.8rem;}
   #cursosAdminContainer .data-table td:first-child{font-family:DM Mono,monospace;font-size:.6rem;color:var(--muted2);}
   #cursosAdminContainer .data-table td:last-child{margin-top:.5rem;padding-top:.5rem;border-top:1px solid var(--border);}
-  .artists-grid{grid-template-columns:1fr 1fr;}
+  .artists-grid{grid-template-columns:repeat(auto-fill,minmax(160px,200px));}
   [id^="toggle"]{font-size:.6rem !important;padding:.65rem 1rem !important;}
   #page-nuevo > div{max-width:100%;}
   #dashProyectos .table-wrap,#dashPendientes .table-wrap{overflow-x:auto;}
@@ -756,7 +766,7 @@ body::before{content:'';position:fixed;inset:0;background-image:url("data:image/
   .artist-panel{width:min(480px,100vw);}
 }
 @media(max-width:540px){
-  .artists-grid{grid-template-columns:1fr;}
+  .artists-grid{grid-template-columns:repeat(auto-fill,minmax(145px,180px));}
   .main-content{padding:.7rem;padding-top:4.2rem;}
   .stat-value{font-size:1.3rem;}
   .page-title{font-size:1.4rem;}
@@ -776,7 +786,7 @@ body::before{content:'';position:fixed;inset:0;background-image:url("data:image/
 }
 @media(max-width:380px){
   .stats-grid{grid-template-columns:1fr;}
-  .artists-grid{grid-template-columns:1fr;}
+  .artists-grid{grid-template-columns:repeat(auto-fill,minmax(190px,1fr));}
 }
 @media(hover:none),(pointer:coarse){
   .cursor,.cursor-ring{display:none;}
@@ -888,7 +898,11 @@ img,svg{max-width:100%;}
 <div class="cursor-ring" id="cursorRing"></div>
 
 <!-- THEME TOGGLE (junto a notificaciones) -->
-<button type="button" class="theme-fab" id="themeToggle" onclick="cycleTheme()" title="Tema" aria-label="Cambiar tema">
+<!-- [FIX] Oculto por defecto (igual que #notifBell): antes se veía en la
+     pantalla de login porque no tenía display:none inicial. Solo se
+     muestra al entrar a la sesión (ver doAdminLogin/restoreSessionIfValid)
+     y se vuelve a ocultar al cerrar sesión (ver doLogout). -->
+<button type="button" class="theme-fab" id="themeToggle" onclick="cycleTheme()" title="Tema" aria-label="Cambiar tema" style="display:none">
   <span id="themeCycleIcon">&#9728;</span>
 </button>
 
@@ -2255,6 +2269,7 @@ async function restoreSessionIfValid(){
   document.getElementById('loginScreen').style.display='none';
   document.getElementById('adminScreen').style.display='block';
   document.getElementById('hamburger').style.display='';
+  document.getElementById('themeToggle').style.display='flex';
   applyRoleUI();
   applySavedCollapse();
   startInactivityWatch();
@@ -2282,6 +2297,7 @@ async function doAdminLogin(){
   document.getElementById('loginScreen').style.display='none';
   document.getElementById('adminScreen').style.display='block';
   document.getElementById('hamburger').style.display='';
+  document.getElementById('themeToggle').style.display='flex';
   applyRoleUI();
   applySavedCollapse();
   await loadAdmin();
@@ -2294,6 +2310,13 @@ function doLogout(){
   document.getElementById('loginScreen').style.display='flex';
   document.getElementById('adminPass').value='';
   document.getElementById('hamburger').style.display='none';
+  // [FIX] Al cerrar sesión, el toggle de tema y la campana de notificaciones
+  // se quedaban visibles (flotando sobre el login) porque nada los volvía
+  // a ocultar. Se restauran a su estado inicial (oculto) junto con el resto
+  // de la UI de la sesión.
+  document.getElementById('themeToggle').style.display='none';
+  document.getElementById('notifBell').style.display='none';
+  closeNotifDrawer();
   oauthToken=null;
   sessionStorage.removeItem('adm_oauth_token');
   updateOAuthUI(false);
