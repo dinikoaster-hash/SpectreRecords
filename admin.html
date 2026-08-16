@@ -328,8 +328,14 @@ body::before{content:'';position:fixed;inset:0;background-image:url("data:image/
 .sidebar.collapsed .sidebar-links-inner{padding:.4rem !important;border-top:none !important;margin-top:0 !important;}
 
 /* MAIN */
-.main-content{margin-left:var(--sidebar-w);flex:1;padding:2.5rem;padding-top:calc(1rem + 38px + .85rem);max-width:calc(100vw - var(--sidebar-w));transition:margin-left var(--dur-slow) var(--ease),max-width var(--dur-slow) var(--ease);}
+.main-content{position:relative;margin-left:var(--sidebar-w);flex:1;padding:2.5rem;padding-top:calc(1rem + 38px + .85rem);max-width:calc(100vw - var(--sidebar-w));transition:margin-left var(--dur-slow) var(--ease),max-width var(--dur-slow) var(--ease);}
 .sidebar.collapsed~.main-content,.main-content.sidebar-collapsed{margin-left:56px;max-width:calc(100vw - 56px);}
+/* ── Overlay de carga inicial (mientras se traen los datos de Sheets) ── */
+.admin-loading-overlay{position:absolute;inset:0;z-index:60;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1rem;background:var(--bg);opacity:1;transition:opacity .35s var(--ease-out);}
+.admin-loading-overlay.hidden{opacity:0;pointer-events:none;}
+.admin-loading-overlay .spinner{width:32px;height:32px;border:2px solid var(--border2);border-top-color:var(--gold);border-radius:50%;animation:adminSpin .8s linear infinite;}
+.admin-loading-overlay .loading-text{font-family:'DM Mono',monospace;font-size:.65rem;letter-spacing:.15em;text-transform:uppercase;color:var(--muted);}
+@keyframes adminSpin{to{transform:rotate(360deg);}}
 .page{display:none;}
 .page.active{display:block;animation:fadeIn .35s var(--ease-out) both;}
 .page-header{display:flex;align-items:flex-end;justify-content:space-between;margin-bottom:2rem;padding-bottom:1.5rem;border-bottom:1px solid var(--border);flex-wrap:wrap;gap:1rem;position:relative;}
@@ -1022,6 +1028,18 @@ img,svg{max-width:100%;}
 <div id="adminScreen">
   <div class="admin-layout">
     <aside class="sidebar" id="sidebar">
+      <script>
+      // Anti-flash: aplica el estado colapsado/expandido del sidebar
+      // ANTES de que se pinte, igual que se hace con el tema. Sin esto,
+      // el sidebar siempre nace expandido (por el HTML) y recién unos
+      // instantes después JS lo colapsaba si el usuario lo tenía cerrado,
+      // lo que se veía como un parpadeo feo de "abre y luego cierra".
+      try{
+        if(localStorage.getItem('sr_sidebar_collapsed')==='1'){
+          document.getElementById('sidebar').classList.add('collapsed');
+        }
+      }catch(e){}
+      </script>
       <div class="sidebar-logo">
         <img src="assets/logo_sr.PNG" alt="Spectre Records"/>
         <button class="sidebar-collapse-btn" id="sidebarCollapseBtn" onclick="toggleSidebarCollapse()" title="Contraer menú">‹</button>
@@ -1089,7 +1107,21 @@ img,svg{max-width:100%;}
       </div>
     </aside>
 
-    <main class="main-content">
+    <main class="main-content" id="mainContent">
+      <script>
+      try{
+        if(localStorage.getItem('sr_sidebar_collapsed')==='1'){
+          document.getElementById('mainContent').classList.add('sidebar-collapsed');
+        }
+      }catch(e){}
+      </script>
+      <!-- Overlay de carga: visible por defecto, se oculta con hideAdminLoading()
+           una vez que loadAdmin() termina de traer los datos. Así nunca se ve
+           una página vacía mientras todavía se está buscando la información. -->
+      <div class="admin-loading-overlay" id="adminLoadingOverlay">
+        <div class="spinner"></div>
+        <div class="loading-text">// Cargando información...</div>
+      </div>
 
       <!-- DASHBOARD -->
       <div class="page active" id="page-dashboard">
@@ -2312,6 +2344,13 @@ function stopInactivityWatch(){
   });
 }
 // Al cargar la página: si hay una sesión guardada y no expiró, entra directo sin pedir login
+// ── Overlay de carga inicial (solo en el arranque: login / restaurar sesión) ──
+function showAdminLoading(){
+  document.getElementById('adminLoadingOverlay')?.classList.remove('hidden');
+}
+function hideAdminLoading(){
+  document.getElementById('adminLoadingOverlay')?.classList.add('hidden');
+}
 async function restoreSessionIfValid(){
   const session=readSession();
   if(!session)return false;
@@ -2325,10 +2364,12 @@ async function restoreSessionIfValid(){
   document.getElementById('adminScreen').style.display='block';
   document.getElementById('hamburger').style.display='';
   document.getElementById('themeToggle').style.display='flex';
+  showAdminLoading();
   applyRoleUI();
   applySavedCollapse();
   startInactivityWatch();
   await loadAdmin();
+  hideAdminLoading();
   // Ya se restauró la vista real vía applyRoleUI(); el <style> temporal
   // del anti-flash del <head> deja de hacer falta.
   document.getElementById('__srBootStyle')?.remove();
@@ -2356,9 +2397,11 @@ async function doAdminLogin(){
   document.getElementById('adminScreen').style.display='block';
   document.getElementById('hamburger').style.display='';
   document.getElementById('themeToggle').style.display='flex';
+  showAdminLoading();
   applyRoleUI();
   applySavedCollapse();
   await loadAdmin();
+  hideAdminLoading();
 }
 function doLogout(){
   userRole='heaven';
@@ -2568,6 +2611,13 @@ async function loadAdmin(delay=0){
   renderFinanzas();renderCursosAdmin();renderCatalogo();renderTareas();renderSuscripciones();
   renderNotificaciones();renderPipeline();
   populateArtistSelects();populateProyectoSelects();populateYearFilters();updateBadges();
+  // [FIX] loadAdmin() no refrescaba Calendario ni Cotizador. Si la vista
+  // recordada al recargar era una de esas dos, quedaban con los datos
+  // vacíos del primer render (hecho antes de que llegara la respuesta de
+  // Sheets) y nunca se volvían a pintar con la información real.
+  const activePage=document.querySelector('.page.active')?.id.replace('page-','');
+  if(activePage==='calendario')renderCalendario();
+  if(activePage==='cotizador'){cotizInit();cotizActualizar();}
 }
 
 function updateBadges(){
