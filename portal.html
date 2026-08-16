@@ -1119,6 +1119,14 @@
       .portal-section-header { margin-bottom:.8rem; }
       .portal-section-title { font-size:1.2rem; }
 
+      /* App-like: en móvil, el hero de bienvenida + stats solo se muestra en
+         la pestaña de inicio (Proyectos). En el resto de pestañas (Archivos,
+         Pagos, Recursos, Perfil) ocupaba espacio vertical fijo arriba de todo
+         el contenido, obligando a bajar mucho para llegar a las tarjetas y
+         sus botones — igual que pasaría en cualquier app nativa, las
+         pantallas secundarias no repiten el dashboard completo. */
+      body[data-tab]:not([data-tab="proyectos"]) .dashboard-hero { display:none; }
+
       /* Config panel */
       .config-panel { padding:1.5rem 1rem; }
       .config-box { padding:2rem 1.5rem; }
@@ -1677,6 +1685,22 @@ function showPortalScreen() {
   portal.classList.remove('portal-fade-in');
   void portal.offsetWidth; // fuerza reflow para poder reiniciar la animación
   portal.classList.add('portal-fade-in');
+
+  // La animación usa `transform` (translateY) para el efecto de deslizado.
+  // Mientras esa clase sigue puesta, aunque la animación ya haya terminado,
+  // el navegador sigue tratando a #portalScreen como el "contenedor" de
+  // cualquier descendiente con position:fixed (así lo define la spec de
+  // CSS: cualquier transform != none crea ese contexto). Eso rompía el
+  // menú inferior fijo en móvil: en vez de quedarse pegado a la pantalla,
+  // quedaba pegado al final de #portalScreen, o sea al final de TODO el
+  // contenido de la pestaña activa. Quitamos la clase en cuanto la
+  // animación termina para liberar ese contexto y que position:fixed
+  // vuelva a ser relativo al viewport, como debe ser.
+  portal.addEventListener('animationend', function onEnd(e) {
+    if (e.target !== portal || e.animationName !== 'portalFadeIn') return;
+    portal.classList.remove('portal-fade-in');
+    portal.removeEventListener('animationend', onEnd);
+  });
 }
 
 // Cierra el splash (si estaba activo) y revela el login con transición,
@@ -2388,6 +2412,7 @@ function setActiveTab(name, opts) {
   if (!content) return false; // tab inexistente (p.ej. dato corrupto en localStorage)
   if (btn) btn.classList.add('active');
   content.classList.add('active');
+  document.body.setAttribute('data-tab', name);
   if (position) positionTabIndicator(instant);
   return true;
 }
