@@ -864,6 +864,36 @@
     .cursos-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(220px,1fr)); gap:1rem; }
     .curso-card { background:var(--surface); border:1px solid var(--border); overflow:hidden; transition:border-color .2s; }
     .curso-card:hover { border-color:var(--purple-dim); }
+
+    /* Files grid (tab Archivos) — antes era una lista angosta de una sola
+       columna con texto centrado de forma inconsistente entre el nombre y
+       el tipo de servicio (se veía "descuadrado"), y dejaba mucho espacio
+       vacío sin usar en pantallas anchas. Ahora es una cuadrícula de
+       tarjetas (mismo patrón que .cursos-grid) que aprovecha el ancho
+       disponible y alinea todo el texto explícitamente a la izquierda. */
+    .files-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(260px,1fr)); gap:1rem; }
+    .file-card {
+      background:var(--surface); border:1px solid var(--border); padding:1.3rem 1.4rem;
+      display:flex; flex-direction:column; gap:1rem; transition:border-color .2s, transform .2s;
+    }
+    .file-card:hover { border-color:var(--purple-dim); }
+    .file-card-top { display:flex; align-items:flex-start; gap:.8rem; text-align:left; }
+    .file-card-icon {
+      width:34px; height:34px; flex-shrink:0; border-radius:var(--r-btn); background:var(--purple-faint);
+      border:1px solid var(--purple-dim); display:flex; align-items:center; justify-content:center; font-size:1rem;
+    }
+    .file-card-body { min-width:0; text-align:left; }
+    .file-card-name { font-weight:600; font-size:.92rem; text-align:left; overflow-wrap:break-word; }
+    .file-card-type {
+      font-family:'DM Mono',monospace; font-size:.62rem; color:var(--muted); text-align:left;
+      margin-top:.3rem; letter-spacing:.02em;
+    }
+    .file-card-btn {
+      font-family:'DM Mono',monospace; font-size:.68rem; letter-spacing:.1em; text-transform:uppercase;
+      color:var(--purple-light); border:1px solid var(--purple-dim); padding:.55rem 1rem; text-decoration:none;
+      text-align:center; transition:background .2s, color .2s; margin-top:auto;
+    }
+    .file-card-btn:hover { background:var(--purple); color:#fff; }
     .curso-video { width:100%; aspect-ratio:16/9; min-height:190px; border:none; display:block; background:#000; }
     .curso-info { padding:.85rem 1rem; }
     .curso-badge { font-family:'DM Mono',monospace; font-size:.5rem; letter-spacing:.1em; text-transform:uppercase; padding:.18rem .5rem; margin-bottom:.5rem; display:inline-block; }
@@ -1002,6 +1032,7 @@
       /* Cursos: en móvil, una sola columna para que los videos (YouTube) sean lo bastante
          grandes para reproducirse e interactuar con los controles cómodamente */
       .cursos-grid { grid-template-columns:1fr; gap:1rem; }
+      .files-grid { grid-template-columns:1fr; gap:.8rem; }
       .curso-info { padding:.6rem .7rem; }
       .curso-titulo { font-size:.85rem; }
       .curso-desc { font-size:.65rem; -webkit-line-clamp:2; }
@@ -1183,6 +1214,7 @@
       <button class="tab-btn" onclick="switchTab('archivos')" data-tab="archivos">
         <svg class="tab-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/></svg>
         <span class="tab-label">Archivos</span>
+        <span id="archivosCount" class="tab-badge tab-badge-purple" style="display:none;"></span>
       </button>
       <button class="tab-btn" onclick="switchTab('cursos')" id="tabCursosBtn" data-tab="cursos">
         <svg class="tab-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
@@ -1230,6 +1262,7 @@
           <div>
             <div class="portal-section-title">MIS ARCHIVOS</div>
           </div>
+          <div class="section-eyebrow" id="archivosCountLabel"></div>
         </div>
         <div id="archivosContainer" class="files-notice">
           Aquí aparecerán los links de descarga de tus archivos.<br>
@@ -1581,6 +1614,11 @@ async function doLogin() {
 }
 
 async function loadPortal() {
+  // Aplica la vista guardada ANTES de revelar #portalScreen, para que nunca
+  // se alcance a pintar "proyectos" (la vista por defecto del HTML) y luego
+  // saltar a la vista real: todo llega ya correcto en el primer frame visible.
+  setActiveTab(getLastTab(), { position: false });
+
   document.getElementById('loginScreen').style.display = 'none';
   document.getElementById('portalScreen').style.display = 'block';
   requestAnimationFrame(() => positionTabIndicator(true));
@@ -1859,7 +1897,21 @@ function renderFinanzas() {
 // ═══════════════════════════════════════
 function renderArchivos() {
   const c = document.getElementById('archivosContainer');
+  const countBadge = document.getElementById('archivosCount');
+  const countLabel = document.getElementById('archivosCountLabel');
   const withFiles = [...allProyectos].reverse().filter(p => p['Archivos entregados'] && p['Archivos entregados'].startsWith('http'));
+
+  // Contador: badge junto a "Archivos" en el menú (igual que Recursos) +
+  // texto junto al título de la sección, para que siempre se vea cuántos
+  // archivos hay disponibles para descargar.
+  if (withFiles.length) {
+    if (countBadge) { countBadge.textContent = withFiles.length; countBadge.style.display = ''; }
+    if (countLabel) countLabel.textContent = `// ${withFiles.length} archivo${withFiles.length===1?'':'s'} disponible${withFiles.length===1?'':'s'}`;
+  } else {
+    if (countBadge) countBadge.style.display = 'none';
+    if (countLabel) countLabel.textContent = '';
+  }
+
   if (!withFiles.length) {
     c.innerHTML = `<div class="files-notice">
       Aquí aparecerán los links de descarga de tus archivos.<br>
@@ -1868,21 +1920,18 @@ function renderArchivos() {
     </div>`;
     return;
   }
-  c.innerHTML = `<div style="display:flex;flex-direction:column;gap:1px;border:1px solid var(--border)">
+  c.className = '';
+  c.innerHTML = `<div class="files-grid">
     ${withFiles.map(p => `
-      <div style="display:flex;justify-content:space-between;align-items:center;padding:1.2rem 1.5rem;background:var(--surface)">
-        <div>
-          <div style="font-weight:600;margin-bottom:.3rem">${p['Nombre del proyecto']}</div>
-          <div style="font-family:'DM Mono',monospace;font-size:.65rem;color:var(--muted)">${p['Tipo de servicio']||''}</div>
+      <div class="file-card">
+        <div class="file-card-top">
+          <div class="file-card-icon">📁</div>
+          <div class="file-card-body">
+            <div class="file-card-name">${p['Nombre del proyecto']}</div>
+            <div class="file-card-type">${p['Tipo de servicio']||''}</div>
+          </div>
         </div>
-        <a href="${p['Archivos entregados']}" target="_blank"
-          style="font-family:'DM Mono',monospace;font-size:.7rem;letter-spacing:.1em;text-transform:uppercase;
-                 color:var(--purple-light);border:1px solid var(--purple-dim);padding:.5rem 1.2rem;text-decoration:none;
-                 transition:background .2s"
-          onmouseover="this.style.background='var(--purple)';this.style.color='#fff'"
-          onmouseout="this.style.background='';this.style.color='var(--purple-light)'">
-          Descargar →
-        </a>
+        <a href="${p['Archivos entregados']}" target="_blank" class="file-card-btn">Descargar →</a>
       </div>
     `).join('')}
   </div>`;
@@ -2166,13 +2215,38 @@ function positionTabIndicator(instant) {
 }
 window.addEventListener('resize', () => positionTabIndicator(true));
 
-function switchTab(name) {
+// ═══════════════════════════════════════
+// RECORDAR ÚLTIMA VISTA (tab) entre recargas
+// ═══════════════════════════════════════
+const PORTAL_TAB_KEY = 'portal_last_tab';
+function saveLastTab(name) {
+  try { localStorage.setItem(PORTAL_TAB_KEY, name); } catch (e) {}
+}
+function getLastTab() {
+  try { return localStorage.getItem(PORTAL_TAB_KEY) || 'proyectos'; } catch (e) { return 'proyectos'; }
+}
+
+// Aplica las clases activas del tab sin necesariamente reposicionar el indicador
+// (útil para dejar todo listo ANTES de mostrar #portalScreen y evitar el parpadeo
+// donde primero se ve "proyectos" y luego salta a la vista guardada)
+function setActiveTab(name, opts) {
+  opts = opts || {};
+  const position = opts.position !== false;
+  const instant  = !!opts.instant;
   document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
   document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
   const btn = document.querySelector('.tab-btn[data-tab="'+name+'"]');
-  if(btn) btn.classList.add('active');
-  document.getElementById('tab-'+name).classList.add('active');
-  positionTabIndicator(false);
+  const content = document.getElementById('tab-'+name);
+  if (!content) return false; // tab inexistente (p.ej. dato corrupto en localStorage)
+  if (btn) btn.classList.add('active');
+  content.classList.add('active');
+  if (position) positionTabIndicator(instant);
+  return true;
+}
+
+function switchTab(name) {
+  setActiveTab(name, { position: true, instant: false });
+  saveLastTab(name);
 }
 
 // ═══════════════════════════════════════
